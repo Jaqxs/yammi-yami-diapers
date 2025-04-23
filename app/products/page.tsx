@@ -1,0 +1,630 @@
+"use client"
+
+import { useState } from "react"
+import Image from "next/image"
+import { motion } from "framer-motion"
+import { ShoppingCart, Filter, Search, Tag, Star } from "lucide-react"
+import Link from "next/link"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Slider } from "@/components/ui/slider"
+import { Badge } from "@/components/ui/badge"
+import { PageWrapper } from "@/components/page-wrapper"
+import { useLanguage } from "@/components/language-provider"
+import { useCart } from "@/components/cart-provider"
+
+// Language translations
+const translations = {
+  en: {
+    products: "Products",
+    allProducts: "All Products",
+    babyDiapers: "Baby Diapers",
+    babyPants: "Baby Pants",
+    ladyPads: "Lady Pads",
+    adultDiapers: "Adult Pants",
+    filter: "Filter",
+    search: "Search products...",
+    sort: "Sort By",
+    price: "Price",
+    size: "Size",
+    apply: "Apply Filters",
+    reset: "Reset",
+    priceRange: "Price Range",
+    addToCart: "Add to Cart",
+    orderViaWhatsApp: "Order via WhatsApp",
+    noProducts: "No products found",
+    newest: "Newest",
+    priceHighToLow: "Price: High to Low",
+    priceLowToHigh: "Price: Low to High",
+    small: "Small",
+    medium: "Medium",
+    large: "Large",
+    extraLarge: "Extra Large",
+    viewPricing: "View Pricing",
+    wholesale: "Wholesale Available",
+    japanStandard: "Japan Standard",
+    highAbsorption: "High Absorption",
+    viewDetails: "View Details",
+    pieces: "pieces",
+    bestSeller: "Best Seller",
+    newArrival: "New Arrival",
+    internationalQuality: "International Quality",
+    viewAllPricing: "View All Pricing",
+    retailPrice: "Retail Price",
+    wholesalePrice: "Wholesale Price",
+    perBundle: "per bundle",
+    bundleSize: "Bundle Size",
+    priceNote: "* Prices in Dar es Salaam/Kariakoo. See Pricing page for details.",
+  },
+  sw: {
+    products: "Bidhaa",
+    allProducts: "Bidhaa Zote",
+    babyDiapers: "Diapers za Watoto",
+    babyPants: "Pants za Watoto",
+    ladyPads: "Pedi za Wanawake",
+    adultDiapers: "Pants za Watu Wazima",
+    filter: "Chuja",
+    search: "Tafuta bidhaa...",
+    sort: "Panga Kwa",
+    price: "Bei",
+    size: "Ukubwa",
+    apply: "Tumia Vichujio",
+    reset: "Anza Upya",
+    priceRange: "Kipimo cha Bei",
+    addToCart: "Ongeza kwenye Kikapu",
+    orderViaWhatsApp: "Agiza kupitia WhatsApp",
+    noProducts: "Hakuna bidhaa zilizopatikana",
+    newest: "Mpya Zaidi",
+    priceHighToLow: "Bei: Juu hadi Chini",
+    priceLowToHigh: "Bei: Chini hadi Juu",
+    small: "Ndogo",
+    medium: "Wastani",
+    large: "Kubwa",
+    extraLarge: "Kubwa Zaidi",
+    viewPricing: "Tazama Bei",
+    wholesale: "Jumla Inapatikana",
+    japanStandard: "Kiwango cha Japan",
+    highAbsorption: "Unyonywaji wa Hali ya Juu",
+    viewDetails: "Tazama Maelezo",
+    pieces: "vipande",
+    bestSeller: "Inayouzwa Zaidi",
+    newArrival: "Mpya Sokoni",
+    internationalQuality: "Ubora wa Kimataifa",
+    viewAllPricing: "Tazama Bei Zote",
+    retailPrice: "Bei ya Rejareja",
+    wholesalePrice: "Bei ya Jumla",
+    perBundle: "kwa kifurushi",
+    bundleSize: "Ukubwa wa Kifurushi",
+    priceNote: "* Bei hizi ni za Dar es Salaam/Kariakoo. Tazama ukurasa wa Bei kwa maelezo zaidi.",
+  },
+}
+
+// Product data with updated prices
+const products = [
+  {
+    id: 1,
+    name: {
+      en: "Premium Baby Diapers",
+      sw: "Diapers Bora za Watoto",
+    },
+    category: "babyDiapers",
+    price: 18000,
+    wholesalePrice: 16000,
+    size: "small",
+    bundleSize: 50,
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/baby%20diaper.jpg-8TUQ8NXCalui3IondSW0pGQKZezKI1.jpeg",
+    tags: ["bestSeller", "highAbsorption"],
+    weightRange: "4-8kg",
+    description: {
+      en: "High-quality baby diapers for newborns and small babies with side-tape closure for a secure fit.",
+      sw: "Diapers bora za watoto wachanga na watoto wadogo zenye utepe wa pembeni kwa usalama zaidi.",
+    },
+  },
+  {
+    id: 2,
+    name: {
+      en: "Baby Pull-up Pants",
+      sw: "Pants za Watoto",
+    },
+    category: "babyPants",
+    price: 20000,
+    wholesalePrice: 17000,
+    size: "medium",
+    bundleSize: 50,
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.41_542754ce.jpg-SYaYX5HxpNniNUoMc0trj7485kedRl.jpeg",
+    tags: ["japanStandard", "highAbsorption"],
+    weightRange: "9-14kg",
+    description: {
+      en: "Medium-sized pull-up pants designed for active babies who need comfort and mobility.",
+      sw: "Pants za ukubwa wa kati zimeundwa kwa watoto wanaocheza wanaohitaji faraja na urahisi wa kutembea.",
+    },
+  },
+  {
+    id: 3,
+    name: {
+      en: "Baby Pull-up Pants",
+      sw: "Pants za Watoto",
+    },
+    category: "babyPants",
+    price: 20000,
+    wholesalePrice: 17000,
+    size: "large",
+    bundleSize: 50,
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.43_dd271f0f.jpg-EYQ4FIQyCghuaa0E0kwbpKWsBDNaPZ.jpeg",
+    tags: ["bestSeller", "highAbsorption"],
+    weightRange: "12-17kg",
+    description: {
+      en: "Large-sized pull-up pants for growing toddlers. Easy to put on and take off.",
+      sw: "Pants za ukubwa mkubwa kwa watoto wanaokua. Rahisi kuvaa na kuvua.",
+    },
+  },
+  {
+    id: 4,
+    name: {
+      en: "Baby Pull-up Pants",
+      sw: "Pants za Watoto",
+    },
+    category: "babyPants",
+    price: 20000,
+    wholesalePrice: 17000,
+    size: "extraLarge",
+    bundleSize: 50,
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.43_3881eb83.jpg-ZdF7ILkVtnX1FsSUkScmxFA9hZhGVe.jpeg",
+    tags: ["japanStandard"],
+    weightRange: ">15kg",
+    description: {
+      en: "Extra-large pull-up pants for bigger toddlers. Maximum absorption and comfort.",
+      sw: "Pants za ukubwa mkubwa zaidi kwa watoto wakubwa. Unyonywaji na faraja ya hali ya juu.",
+    },
+  },
+  {
+    id: 5,
+    name: {
+      en: "Adult Pants",
+      sw: "Pants za Watu Wazima",
+    },
+    category: "adultDiapers",
+    price: 25000,
+    wholesalePrice: 22000,
+    size: "large",
+    bundleSize: 20,
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adult%20pants.jpg-eYvgmKtmGCITzb488aMf7pcNvB16Y2.jpeg",
+    tags: ["internationalQuality"],
+    hipSize: "80-105cm",
+    description: {
+      en: "Comfortable adult pants for those with mobility issues, incontinence, or post-operation recovery.",
+      sw: "Pants za watu wazima zenye faraja kwa wenye matatizo ya kutembea, kukojoa bila kujizuia, au wanaopona baada ya upasuaji.",
+    },
+  },
+  {
+    id: 6,
+    name: {
+      en: "Baby Wipes",
+      sw: "Wipes za Watoto",
+    },
+    category: "babyDiapers",
+    price: 4000,
+    wholesalePrice: 3500,
+    bundleSize: 120,
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.35_9bc82b01.jpg-UGTLfNsjPhFwjcUEg1g1UZu7SxWXrS.jpeg",
+    tags: ["newArrival"],
+    description: {
+      en: "Soft and gentle baby wipes for cleaning your baby's delicate skin. Pack of 120 sheets.",
+      sw: "Wipes laini na nyororo kwa kusafisha ngozi nyeti ya mtoto wako. Pakiti ya karatasi 120.",
+    },
+  },
+  {
+    id: 7,
+    name: {
+      en: "Premium Royal Baby Pants",
+      sw: "Pants Bora za Kifalme za Watoto",
+    },
+    category: "babyPants",
+    price: 22000,
+    wholesalePrice: 19000,
+    size: "large",
+    bundleSize: 50,
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.41_542754ce.jpg-SYaYX5HxpNniNUoMc0trj7485kedRl.jpeg",
+    tags: ["bestSeller", "internationalQuality", "highAbsorption"],
+    weightRange: "9-14kg",
+    description: {
+      en: "Our highest quality pants with premium absorption and extra softness. Royal quality.",
+      sw: "Pants zetu za ubora wa juu zaidi zenye unyonywaji wa hali ya juu na ulaini wa ziada. Ubora wa kifalme.",
+    },
+  },
+  {
+    id: 8,
+    name: {
+      en: "Wholesale Carton - Baby Pants",
+      sw: "Kartoni ya Jumla - Pants za Watoto",
+    },
+    category: "babyPants",
+    price: 103000,
+    isCarton: true,
+    size: "medium",
+    cartonSize: "50pcs x 6 packs",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.33_052ce928.jpg-JNRalaEhieJuq7sRcGf2ZHIm0Erups.jpeg",
+    tags: ["wholesale", "internationalQuality"],
+    description: {
+      en: "Wholesale carton containing 6 packs of 50 medium-sized baby pants each. Great value for retailers.",
+      sw: "Kartoni ya jumla yenye pakiti 6 za pants 50 za watoto, ukubwa wa kati. Thamani kubwa kwa wafanyabiashara.",
+    },
+  },
+]
+
+export default function ProductsPage() {
+  const { language } = useLanguage()
+  const { addItem } = useCart()
+  const [activeTab, setActiveTab] = useState("all")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [priceRange, setPriceRange] = useState([0, 30000])
+  const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  const [sortOption, setSortOption] = useState("newest")
+
+  const t = translations[language]
+
+  const formatPrice = (price: number) => {
+    return `TZS ${price.toLocaleString()}`
+  }
+
+  // Filter products based on active filters
+  const filteredProducts = products.filter((product) => {
+    // Filter by category
+    if (activeTab !== "all" && product.category !== activeTab) {
+      return false
+    }
+
+    // Filter by search query
+    if (searchQuery && !product.name[language].toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false
+    }
+
+    // Filter by price range
+    if (product.price < priceRange[0] || product.price > priceRange[1]) {
+      return false
+    }
+
+    // Filter by size
+    if (selectedSize && product.size !== selectedSize) {
+      return false
+    }
+
+    return true
+  })
+
+  // Sort products
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortOption === "priceHighToLow") {
+      return b.price - a.price
+    } else if (sortOption === "priceLowToHigh") {
+      return a.price - b.price
+    }
+    // Default: newest (by id in this demo)
+    return b.id - a.id
+  })
+
+  // Handle WhatsApp order
+  const handleWhatsAppOrder = (product: (typeof products)[0]) => {
+    const message = `Hello, I would like to order: ${product.name[language]} - ${formatPrice(product.price)}`
+    const whatsappUrl = `https://wa.me/255658181863?text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, "_blank")
+  }
+
+  const handleAddToCart = (product: (typeof products)[0]) => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.image,
+      size: product.size,
+      bundleSize: product.bundleSize,
+    })
+  }
+
+  return (
+    <PageWrapper>
+      <div className="container mx-auto px-4 py-12">
+        <h1 className="text-4xl font-bubblegum mb-8 text-yammy-dark-blue text-center">{t.products}</h1>
+
+        {/* Featured banner */}
+        <div className="relative w-full mb-8 p-6 rounded-xl bg-gradient-to-r from-yammy-blue to-yammy-dark-blue text-white">
+          <div className="max-w-3xl">
+            <h2 className="text-2xl font-bubblegum mb-3">
+              {language === "en" ? "High-Quality Products at Affordable Prices" : "Bidhaa Bora kwa Bei Nafuu"}
+            </h2>
+            <p className="mb-4">
+              {language === "en"
+                ? "Twice as cost-effective as typical market offerings while maintaining international quality standards."
+                : "Mara mbili ya gharama nafuu kuliko bidhaa za kawaida za soko huku zikidumisha viwango vya kimataifa."}
+            </p>
+            <Button asChild variant="secondary">
+              <Link href="/pricing">{t.viewAllPricing}</Link>
+            </Button>
+          </div>
+          <div className="absolute right-6 bottom-0 hidden lg:block">
+            <div className="relative w-32 h-32">
+              <Tag className="h-8 w-8 text-white absolute -top-4 -right-4" />
+            </div>
+          </div>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-yammy-blue h-4 w-4" />
+              <Input
+                type="text"
+                placeholder={t.search}
+                className="pl-10 border-yammy-blue/30 focus-visible:ring-yammy-blue"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="border-yammy-blue/30 text-yammy-blue">
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle className="font-bubblegum text-yammy-dark-blue text-2xl">{t.filter}</SheetTitle>
+                  <SheetDescription>
+                    {language === "en"
+                      ? "Adjust filters to find the perfect products for you."
+                      : "Rekebisha vichujio kupata bidhaa zinazokufaa."}
+                  </SheetDescription>
+                </SheetHeader>
+
+                <div className="py-6 space-y-6">
+                  {/* Price Range Filter */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium text-yammy-dark-blue">{t.priceRange}</h3>
+                    <Slider
+                      defaultValue={[0, 30000]}
+                      max={30000}
+                      step={1000}
+                      value={priceRange}
+                      onValueChange={setPriceRange}
+                      className="[&>span]:bg-yammy-blue"
+                    />
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>{formatPrice(priceRange[0])}</span>
+                      <span>{formatPrice(priceRange[1])}</span>
+                    </div>
+                  </div>
+
+                  {/* Size Filter */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium text-yammy-dark-blue">{t.size}</h3>
+                    <Select value={selectedSize || "all"} onValueChange={setSelectedSize}>
+                      <SelectTrigger className="border-yammy-blue/30 focus:ring-yammy-blue">
+                        <SelectValue placeholder={language === "en" ? "Select size" : "Chagua ukubwa"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{language === "en" ? "All sizes" : "Ukubwa wote"}</SelectItem>
+                        <SelectItem value="small">{t.small}</SelectItem>
+                        <SelectItem value="medium">{t.medium}</SelectItem>
+                        <SelectItem value="large">{t.large}</SelectItem>
+                        <SelectItem value="extraLarge">{t.extraLarge}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex gap-2 pt-4">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-yammy-blue/30 text-yammy-blue"
+                      onClick={() => {
+                        setPriceRange([0, 30000])
+                        setSelectedSize(null)
+                      }}
+                    >
+                      {t.reset}
+                    </Button>
+                    <Button className="flex-1 bg-yammy-blue hover:bg-yammy-dark-blue">{t.apply}</Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <Select value={sortOption} onValueChange={setSortOption}>
+              <SelectTrigger className="w-full md:w-[180px] border-yammy-blue/30 focus:ring-yammy-blue">
+                <SelectValue placeholder={t.sort} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">{t.newest}</SelectItem>
+                <SelectItem value="priceHighToLow">{t.priceHighToLow}</SelectItem>
+                <SelectItem value="priceLowToHigh">{t.priceLowToHigh}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Category Tabs */}
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <TabsList className="grid w-full grid-cols-5 bg-yammy-light-blue">
+            <TabsTrigger
+              value="all"
+              className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
+            >
+              {t.allProducts}
+            </TabsTrigger>
+            <TabsTrigger
+              value="babyDiapers"
+              className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
+            >
+              {t.babyDiapers}
+            </TabsTrigger>
+            <TabsTrigger
+              value="babyPants"
+              className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
+            >
+              {t.babyPants}
+            </TabsTrigger>
+            <TabsTrigger
+              value="adultDiapers"
+              className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
+            >
+              {t.adultDiapers}
+            </TabsTrigger>
+            <TabsTrigger
+              value="wholesale"
+              className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
+            >
+              {t.wholesale}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* Products Grid */}
+        {sortedProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {sortedProducts.map((product) => (
+              <motion.div
+                key={product.id}
+                className="product-card bg-white rounded-2xl shadow-md overflow-hidden"
+                whileHover={{ y: -10 }}
+              >
+                <div className="relative h-64 bg-yammy-light-blue">
+                  <Image
+                    src={product.image || "/placeholder.svg"}
+                    alt={product.name[language]}
+                    fill
+                    className="object-contain p-4"
+                  />
+                  {/* Product tags */}
+                  <div className="absolute top-2 left-2 flex flex-col gap-1">
+                    {product.tags && product.tags.includes("bestSeller") && (
+                      <Badge className="bg-yammy-orange text-white">{t.bestSeller}</Badge>
+                    )}
+                    {product.tags && product.tags.includes("newArrival") && (
+                      <Badge className="bg-yammy-pink text-white">{t.newArrival}</Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="font-bubblegum text-xl mb-1 text-yammy-dark-blue">{product.name[language]}</h3>
+
+                  {/* Product details */}
+                  <div className="mb-3 text-sm text-gray-600">
+                    {product.size && (
+                      <div>
+                        {language === "en" ? "Size" : "Ukubwa"}: {t[product.size as keyof typeof t]}
+                        {product.weightRange && ` (${product.weightRange})`}
+                        {product.hipSize && ` (${product.hipSize})`}
+                      </div>
+                    )}
+                    <div>
+                      {language === "en" ? "Bundle Size" : "Ukubwa wa Kifurushi"}: {product.bundleSize} {t.pieces}
+                      {product.cartonSize && ` (${product.cartonSize})`}
+                    </div>
+                  </div>
+
+                  {/* Pricing */}
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm text-gray-600">{t.retailPrice}:</span>
+                      <span className="text-yammy-blue font-bold">{formatPrice(product.price)}</span>
+                    </div>
+                    {product.wholesalePrice && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">{t.wholesalePrice}:</span>
+                        <span className="text-yammy-orange font-medium">{formatPrice(product.wholesalePrice)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      size="sm"
+                      className="w-full bg-yammy-blue hover:bg-yammy-dark-blue rounded-full"
+                      onClick={() => handleAddToCart(product)}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      {t.addToCart}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full border-yammy-blue text-yammy-blue hover:bg-yammy-blue hover:text-white rounded-full"
+                      onClick={() => handleWhatsAppOrder(product)}
+                    >
+                      {t.orderViaWhatsApp}
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500 font-bubblegum text-xl">{t.noProducts}</p>
+          </div>
+        )}
+
+        {/* Price note */}
+        <div className="mt-8 text-sm text-gray-500 text-center">{t.priceNote}</div>
+
+        {/* CTA to pricing page */}
+        <div className="mt-12 text-center">
+          <Button asChild className="bg-yammy-blue hover:bg-yammy-dark-blue">
+            <Link href="/pricing">{t.viewAllPricing}</Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Brand Ambassador Testimonial */}
+      <section className="py-12 bg-yammy-light-blue">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="relative h-[400px]">
+              <Image
+                src="/images/ambassador-6.png"
+                alt="Brand Ambassador with Yammy Yami Products"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bubblegum text-yammy-dark-blue mb-4">
+                {language === "en" ? "Trusted by Our Ambassadors" : "Inaaminiwa na Mabalozi Wetu"}
+              </h2>
+              <div className="flex mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-5 w-5 fill-yammy-orange text-yammy-orange" />
+                ))}
+              </div>
+              <blockquote className="text-lg italic text-gray-700 mb-6">
+                {language === "en"
+                  ? "I love Yammy Yami products because they provide the perfect combination of comfort, quality, and affordability. As a brand ambassador, I'm proud to represent a company that truly cares about Tanzanian families."
+                  : "Ninapenda bidhaa za Yammy Yami kwa sababu zinatoa mchanganyiko kamili wa faraja, ubora, na bei nafuu. Kama balozi wa bidhaa, ninajivunia kuwakilisha kampuni inayojali kweli familia za Kitanzania."}
+              </blockquote>
+              <p className="font-bold text-yammy-dark-blue">
+                {language === "en" ? "Brand Ambassador" : "Balozi wa Bidhaa"}
+              </p>
+              <p className="text-yammy-blue">Yammy Yami Diaper TZ</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </PageWrapper>
+  )
+}
