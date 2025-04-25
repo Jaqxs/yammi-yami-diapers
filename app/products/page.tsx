@@ -318,7 +318,7 @@ export default function ProductsPage() {
   // Handle WhatsApp order
   const handleWhatsAppOrder = (product: (typeof products)[0]) => {
     const message = `Hello, I would like to order: ${product.name[language]} - ${formatPrice(product.price)}`
-    const whatsappUrl = `https://wa.me/255658181863?text=${encodeURIComponent(message)}`
+    const whatsappUrl = `https://wa.me/255773181863?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 
