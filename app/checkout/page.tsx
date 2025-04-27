@@ -219,7 +219,7 @@ ${orderItems}
 `
 
     // Create WhatsApp link with order details
-    const whatsappUrl = `https://wa.me/255773181863?text=${encodeURIComponent(orderDetails)}`
+    const whatsappUrl = `https://wa.me/255658181863?text=${encodeURIComponent(orderDetails)}`
 
     // Set success state and clear cart
     setIsSuccess(true)
