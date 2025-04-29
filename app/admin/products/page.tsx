@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Plus, Search, Filter, Edit, Trash2, MoreHorizontal, Eye } from "lucide-react"
+import { Plus, Search, Filter, Edit, Trash2, MoreHorizontal, Eye, Star } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,116 +22,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
 import { Pagination } from "@/components/admin/pagination"
-
-// Mock product data
-const mockProducts = [
-  {
-    id: 1,
-    name: "Premium Baby Diapers",
-    category: "babyDiapers",
-    price: 18000,
-    wholesalePrice: 16000,
-    size: "small",
-    bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/baby%20diaper.jpg-8TUQ8NXCalui3IondSW0pGQKZezKI1.jpeg",
-    stock: 120,
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Baby Pull-up Pants",
-    category: "babyPants",
-    price: 20000,
-    wholesalePrice: 17000,
-    size: "medium",
-    bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.41_542754ce.jpg-SYaYX5HxpNniNUoMc0trj7485kedRl.jpeg",
-    stock: 85,
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "Baby Pull-up Pants",
-    category: "babyPants",
-    price: 20000,
-    wholesalePrice: 17000,
-    size: "large",
-    bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.43_dd271f0f.jpg-EYQ4FIQyCghuaa0E0kwbpKWsBDNaPZ.jpeg",
-    stock: 65,
-    status: "active",
-  },
-  {
-    id: 4,
-    name: "Baby Pull-up Pants",
-    category: "babyPants",
-    price: 20000,
-    wholesalePrice: 17000,
-    size: "extraLarge",
-    bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.43_3881eb83.jpg-ZdF7ILkVtnX1FsSUkScmxFA9hZhGVe.jpeg",
-    stock: 42,
-    status: "active",
-  },
-  {
-    id: 5,
-    name: "Adult Pants",
-    category: "adultDiapers",
-    price: 25000,
-    wholesalePrice: 22000,
-    size: "large",
-    bundleSize: 20,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adult%20pants.jpg-eYvgmKtmGCITzb488aMf7pcNvB16Y2.jpeg",
-    stock: 30,
-    status: "active",
-  },
-  {
-    id: 6,
-    name: "Baby Wipes",
-    category: "babyDiapers",
-    price: 4000,
-    wholesalePrice: 3500,
-    bundleSize: 120,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.35_9bc82b01.jpg-UGTLfNsjPhFwjcUEg1g1UZu7SxWXrS.jpeg",
-    stock: 200,
-    status: "active",
-  },
-  {
-    id: 7,
-    name: "Premium Royal Baby Pants",
-    category: "babyPants",
-    price: 22000,
-    wholesalePrice: 19000,
-    size: "large",
-    bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.41_542754ce.jpg-SYaYX5HxpNniNUoMc0trj7485kedRl.jpeg",
-    stock: 15,
-    status: "low_stock",
-  },
-  {
-    id: 8,
-    name: "Wholesale Carton - Baby Pants",
-    category: "babyPants",
-    price: 103000,
-    isCarton: true,
-    size: "medium",
-    cartonSize: "50pcs x 6 packs",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.33_052ce928.jpg-JNRalaEhieJuq7sRcGf2ZHIm0Erups.jpeg",
-    stock: 8,
-    status: "active",
-  },
-]
+import { useStore } from "@/lib/store"
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState(mockProducts)
+  const { state, loadProducts, deleteProduct, updateProduct } = useStore()
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -141,18 +35,20 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
-  useEffect(() => {
-    // Simulate loading data
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
+  // Load products on component mount
+  const fetchProducts = useCallback(async () => {
+    setIsLoading(true)
+    await loadProducts()
+    setIsLoading(false)
+  }, [loadProducts])
 
-    return () => clearTimeout(timer)
-  }, [])
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   // Filter products based on search and filters
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProducts = state.products.filter((product) => {
+    const matchesSearch = product.name.en.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter
     const matchesStatus = statusFilter === "all" || product.status === statusFilter
 
@@ -182,23 +78,60 @@ export default function ProductsPage() {
     setIsDeleteDialogOpen(true)
   }
 
-  const handleDeleteConfirm = () => {
-    if (productToDelete) {
-      setProducts(products.filter((p) => p.id !== productToDelete))
+  const handleDeleteConfirm = async () => {
+    try {
+      if (productToDelete) {
+        await deleteProduct(productToDelete)
+        toast({
+          title: "Product deleted",
+          description: "The product has been deleted successfully",
+        })
+      } else if (selectedProducts.length > 0) {
+        // Delete multiple products
+        for (const id of selectedProducts) {
+          await deleteProduct(id)
+        }
+        setSelectedProducts([])
+        toast({
+          title: "Products deleted",
+          description: `${selectedProducts.length} products have been deleted successfully`,
+        })
+      }
+    } catch (error) {
       toast({
-        title: "Product deleted",
-        description: "The product has been deleted successfully",
+        title: "Error",
+        description: "Failed to delete product(s)",
+        variant: "destructive",
       })
-    } else if (selectedProducts.length > 0) {
-      setProducts(products.filter((p) => !selectedProducts.includes(p.id)))
-      setSelectedProducts([])
+    } finally {
+      setIsDeleteDialogOpen(false)
+      setProductToDelete(null)
+    }
+  }
+
+  // Handle toggle featured
+  const handleToggleFeatured = async (id: number) => {
+    try {
+      const product = state.products.find((p) => p.id === id)
+      if (product) {
+        const updatedProduct = {
+          ...product,
+          featured: !product.featured,
+        }
+        await updateProduct(updatedProduct)
+
+        toast({
+          title: updatedProduct.featured ? "Added to featured" : "Removed from featured",
+          description: `"${product.name.en}" has been ${updatedProduct.featured ? "added to" : "removed from"} featured products`,
+        })
+      }
+    } catch (error) {
       toast({
-        title: "Products deleted",
-        description: `${selectedProducts.length} products have been deleted successfully`,
+        title: "Error",
+        description: "Failed to update featured status",
+        variant: "destructive",
       })
     }
-    setIsDeleteDialogOpen(false)
-    setProductToDelete(null)
   }
 
   // Format currency
@@ -290,6 +223,7 @@ export default function ProductsPage() {
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Featured</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -297,14 +231,14 @@ export default function ProductsPage() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, index) => (
                 <TableRow key={index}>
-                  <TableCell colSpan={8} className="h-16">
+                  <TableCell colSpan={9} className="h-16">
                     <div className="w-full h-8 bg-gray-200 animate-pulse rounded"></div>
                   </TableCell>
                 </TableRow>
               ))
             ) : filteredProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   No products found
                 </TableCell>
               </TableRow>
@@ -315,14 +249,14 @@ export default function ProductsPage() {
                     <Checkbox
                       checked={selectedProducts.includes(product.id)}
                       onCheckedChange={() => handleSelectProduct(product.id)}
-                      aria-label={`Select ${product.name}`}
+                      aria-label={`Select ${product.name.en}`}
                     />
                   </TableCell>
                   <TableCell>
                     <div className="relative h-10 w-10 rounded-md overflow-hidden">
                       <Image
                         src={product.image || "/placeholder.svg"}
-                        alt={product.name}
+                        alt={product.name.en}
                         fill
                         className="object-cover"
                       />
@@ -330,7 +264,7 @@ export default function ProductsPage() {
                   </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex flex-col">
-                      <span>{product.name}</span>
+                      <span>{product.name.en}</span>
                       <span className="text-xs text-gray-500">
                         {product.size && `Size: ${product.size}`}
                         {product.bundleSize && `, ${product.bundleSize} pcs`}
@@ -374,6 +308,16 @@ export default function ProductsPage() {
                       {product.status === "low_stock" && "Low Stock"}
                       {product.status === "out_of_stock" && "Out of Stock"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleToggleFeatured(product.id)}
+                      className={product.featured ? "text-yammy-orange" : "text-gray-400"}
+                    >
+                      <Star className={`h-5 w-5 ${product.featured ? "fill-yammy-orange" : ""}`} />
+                    </Button>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

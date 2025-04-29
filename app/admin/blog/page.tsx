@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Plus, Search, Filter, Edit, Trash2, MoreHorizontal, Eye, Calendar, Clock, Star } from "lucide-react"
@@ -22,96 +22,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
 import { Pagination } from "@/components/admin/pagination"
-
-// Mock blog post data
-const mockBlogPosts = [
-  {
-    id: 1,
-    title: "How to Choose the Right Diaper Size for Your Baby",
-    excerpt: "Learn how to measure your baby and choose the perfect diaper size to ensure comfort and prevent leaks.",
-    date: "2023-06-15",
-    readTime: 5,
-    category: "babyHealth",
-    image: "/images/baby-diapers.png",
-    tags: ["newborn", "tips"],
-    featured: true,
-    status: "published",
-    author: "Admin",
-  },
-  {
-    id: 2,
-    title: "Understanding Diaper Rash: Causes and Prevention",
-    excerpt:
-      "Discover the common causes of diaper rash and effective strategies to prevent it and keep your baby comfortable.",
-    date: "2023-07-20",
-    readTime: 8,
-    category: "babyHealth",
-    image: "/images/baby-with-products.png",
-    tags: ["skinCare", "tips"],
-    featured: false,
-    status: "published",
-    author: "Admin",
-  },
-  {
-    id: 3,
-    title: "The Benefits of High-Absorption Diapers for Overnight Use",
-    excerpt:
-      "Learn why high-absorption diapers are essential for peaceful nights and how they help improve your baby's sleep quality.",
-    date: "2023-08-05",
-    readTime: 6,
-    category: "productInfo",
-    image: "/images/diaper-features.png",
-    tags: ["sleep", "tips"],
-    featured: true,
-    status: "published",
-    author: "Admin",
-  },
-  {
-    id: 4,
-    title: "Potty Training: Signs Your Child is Ready",
-    excerpt:
-      "Recognize the signs that indicate your child is ready to start potty training and learn tips for a smooth transition.",
-    date: "2023-09-10",
-    readTime: 10,
-    category: "parentingTips",
-    image: "/images/baby-with-products.png",
-    tags: ["pottyTraining", "tips"],
-    featured: false,
-    status: "published",
-    author: "Admin",
-  },
-  {
-    id: 5,
-    title: "Nutrition for Healthy Skin: Foods That Help Prevent Diaper Rash",
-    excerpt:
-      "Discover how your baby's diet can impact skin health and which foods can help reduce the risk of diaper rash.",
-    date: "2023-10-15",
-    readTime: 7,
-    category: "babyHealth",
-    image: "/images/model-with-diapers.png",
-    tags: ["nutrition", "skinCare"],
-    featured: false,
-    status: "draft",
-    author: "Admin",
-  },
-  {
-    id: 6,
-    title: "New Product Launch: Introducing Our Eco-Friendly Diaper Line",
-    excerpt:
-      "Learn about our new eco-friendly diaper line that offers the same quality and comfort while being better for the environment.",
-    date: "2023-11-20",
-    readTime: 5,
-    category: "latestNews",
-    image: "/images/diaper-sizes.png",
-    tags: ["productInfo"],
-    featured: true,
-    status: "published",
-    author: "Admin",
-  },
-]
+import { useStore } from "@/lib/store"
 
 export default function BlogPage() {
-  const [blogPosts, setBlogPosts] = useState(mockBlogPosts)
+  const { state, loadBlogPosts, deleteBlogPost, updateBlogPost } = useStore()
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -121,20 +35,22 @@ export default function BlogPage() {
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
-  useEffect(() => {
-    // Simulate loading data
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
+  // Load blog posts on component mount
+  const fetchBlogPosts = useCallback(async () => {
+    setIsLoading(true)
+    await loadBlogPosts()
+    setIsLoading(false)
+  }, [loadBlogPosts])
 
-    return () => clearTimeout(timer)
-  }, [])
+  useEffect(() => {
+    fetchBlogPosts()
+  }, [fetchBlogPosts])
 
   // Filter blog posts based on search and filters
-  const filteredPosts = blogPosts.filter((post) => {
+  const filteredPosts = state.blogPosts.filter((post) => {
     const matchesSearch =
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+      post.title.en.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.excerpt.en.toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesCategory = categoryFilter === "all" || post.category === categoryFilter
     const matchesStatus = statusFilter === "all" || post.status === statusFilter
@@ -165,34 +81,58 @@ export default function BlogPage() {
     setIsDeleteDialogOpen(true)
   }
 
-  const handleDeleteConfirm = () => {
-    if (postToDelete) {
-      setBlogPosts(blogPosts.filter((p) => p.id !== postToDelete))
+  const handleDeleteConfirm = async () => {
+    try {
+      if (postToDelete) {
+        await deleteBlogPost(postToDelete)
+        toast({
+          title: "Article deleted",
+          description: "The article has been deleted successfully",
+        })
+      } else if (selectedPosts.length > 0) {
+        // Delete multiple posts
+        for (const id of selectedPosts) {
+          await deleteBlogPost(id)
+        }
+        setSelectedPosts([])
+        toast({
+          title: "Articles deleted",
+          description: `${selectedPosts.length} articles have been deleted successfully`,
+        })
+      }
+    } catch (error) {
       toast({
-        title: "Article deleted",
-        description: "The article has been deleted successfully",
+        title: "Error",
+        description: "Failed to delete article(s)",
+        variant: "destructive",
       })
-    } else if (selectedPosts.length > 0) {
-      setBlogPosts(blogPosts.filter((p) => !selectedPosts.includes(p.id)))
-      setSelectedPosts([])
-      toast({
-        title: "Articles deleted",
-        description: `${selectedPosts.length} articles have been deleted successfully`,
-      })
+    } finally {
+      setIsDeleteDialogOpen(false)
+      setPostToDelete(null)
     }
-    setIsDeleteDialogOpen(false)
-    setPostToDelete(null)
   }
 
   // Handle toggle featured
-  const handleToggleFeatured = (id: number) => {
-    setBlogPosts(blogPosts.map((post) => (post.id === id ? { ...post, featured: !post.featured } : post)))
+  const handleToggleFeatured = async (id: number) => {
+    try {
+      const post = state.blogPosts.find((p) => p.id === id)
+      if (post) {
+        const updatedPost = {
+          ...post,
+          featured: !post.featured,
+        }
+        await updateBlogPost(updatedPost)
 
-    const post = blogPosts.find((p) => p.id === id)
-    if (post) {
+        toast({
+          title: updatedPost.featured ? "Added to featured" : "Removed from featured",
+          description: `"${post.title.en}" has been ${updatedPost.featured ? "added to" : "removed from"} featured articles`,
+        })
+      }
+    } catch (error) {
       toast({
-        title: post.featured ? "Removed from featured" : "Added to featured",
-        description: `"${post.title}" has been ${post.featured ? "removed from" : "added to"} featured articles`,
+        title: "Error",
+        description: "Failed to update featured status",
+        variant: "destructive",
       })
     }
   }
@@ -290,6 +230,7 @@ export default function BlogPage() {
               <TableHead>Category</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Featured</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -297,14 +238,14 @@ export default function BlogPage() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, index) => (
                 <TableRow key={index}>
-                  <TableCell colSpan={7} className="h-16">
+                  <TableCell colSpan={8} className="h-16">
                     <div className="w-full h-8 bg-gray-200 animate-pulse rounded"></div>
                   </TableCell>
                 </TableRow>
               ))
             ) : filteredPosts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   No articles found
                 </TableCell>
               </TableRow>
@@ -315,25 +256,22 @@ export default function BlogPage() {
                     <Checkbox
                       checked={selectedPosts.includes(post.id)}
                       onCheckedChange={() => handleSelectPost(post.id)}
-                      aria-label={`Select ${post.title}`}
+                      aria-label={`Select ${post.title.en}`}
                     />
                   </TableCell>
                   <TableCell>
                     <div className="relative h-10 w-10 rounded-md overflow-hidden">
-                      <Image src={post.image || "/placeholder.svg"} alt={post.title} fill className="object-cover" />
+                      <Image src={post.image || "/placeholder.svg"} alt={post.title.en} fill className="object-cover" />
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex flex-col">
-                      <span>{post.title}</span>
+                      <span>{post.title.en}</span>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span className="flex items-center">
                           <Clock className="h-3 w-3 mr-1" />
                           {post.readTime} min read
                         </span>
-                        {post.featured && (
-                          <Badge className="bg-yammy-orange text-white hover:bg-yammy-orange">Featured</Badge>
-                        )}
                       </div>
                     </div>
                   </TableCell>
@@ -363,6 +301,16 @@ export default function BlogPage() {
                       {post.status === "published" ? "Published" : "Draft"}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleToggleFeatured(post.id)}
+                      className={post.featured ? "text-yammy-orange" : "text-gray-400"}
+                    >
+                      <Star className={`h-5 w-5 ${post.featured ? "fill-yammy-orange" : ""}`} />
+                    </Button>
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -382,10 +330,6 @@ export default function BlogPage() {
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleFeatured(post.id)}>
-                          <Star className="mr-2 h-4 w-4" />
-                          {post.featured ? "Remove from Featured" : "Add to Featured"}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-500 focus:text-red-500"

@@ -4,11 +4,13 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ShoppingCart, ChevronRight, Phone, Instagram, Star } from "lucide-react"
+import { ShoppingCart, ChevronRight, Phone, Instagram, Star, Calendar, Clock } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
 import { PageWrapper } from "@/components/page-wrapper"
+import { useStore } from "@/lib/store"
+import { useCart } from "@/components/cart-provider"
 
 // Language translations
 const translations = {
@@ -39,6 +41,12 @@ const translations = {
     allSizesAvailable: "All Sizes Available",
     highAbsorption: "High Absorption",
     japanStandard: "Japan Standard",
+    latestBlogPosts: "Latest Blog Posts",
+    readMore: "Read More",
+    minutes: "min read",
+    noFeaturedProducts: "No featured products available",
+    noFeaturedPosts: "No featured blog posts available",
+    addToCart: "Add to Cart",
   },
   sw: {
     heroTitle: "Penda Mtoto Wako, Penda Familia Yako",
@@ -67,48 +75,14 @@ const translations = {
     allSizesAvailable: "Ukubwa Wote Unapatikana",
     highAbsorption: "Unyonywaji wa Hali ya Juu",
     japanStandard: "Kiwango cha Japan",
+    latestBlogPosts: "Makala za Hivi Karibuni",
+    readMore: "Soma Zaidi",
+    minutes: "dakika za kusoma",
+    noFeaturedProducts: "Hakuna bidhaa zilizoangaziwa zinazopatikana",
+    noFeaturedPosts: "Hakuna makala zilizoangaziwa zinazopatikana",
+    addToCart: "Ongeza kwenye Kikapu",
   },
 }
-
-// Product data
-const products = [
-  {
-    id: 1,
-    name: {
-      en: "Premium Baby Diapers - Small",
-      sw: "Diapers Bora za Watoto - Ndogo",
-    },
-    price: 15000,
-    image: "/images/baby-diapers.png",
-  },
-  {
-    id: 2,
-    name: {
-      en: "Ultra Soft Lady Pads - Pack of 10",
-      sw: "Pedi Laini za Wanawake - Pakiti ya 10",
-    },
-    price: 8000,
-    image: "/images/lady-pads.png",
-  },
-  {
-    id: 3,
-    name: {
-      en: "Baby Diapers - All Sizes",
-      sw: "Diapers za Watoto - Ukubwa Wote",
-    },
-    price: 20000,
-    image: "/images/diaper-sizes.png",
-  },
-  {
-    id: 4,
-    name: {
-      en: "High Absorption Baby Diapers",
-      sw: "Diapers za Watoto za Unyonywaji wa Juu",
-    },
-    price: 25000,
-    image: "/images/diaper-features.png",
-  },
-]
 
 // Features
 const features = [
@@ -176,7 +150,11 @@ const testimonials = [
 
 export default function Home() {
   const { language } = useLanguage()
+  const { state, loadProducts, loadBlogPosts } = useStore()
+  const { addItem } = useCart()
   const [bubbles, setBubbles] = useState<Array<{ id: number; size: number; left: string; delay: number }>>([])
+  const [featuredProducts, setFeaturedProducts] = useState([])
+  const [featuredBlogPosts, setFeaturedBlogPosts] = useState([])
   const t = translations[language]
 
   useEffect(() => {
@@ -190,8 +168,49 @@ export default function Home() {
     setBubbles(newBubbles)
   }, [])
 
+  // Load featured products and blog posts
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Load products and blog posts
+        await Promise.all([loadProducts(), loadBlogPosts()])
+
+        // Filter featured items
+        const featured = state.products.filter((product) => product.featured === true)
+        setFeaturedProducts(featured.slice(0, 4))
+
+        const featuredPosts = state.blogPosts.filter((post) => post.featured === true)
+        setFeaturedBlogPosts(featuredPosts.slice(0, 3))
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      }
+    }
+
+    fetchData()
+    // Only depend on the loadProducts and loadBlogPosts functions, not the state itself
+  }, [loadProducts, loadBlogPosts])
+
   const formatPrice = (price: number) => {
     return `TZS ${price.toLocaleString()}`
+  }
+
+  // Format date function
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const options: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" }
+    return date.toLocaleDateString(language === "en" ? "en-US" : "sw-TZ", options)
+  }
+
+  const handleAddToCart = (product) => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.image,
+      size: product.size,
+      bundleSize: product.bundleSize,
+    })
   }
 
   return (
@@ -277,34 +296,44 @@ export default function Home() {
             {t.featuredProducts}
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {products.map((product) => (
-              <motion.div
-                key={product.id}
-                className="product-card bg-white rounded-2xl shadow-md overflow-hidden"
-                whileHover={{ y: -10 }}
-              >
-                <div className="relative h-64 bg-yammy-light-blue">
-                  <Image
-                    src={product.image || "/placeholder.svg"}
-                    alt={product.name[language]}
-                    fill
-                    className="object-contain p-4"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">{product.name[language]}</h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-yammy-blue font-bold">{formatPrice(product.price)}</span>
-                    <Button size="sm" className="rounded-full bg-yammy-blue hover:bg-yammy-dark-blue">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      <span>{language === "en" ? "Add" : "Ongeza"}</span>
-                    </Button>
+          {featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {featuredProducts.map((product) => (
+                <motion.div
+                  key={product.id}
+                  className="product-card bg-white rounded-2xl shadow-md overflow-hidden"
+                  whileHover={{ y: -10 }}
+                >
+                  <div className="relative h-64 bg-yammy-light-blue">
+                    <Image
+                      src={product.image || "/placeholder.svg"}
+                      alt={product.name[language]}
+                      fill
+                      className="object-contain p-4"
+                    />
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                  <div className="p-6">
+                    <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">{product.name[language]}</h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-yammy-blue font-bold">{formatPrice(product.price)}</span>
+                      <Button
+                        size="sm"
+                        className="rounded-full bg-yammy-blue hover:bg-yammy-dark-blue"
+                        onClick={() => handleAddToCart(product)}
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        <span>{t.addToCart}</span>
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">{t.noFeaturedProducts}</p>
+            </div>
+          )}
 
           <div className="mt-12 text-center">
             <Link href="/products">
@@ -346,50 +375,65 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Brand Ambassadors Section */}
+      {/* Latest Blog Posts */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bubblegum text-center mb-12 text-yammy-dark-blue">
-            {language === "en" ? "Our Brand Ambassadors" : "Mabalozi Wetu wa Bidhaa"}
+            {t.latestBlogPosts}
           </h2>
 
-          <p className="text-center text-gray-600 max-w-3xl mx-auto mb-12">
-            {language === "en"
-              ? "Meet the faces behind Yammy Yami Diaper TZ. Our ambassadors represent the quality, comfort, and style that our products bring to Tanzanian families."
-              : "Wafahamu nyuso nyuma ya Yammy Yami Diaper TZ. Mabalozi wetu wanawakilisha ubora, faraja, na mtindo ambao bidhaa zetu huleta kwa familia za Kitanzania."}
-          </p>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[1, 5, 6, 8].map((num) => (
-              <motion.div
-                key={num}
-                className="relative rounded-xl overflow-hidden shadow-md group"
-                whileHover={{ y: -10 }}
-              >
-                <div className="aspect-[3/4] relative">
-                  <Image
-                    src={`/images/ambassador-${num}.png`}
-                    alt={`Yammy Yami Brand Ambassador ${num}`}
-                    fill
-                    className="object-cover transition-transform group-hover:scale-105"
-                  />
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-yammy-dark-blue/80 to-transparent p-4">
-                  <p className="text-white font-medium text-center">
-                    {language === "en" ? "Brand Ambassador" : "Balozi wa Bidhaa"}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {featuredBlogPosts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {featuredBlogPosts.map((post) => (
+                <motion.div
+                  key={post.id}
+                  className="bg-white rounded-2xl shadow-md overflow-hidden"
+                  whileHover={{ y: -10 }}
+                >
+                  <div className="relative h-48">
+                    <Image
+                      src={post.image || "/placeholder.svg"}
+                      alt={post.title[language]}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">{post.title[language]}</h3>
+                    <p className="text-gray-600 mb-4 line-clamp-2">{post.excerpt[language]}</p>
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        {formatDate(post.date)}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {post.readTime} {t.minutes}
+                      </div>
+                    </div>
+                    <Button className="mt-4 w-full bg-yammy-blue hover:bg-yammy-dark-blue" asChild>
+                      <Link href={`/blog/${post.id}`}>
+                        {t.readMore} <ChevronRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">{t.noFeaturedPosts}</p>
+            </div>
+          )}
 
           <div className="mt-12 text-center">
-            <Link href="/about">
+            <Link href="/blog">
               <Button
                 variant="outline"
                 className="group border-yammy-blue text-yammy-blue hover:bg-yammy-blue hover:text-white"
               >
-                {language === "en" ? "Learn More About Us" : "Jifunze Zaidi Kutuhusu"}
+                {language === "en" ? "View All Blog Posts" : "Tazama Makala Zote"}
                 <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>

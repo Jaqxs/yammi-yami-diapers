@@ -148,58 +148,164 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Brand Ambassadors Section */}
+        {/* Brand Influencers Section */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-10">
-            {language === "en" ? "Our Brand Ambassadors" : "Mabalozi Wetu wa Bidhaa"}
+            {language === "en" ? "Our Brand Influencers" : "Washawishi Wetu wa Bidhaa"}
           </h2>
 
           <div className="max-w-3xl mx-auto text-center mb-10">
             <p className="text-gray-600">
               {language === "en"
-                ? "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our ambassadors are passionate about quality, comfort, and family care."
-                : "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Mabalozi wetu wana shauku juu ya ubora, faraja, na utunzaji wa familia."}
+                ? "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our influencers are passionate about quality, comfort, and family care."
+                : "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Washawishi wetu wana shauku juu ya ubora, faraja, na utunzaji wa familia."}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[2, 3, 4, 7, 9, 10].map((num) => (
-              <motion.div
-                key={num}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 * (num % 6) }}
-                className="bg-white rounded-xl overflow-hidden shadow-lg"
-              >
-                <div className="aspect-[3/4] relative">
-                  <Image
-                    src={`/images/ambassador-${num}.png`}
-                    alt={`Yammy Yami Brand Ambassador ${num}`}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-4 bg-yammy-light-blue">
-                  <h3 className="font-bold text-yammy-dark-blue text-lg text-center">
-                    {language === "en" ? "Brand Ambassador" : "Balozi wa Bidhaa"}
-                  </h3>
-                  <p className="text-center text-yammy-blue">
-                    {language === "en" ? "Yammy Yami Diaper TZ" : "Yammy Yami Diaper TZ"}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* First Influencer */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-white rounded-xl overflow-hidden shadow-lg"
+            >
+              <div className="aspect-[3/4] relative">
+                <Image
+                  src="/images/influencer-1.jpeg"
+                  alt="Yammy Yami Brand Influencer"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="p-4 bg-yammy-pink/20">
+                <h3 className="font-bold text-yammy-dark-blue text-lg text-center">
+                  {language === "en" ? "Influencer" : "Mshawishi"}
+                </h3>
+                <p className="text-center text-yammy-blue">
+                  {language === "en" ? "Yammy Yami Diaper TZ" : "Yammy Yami Diaper TZ"}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Second Influencer */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-white rounded-xl overflow-hidden shadow-lg"
+            >
+              <div className="aspect-[3/4] relative">
+                <Image
+                  src="/images/influencer-2.jpeg"
+                  alt="Yammy Yami Brand Influencer"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="p-4 bg-yammy-pink/20">
+                <h3 className="font-bold text-yammy-dark-blue text-lg text-center">
+                  {language === "en" ? "Brand Influencer" : "Mshawishi wa Biashara"}
+                </h3>
+                <p className="text-center text-yammy-blue">
+                  {language === "en" ? "Yammy Yami Diaper TZ" : "Yammy Yami Diaper TZ"}
+                </p>
+              </div>
+            </motion.div>
           </div>
 
           <div className="mt-12 text-center">
             <p className="text-gray-600 mb-6">
               {language === "en"
-                ? "Interested in becoming a Yammy Yami brand ambassador? Contact us to learn more about partnership opportunities."
-                : "Una nia ya kuwa balozi wa bidhaa za Yammy Yami? Wasiliana nasi kujifunza zaidi kuhusu fursa za ushirikiano."}
+                ? "Interested in becoming a Yammy Yami brand influencer? Contact us to learn more about partnership opportunities."
+                : "Una nia ya kuwa mshawishi wa bidhaa za Yammy Yami? Wasiliana nasi kujifunza zaidi kuhusu fursa za ushirikiano."}
             </p>
             <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white">
               {language === "en" ? "Contact Us" : "Wasiliana Nasi"}
             </Button>
+          </div>
+        </div>
+
+        {/* Team Members Section */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-10">
+            {language === "en" ? "Our Leadership Team" : "Timu Yetu ya Uongozi"}
+          </h2>
+
+          <div className="max-w-3xl mx-auto text-center mb-10">
+            <p className="text-gray-600">
+              {language === "en"
+                ? "Meet the dedicated professionals leading Yammy Yami Diaper TZ. Our leadership team brings together decades of experience and a shared passion for improving family care across Tanzania."
+                : "Kutana na wataalamu wanaojitoa wanaoongoza Yammy Yami Diaper TZ. Timu yetu ya uongozi inaleta pamoja miongo ya uzoefu na shauku ya pamoja ya kuboresha utunzaji wa familia kote Tanzania."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-white rounded-xl overflow-hidden shadow-lg"
+            >
+              <div className="aspect-square relative bg-yammy-light-blue/20">
+                <div className="flex items-center justify-center h-full bg-gray-100">
+                  <div className="text-4xl text-gray-300">CEO</div>
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-yammy-dark-blue text-lg">Mohamed yahya ali</h3>
+                <p className="text-yammy-blue">Chief Executive Officer (CEO)</p>
+                <p className="text-gray-600 mt-2 text-sm">Known as "Jack ma"</p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-white rounded-xl overflow-hidden shadow-lg"
+            >
+              <div className="aspect-square relative">
+                <Image src="/images/fei-toto.jpeg" alt="Feisal salum abdalah" fill className="object-cover" />
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-yammy-dark-blue text-lg">Feisal salum abdalah</h3>
+                <p className="text-yammy-blue">Chief Growth Officer (CGO)</p>
+                <p className="text-gray-600 mt-2 text-sm">Known as "Feitoto"</p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-white rounded-xl overflow-hidden shadow-lg"
+            >
+              <div className="aspect-square relative">
+                <Image src="/images/hassan.jpeg" alt="Hassan mwara katuju" fill className="object-cover" />
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-yammy-dark-blue text-lg">Hassan mwara katuju</h3>
+                <p className="text-yammy-blue">Chief Financial Officer (CFO)</p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="bg-white rounded-xl overflow-hidden shadow-lg"
+            >
+              <div className="aspect-square relative bg-yammy-light-blue/20">
+                <div className="flex items-center justify-center h-full bg-gray-100">
+                  <div className="text-4xl text-gray-300">COO</div>
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-yammy-dark-blue text-lg">Juma ramadhan iddi</h3>
+                <p className="text-yammy-blue">Chief Operations Officer (COO)</p>
+              </div>
+            </motion.div>
           </div>
         </div>
 

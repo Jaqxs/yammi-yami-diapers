@@ -8,8 +8,8 @@ export type SiteConfig = {
 }
 
 export const siteConfig: SiteConfig = {
-  name: "Yammy Yami",
-  description: "Quality diapers and sanitary products for your family",
+  name: "Yammy Yami Diaper",
+  description: "High-quality diapers for all family members",
   mainNav: [
     {
       title: "Home",

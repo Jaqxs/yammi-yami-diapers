@@ -87,20 +87,30 @@ export function Pagination({ totalItems, itemsPerPage, currentPage, onPageChange
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
-        {getPageNumbers().map((page, index) => (
-          <Button
-            key={index}
-            variant={page === currentPage ? "default" : "outline"}
-            size="icon"
-            className={page === currentPage ? "bg-yammy-blue hover:bg-yammy-dark-blue" : ""}
-            onClick={() => typeof page === "number" && onPageChange(page)}
-            disabled={typeof page !== "number"}
-          >
-            {page}
-          </Button>
-        ))}
+        {getPageNumbers().map((page, index) =>
+          page === "..." ? (
+            <Button key={index} variant="outline" size="icon" disabled className="cursor-default">
+              <span className="text-xs">...</span>
+            </Button>
+          ) : (
+            <Button
+              key={index}
+              variant={page === currentPage ? "default" : "outline"}
+              size="icon"
+              className={page === currentPage ? "bg-yammy-blue hover:bg-yammy-dark-blue" : ""}
+              onClick={() => typeof page === "number" && onPageChange(page)}
+            >
+              {page}
+            </Button>
+          ),
+        )}
 
-        <Button variant="outline" size="icon" onClick={handleNext} disabled={currentPage === totalPages}>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleNext}
+          disabled={currentPage === totalPages || totalPages === 0}
+        >
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

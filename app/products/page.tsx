@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { ShoppingCart, Filter, Search, Tag, Star } from "lucide-react"
@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { PageWrapper } from "@/components/page-wrapper"
 import { useLanguage } from "@/components/language-provider"
 import { useCart } from "@/components/cart-provider"
+import { useStore } from "@/lib/store"
 
 // Language translations
 const translations = {
@@ -59,6 +60,7 @@ const translations = {
     perBundle: "per bundle",
     bundleSize: "Bundle Size",
     priceNote: "* Prices in Dar es Salaam/Kariakoo. See Pricing page for details.",
+    loading: "Loading products...",
   },
   sw: {
     products: "Bidhaa",
@@ -100,187 +102,40 @@ const translations = {
     perBundle: "kwa kifurushi",
     bundleSize: "Ukubwa wa Kifurushi",
     priceNote: "* Bei hizi ni za Dar es Salaam/Kariakoo. Tazama ukurasa wa Bei kwa maelezo zaidi.",
+    loading: "Inapakia bidhaa...",
   },
 }
-
-// Product data with updated prices
-const products = [
-  {
-    id: 1,
-    name: {
-      en: "Premium Baby Diapers",
-      sw: "Diapers Bora za Watoto",
-    },
-    category: "babyDiapers",
-    price: 18000,
-    wholesalePrice: 16000,
-    size: "small",
-    bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/baby%20diaper.jpg-8TUQ8NXCalui3IondSW0pGQKZezKI1.jpeg",
-    tags: ["bestSeller", "highAbsorption"],
-    weightRange: "4-8kg",
-    description: {
-      en: "High-quality baby diapers for newborns and small babies with side-tape closure for a secure fit.",
-      sw: "Diapers bora za watoto wachanga na watoto wadogo zenye utepe wa pembeni kwa usalama zaidi.",
-    },
-  },
-  {
-    id: 2,
-    name: {
-      en: "Baby Pull-up Pants",
-      sw: "Pants za Watoto",
-    },
-    category: "babyPants",
-    price: 20000,
-    wholesalePrice: 17000,
-    size: "medium",
-    bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.41_542754ce.jpg-SYaYX5HxpNniNUoMc0trj7485kedRl.jpeg",
-    tags: ["japanStandard", "highAbsorption"],
-    weightRange: "9-14kg",
-    description: {
-      en: "Medium-sized pull-up pants designed for active babies who need comfort and mobility.",
-      sw: "Pants za ukubwa wa kati zimeundwa kwa watoto wanaocheza wanaohitaji faraja na urahisi wa kutembea.",
-    },
-  },
-  {
-    id: 3,
-    name: {
-      en: "Baby Pull-up Pants",
-      sw: "Pants za Watoto",
-    },
-    category: "babyPants",
-    price: 20000,
-    wholesalePrice: 17000,
-    size: "large",
-    bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.43_dd271f0f.jpg-EYQ4FIQyCghuaa0E0kwbpKWsBDNaPZ.jpeg",
-    tags: ["bestSeller", "highAbsorption"],
-    weightRange: "12-17kg",
-    description: {
-      en: "Large-sized pull-up pants for growing toddlers. Easy to put on and take off.",
-      sw: "Pants za ukubwa mkubwa kwa watoto wanaokua. Rahisi kuvaa na kuvua.",
-    },
-  },
-  {
-    id: 4,
-    name: {
-      en: "Baby Pull-up Pants",
-      sw: "Pants za Watoto",
-    },
-    category: "babyPants",
-    price: 20000,
-    wholesalePrice: 17000,
-    size: "extraLarge",
-    bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.43_3881eb83.jpg-ZdF7ILkVtnX1FsSUkScmxFA9hZhGVe.jpeg",
-    tags: ["japanStandard"],
-    weightRange: ">15kg",
-    description: {
-      en: "Extra-large pull-up pants for bigger toddlers. Maximum absorption and comfort.",
-      sw: "Pants za ukubwa mkubwa zaidi kwa watoto wakubwa. Unyonywaji na faraja ya hali ya juu.",
-    },
-  },
-  {
-    id: 5,
-    name: {
-      en: "Adult Pants",
-      sw: "Pants za Watu Wazima",
-    },
-    category: "adultDiapers",
-    price: 25000,
-    wholesalePrice: 22000,
-    size: "large",
-    bundleSize: 20,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adult%20pants.jpg-eYvgmKtmGCITzb488aMf7pcNvB16Y2.jpeg",
-    tags: ["internationalQuality"],
-    hipSize: "80-105cm",
-    description: {
-      en: "Comfortable adult pants for those with mobility issues, incontinence, or post-operation recovery.",
-      sw: "Pants za watu wazima zenye faraja kwa wenye matatizo ya kutembea, kukojoa bila kujizuia, au wanaopona baada ya upasuaji.",
-    },
-  },
-  {
-    id: 6,
-    name: {
-      en: "Baby Wipes",
-      sw: "Wipes za Watoto",
-    },
-    category: "babyDiapers",
-    price: 4000,
-    wholesalePrice: 3500,
-    bundleSize: 120,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.35_9bc82b01.jpg-UGTLfNsjPhFwjcUEg1g1UZu7SxWXrS.jpeg",
-    tags: ["newArrival"],
-    description: {
-      en: "Soft and gentle baby wipes for cleaning your baby's delicate skin. Pack of 120 sheets.",
-      sw: "Wipes laini na nyororo kwa kusafisha ngozi nyeti ya mtoto wako. Pakiti ya karatasi 120.",
-    },
-  },
-  {
-    id: 7,
-    name: {
-      en: "Premium Royal Baby Pants",
-      sw: "Pants Bora za Kifalme za Watoto",
-    },
-    category: "babyPants",
-    price: 22000,
-    wholesalePrice: 19000,
-    size: "large",
-    bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.41_542754ce.jpg-SYaYX5HxpNniNUoMc0trj7485kedRl.jpeg",
-    tags: ["bestSeller", "internationalQuality", "highAbsorption"],
-    weightRange: "9-14kg",
-    description: {
-      en: "Our highest quality pants with premium absorption and extra softness. Royal quality.",
-      sw: "Pants zetu za ubora wa juu zaidi zenye unyonywaji wa hali ya juu na ulaini wa ziada. Ubora wa kifalme.",
-    },
-  },
-  {
-    id: 8,
-    name: {
-      en: "Wholesale Carton - Baby Pants",
-      sw: "Kartoni ya Jumla - Pants za Watoto",
-    },
-    category: "babyPants",
-    price: 103000,
-    isCarton: true,
-    size: "medium",
-    cartonSize: "50pcs x 6 packs",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.33_052ce928.jpg-JNRalaEhieJuq7sRcGf2ZHIm0Erups.jpeg",
-    tags: ["wholesale", "internationalQuality"],
-    description: {
-      en: "Wholesale carton containing 6 packs of 50 medium-sized baby pants each. Great value for retailers.",
-      sw: "Kartoni ya jumla yenye pakiti 6 za pants 50 za watoto, ukubwa wa kati. Thamani kubwa kwa wafanyabiashara.",
-    },
-  },
-]
 
 export default function ProductsPage() {
   const { language } = useLanguage()
   const { addItem } = useCart()
+  const { state, loadProducts } = useStore()
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [priceRange, setPriceRange] = useState([0, 30000])
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [sortOption, setSortOption] = useState("newest")
+  const [isLoading, setIsLoading] = useState(true)
 
   const t = translations[language]
+
+  // Load products on component mount
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true)
+      await loadProducts()
+      setIsLoading(false)
+    }
+
+    fetchProducts()
+  }, [loadProducts]) // Include loadProducts in dependency array
 
   const formatPrice = (price: number) => {
     return `TZS ${price.toLocaleString()}`
   }
 
   // Filter products based on active filters
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = state.products.filter((product) => {
     // Filter by category
     if (activeTab !== "all" && product.category !== activeTab) {
       return false
@@ -316,13 +171,13 @@ export default function ProductsPage() {
   })
 
   // Handle WhatsApp order
-  const handleWhatsAppOrder = (product: (typeof products)[0]) => {
+  const handleWhatsAppOrder = (product: (typeof state.products)[0]) => {
     const message = `Hello, I would like to order: ${product.name[language]} - ${formatPrice(product.price)}`
     const whatsappUrl = `https://wa.me/255658181863?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 
-  const handleAddToCart = (product: (typeof products)[0]) => {
+  const handleAddToCart = (product: (typeof state.products)[0]) => {
     addItem({
       id: product.id,
       name: product.name,
@@ -495,7 +350,12 @@ export default function ProductsPage() {
         </Tabs>
 
         {/* Products Grid */}
-        {sortedProducts.length > 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin w-10 h-10 border-4 border-yammy-blue border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-500 font-bubblegum text-xl">{t.loading}</p>
+          </div>
+        ) : sortedProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {sortedProducts.map((product) => (
               <motion.div

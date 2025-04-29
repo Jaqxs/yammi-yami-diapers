@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { Save, X, Upload, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -17,12 +17,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
 import { useStore } from "@/lib/store"
 
-export default function NewProductPage() {
+export default function EditProductPage() {
+  const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
-  const { addProduct, loadProducts } = useStore()
+  const { state, loadProducts, updateProduct } = useStore()
+  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [productData, setProductData] = useState({
+    id: 0,
     name: {
       en: "",
       sw: "",
@@ -41,7 +44,51 @@ export default function NewProductPage() {
     isWholesale: false,
     tags: [] as string[],
     images: [] as string[],
+    image: "",
+    featured: false,
   })
+
+  // Load product data
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setIsLoading(true)
+      try {
+        await loadProducts()
+        const productId = Number(params.id)
+        const foundProduct = state.products.find((p) => p.id === productId)
+
+        if (foundProduct) {
+          setProductData({
+            ...foundProduct,
+            price: foundProduct.price.toString(),
+            wholesalePrice: foundProduct.wholesalePrice ? foundProduct.wholesalePrice.toString() : "",
+            bundleSize: foundProduct.bundleSize ? foundProduct.bundleSize.toString() : "",
+            stock: foundProduct.stock.toString(),
+            isWholesale: !!foundProduct.wholesalePrice,
+            images: foundProduct.image ? [foundProduct.image] : [],
+          })
+        } else {
+          toast({
+            title: "Product not found",
+            description: "The requested product could not be found",
+            variant: "destructive",
+          })
+          router.push("/admin/products")
+        }
+      } catch (error) {
+        console.error("Failed to load product:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load product details",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProduct()
+  }, [params.id, loadProducts, state.products, router, toast])
 
   // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -76,10 +123,10 @@ export default function NewProductPage() {
   const [newTag, setNewTag] = useState("")
 
   const addTag = () => {
-    if (newTag.trim() && !productData.tags.includes(newTag.trim())) {
+    if (newTag.trim() && !productData.tags?.includes(newTag.trim())) {
       setProductData({
         ...productData,
-        tags: [...productData.tags, newTag.trim()],
+        tags: [...(productData.tags || []), newTag.trim()],
       })
       setNewTag("")
     }
@@ -88,7 +135,7 @@ export default function NewProductPage() {
   const removeTag = (tagToRemove: string) => {
     setProductData({
       ...productData,
-      tags: productData.tags.filter((tag) => tag !== tagToRemove),
+      tags: productData.tags?.filter((tag) => tag !== tagToRemove) || [],
     })
   }
 
@@ -132,38 +179,40 @@ export default function NewProductPage() {
       }
 
       // Prepare product data
-      const newProduct = {
+      const updatedProduct = {
+        id: productData.id,
         name: productData.name,
         category: productData.category,
         description: productData.description,
         price: Number(productData.price),
         wholesalePrice: productData.wholesalePrice ? Number(productData.wholesalePrice) : undefined,
         size: productData.size || undefined,
-        bundleSize: productData.bundleSize ? Number(productData.bundleSize) : undefined,
+        bundleSize: productData.bundleSize ? productData.bundleSize.toString() : undefined,
         stock: Number(productData.stock),
         status: productData.status as "active" | "low_stock" | "out_of_stock" | "draft",
         tags: productData.tags,
         image: productData.images.length > 0 ? productData.images[0] : "/placeholder.svg",
+        featured: productData.featured,
       }
 
-      // Add product to store
-      await addProduct(newProduct)
+      // Update product in store
+      await updateProduct(updatedProduct)
 
       toast({
-        title: "Product created",
-        description: "The product has been created successfully",
+        title: "Product updated",
+        description: "The product has been updated successfully",
       })
 
       // Force a refresh of products by calling loadProducts before navigating
       await loadProducts()
 
-      // Navigate back to products page
-      router.push("/admin/products")
+      // Navigate back to product view page
+      router.push(`/admin/products/${productData.id}`)
     } catch (error) {
-      console.error("Failed to add product:", error)
+      console.error("Failed to update product:", error)
       toast({
         title: "Error",
-        description: "Failed to create product",
+        description: "Failed to update product",
         variant: "destructive",
       })
     } finally {
@@ -173,15 +222,27 @@ export default function NewProductPage() {
 
   // Handle cancel
   const handleCancel = () => {
-    router.push("/admin/products")
+    router.push(`/admin/products/${productData.id}`)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="h-8 w-48 bg-gray-200 animate-pulse rounded"></div>
+          <div className="h-10 w-24 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+        <div className="h-96 bg-gray-200 animate-pulse rounded"></div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bubblegum text-yammy-dark-blue">Add New Product</h1>
-          <p className="text-gray-500">Create a new product in your inventory</p>
+          <h1 className="text-3xl font-bubblegum text-yammy-dark-blue">Edit Product</h1>
+          <p className="text-gray-500">Update product information</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleCancel}>
@@ -197,7 +258,7 @@ export default function NewProductPage() {
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                Save Product
+                Save Changes
               </>
             )}
           </Button>
@@ -292,9 +353,19 @@ export default function NewProductPage() {
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="low_stock">Low Stock</SelectItem>
                       <SelectItem value="out_of_stock">Out of Stock</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="featured"
+                    checked={productData.featured}
+                    onCheckedChange={(checked) => handleSwitchChange("featured", checked)}
+                  />
+                  <Label htmlFor="featured">Featured product (shown on homepage)</Label>
                 </div>
               </CardContent>
             </Card>
@@ -359,11 +430,12 @@ export default function NewProductPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="size">Size</Label>
-                    <Select value={productData.size} onValueChange={(value) => handleSelectChange("size", value)}>
+                    <Select value={productData.size || ""} onValueChange={(value) => handleSelectChange("size", value)}>
                       <SelectTrigger id="size">
                         <SelectValue placeholder="Select size" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="">None</SelectItem>
                         <SelectItem value="small">Small</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="large">Large</SelectItem>
@@ -452,7 +524,7 @@ export default function NewProductPage() {
                 <div className="space-y-2">
                   <Label>Tags</Label>
                   <div className="flex flex-wrap gap-2 mb-2">
-                    {productData.tags.map((tag, index) => (
+                    {productData.tags?.map((tag, index) => (
                       <div
                         key={index}
                         className="bg-yammy-light-blue text-yammy-blue px-3 py-1 rounded-full text-sm flex items-center"

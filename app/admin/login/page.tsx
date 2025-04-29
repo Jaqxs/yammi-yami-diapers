@@ -30,27 +30,18 @@ export default function AdminLoginPage() {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      if (username === "admin" && password === "password") {
-        // Set authentication in localStorage
-        localStorage.setItem("admin-authenticated", "true")
+      // Accept any username/password combination for demo purposes
+      localStorage.setItem("admin-authenticated", "true")
 
-        toast({
-          title: "Login successful",
-          description: "Welcome to the admin panel",
-        })
+      toast({
+        title: "Login successful",
+        description: "Welcome to the admin panel",
+      })
 
-        // Force a small delay to ensure localStorage is set before navigation
-        setTimeout(() => {
-          router.push("/admin")
-        }, 100)
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Invalid username or password",
-          variant: "destructive",
-        })
-        setIsLoading(false)
-      }
+      // Force a small delay to ensure localStorage is set before navigation
+      setTimeout(() => {
+        router.push("/admin")
+      }, 100)
     } catch (error) {
       console.error("Login error:", error)
       toast({
@@ -78,7 +69,7 @@ export default function AdminLoginPage() {
               </div>
             </div>
             <CardTitle className="text-2xl font-bubblegum text-yammy-dark-blue">Admin Login</CardTitle>
-            <CardDescription>Enter your credentials to access the admin panel</CardDescription>
+            <CardDescription>Enter any credentials to access the admin panel</CardDescription>
           </CardHeader>
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-4">
@@ -134,7 +125,7 @@ export default function AdminLoginPage() {
             </CardFooter>
           </form>
           <div className="p-4 text-center text-sm text-gray-500">
-            <p>Demo credentials: username: admin, password: password</p>
+            <p>For demo purposes, you can use any username and password</p>
           </div>
         </Card>
       </motion.div>
