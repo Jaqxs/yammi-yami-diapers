@@ -4,382 +4,390 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Save, X, Upload, Plus, Calendar } from "lucide-react"
+import { Loader2, Plus, Check, Upload, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { useStore } from "@/lib/store"
 import { useToast } from "@/components/ui/use-toast"
+import { useStoreSync } from "@/lib/store-sync"
 import { RichTextEditor } from "@/components/admin/rich-text-editor"
 
-export default function NewArticlePage() {
+export default function NewBlogPostPage() {
   const router = useRouter()
+  const { addBlogPost } = useStore()
+  const { notifyChange } = useStoreSync()
   const { toast } = useToast()
+
+  // Form state
+  const [title, setTitle] = useState({ en: "", sw: "" })
+  const [excerpt, setExcerpt] = useState({ en: "", sw: "" })
+  const [content, setContent] = useState({ en: "", sw: "" })
+  const [category, setCategory] = useState("")
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState("")
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0])
+  const [readTime, setReadTime] = useState("5")
+  const [status, setStatus] = useState<"published" | "draft">("draft")
+  const [featured, setFeatured] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [articleData, setArticleData] = useState({
-    title: "",
-    excerpt: "",
-    content: "",
-    category: "",
-    readTime: "",
-    date: new Date().toISOString().split("T")[0],
-    status: "draft",
-    featured: false,
-    tags: [] as string[],
-    image: "",
-  })
 
-  // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setArticleData({ ...articleData, [name]: value })
-  }
+  // Image handling
+  const [image, setImage] = useState<string | null>(null)
 
-  // Handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    setArticleData({ ...articleData, [name]: value })
-  }
-
-  // Handle switch changes
-  const handleSwitchChange = (name: string, checked: boolean) => {
-    setArticleData({ ...articleData, [name]: checked })
-  }
-
-  // Handle content change
-  const handleContentChange = (content: string) => {
-    setArticleData({ ...articleData, content })
-  }
-
-  // Handle tag changes
-  const [newTag, setNewTag] = useState("")
-
-  const addTag = () => {
-    if (newTag.trim() && !articleData.tags.includes(newTag.trim())) {
-      setArticleData({
-        ...articleData,
-        tags: [...articleData.tags, newTag.trim()],
-      })
-      setNewTag("")
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0]
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
-  const removeTag = (tagToRemove: string) => {
-    setArticleData({
-      ...articleData,
-      tags: articleData.tags.filter((tag) => tag !== tagToRemove),
-    })
+  // Tag handling
+  const handleAddTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags((prev) => [...prev, tagInput.trim()])
+      setTagInput("")
+    }
   }
 
-  // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // In a real app, you would upload this to a storage service
-    // Here we're just creating an object URL for preview
-    const imageUrl = URL.createObjectURL(file)
-    setArticleData({ ...articleData, image: imageUrl })
+  const removeTag = (tag: string) => {
+    setTags((prev) => prev.filter((t) => t !== tag))
   }
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  // Form validation
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!title.en) newErrors.titleEn = "English title is required"
+    if (!title.sw) newErrors.titleSw = "Swahili title is required"
+    if (!excerpt.en) newErrors.excerptEn = "English excerpt is required"
+    if (!excerpt.sw) newErrors.excerptSw = "Swahili excerpt is required"
+    if (!content.en) newErrors.contentEn = "English content is required"
+    if (!content.sw) newErrors.contentSw = "Swahili content is required"
+    if (!category) newErrors.category = "Category is required"
+    if (!date) newErrors.date = "Date is required"
+    if (!readTime) newErrors.readTime = "Read time is required"
+    else if (isNaN(Number(readTime))) newErrors.readTime = "Read time must be a number"
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  // Form submission
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Article created",
-        description: "The article has been created successfully",
+    try {
+      const newBlogPost = await addBlogPost({
+        title,
+        excerpt,
+        content,
+        category,
+        tags,
+        date,
+        readTime: Number(readTime),
+        status,
+        featured,
+        image: image || "/writing-desk-inspiration.png",
+        author: {
+          name: "Admin",
+          avatar: "/mystical-forest-spirit.png",
+        },
       })
-      setIsSubmitting(false)
-      router.push("/admin/blog")
-    }, 1500)
-  }
 
-  // Handle cancel
-  const handleCancel = () => {
-    router.push("/admin/blog")
+      // Notify about the new blog post
+      notifyChange({
+        type: "blogPost",
+        action: "add",
+        id: newBlogPost.id,
+      })
+
+      toast({
+        title: "Blog Post Added",
+        description: "The article has been added successfully",
+      })
+
+      router.push("/admin/blog")
+    } catch (error) {
+      console.error("Error adding blog post:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add article. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bubblegum text-yammy-dark-blue">Create New Article</h1>
-          <p className="text-gray-500">Write and publish a new blog article</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleCancel}>
-            <X className="mr-2 h-4 w-4" />
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bubblegum text-yammy-dark-blue">Create New Article</h1>
+        <Button variant="outline" onClick={() => router.push("/admin/blog")}>
+          Cancel
+        </Button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Article Information</CardTitle>
+            <CardDescription>Enter the basic information about the article</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Title */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="title-en">Title (English)</Label>
+                <Input
+                  id="title-en"
+                  value={title.en}
+                  onChange={(e) => setTitle({ ...title, en: e.target.value })}
+                  placeholder="Article title in English"
+                  className={errors.titleEn ? "border-red-500" : ""}
+                />
+                {errors.titleEn && <p className="text-sm text-red-500">{errors.titleEn}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="title-sw">Title (Swahili)</Label>
+                <Input
+                  id="title-sw"
+                  value={title.sw}
+                  onChange={(e) => setTitle({ ...title, sw: e.target.value })}
+                  placeholder="Article title in Swahili"
+                  className={errors.titleSw ? "border-red-500" : ""}
+                />
+                {errors.titleSw && <p className="text-sm text-red-500">{errors.titleSw}</p>}
+              </div>
+            </div>
+
+            {/* Excerpt */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="excerpt-en">Excerpt (English)</Label>
+                <Textarea
+                  id="excerpt-en"
+                  value={excerpt.en}
+                  onChange={(e) => setExcerpt({ ...excerpt, en: e.target.value })}
+                  placeholder="Short description in English"
+                  rows={3}
+                  className={errors.excerptEn ? "border-red-500" : ""}
+                />
+                {errors.excerptEn && <p className="text-sm text-red-500">{errors.excerptEn}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="excerpt-sw">Excerpt (Swahili)</Label>
+                <Textarea
+                  id="excerpt-sw"
+                  value={excerpt.sw}
+                  onChange={(e) => setExcerpt({ ...excerpt, sw: e.target.value })}
+                  placeholder="Short description in Swahili"
+                  rows={3}
+                  className={errors.excerptSw ? "border-red-500" : ""}
+                />
+                {errors.excerptSw && <p className="text-sm text-red-500">{errors.excerptSw}</p>}
+              </div>
+            </div>
+
+            {/* Category and Date */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger id="category" className={errors.category ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="babyHealth">Baby Health</SelectItem>
+                    <SelectItem value="parentingTips">Parenting Tips</SelectItem>
+                    <SelectItem value="productInfo">Product Info</SelectItem>
+                    <SelectItem value="latestNews">Latest News</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className={errors.date ? "border-red-500" : ""}
+                />
+                {errors.date && <p className="text-sm text-red-500">{errors.date}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="read-time">Read Time (minutes)</Label>
+                <Input
+                  id="read-time"
+                  type="number"
+                  value={readTime}
+                  onChange={(e) => setReadTime(e.target.value)}
+                  min="1"
+                  className={errors.readTime ? "border-red-500" : ""}
+                />
+                {errors.readTime && <p className="text-sm text-red-500">{errors.readTime}</p>}
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="tags"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  placeholder="Add a tag"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      handleAddTag()
+                    }
+                  }}
+                />
+                <Button type="button" variant="outline" onClick={handleAddTag}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                    {tag}
+                    <button type="button" onClick={() => removeTag(tag)} className="text-gray-500 hover:text-gray-700">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Featured */}
+            <div className="flex items-center space-x-2">
+              <Switch id="featured" checked={featured} onCheckedChange={setFeatured} />
+              <Label htmlFor="featured">Feature this article on the homepage</Label>
+            </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={status} onValueChange={(value) => setStatus(value as "published" | "draft")}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Article Content (English)</CardTitle>
+            <CardDescription>Write the main content of your article in English</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RichTextEditor
+              content={content.en}
+              onChange={(value) => setContent({ ...content, en: value })}
+              className={errors.contentEn ? "border-red-500" : ""}
+            />
+            {errors.contentEn && <p className="text-sm text-red-500 mt-2">{errors.contentEn}</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Article Content (Swahili)</CardTitle>
+            <CardDescription>Write the main content of your article in Swahili</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RichTextEditor
+              content={content.sw}
+              onChange={(value) => setContent({ ...content, sw: value })}
+              className={errors.contentSw ? "border-red-500" : ""}
+            />
+            {errors.contentSw && <p className="text-sm text-red-500 mt-2">{errors.contentSw}</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Featured Image</CardTitle>
+            <CardDescription>Upload a featured image for your article</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input type="file" id="image-upload" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                <Label htmlFor="image-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                  <Upload className="h-10 w-10 text-gray-400 mb-2" />
+                  <span className="text-sm font-medium text-gray-600">Click to upload an image</span>
+                  <span className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</span>
+                </Label>
+              </div>
+
+              {image && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium mb-2">Preview</p>
+                  <div className="aspect-video w-full max-w-2xl mx-auto rounded-md overflow-hidden border">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={image || "/placeholder.svg"}
+                      alt="Article preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-4">
+          <Button variant="outline" type="button" onClick={() => router.push("/admin/blog")}>
             Cancel
           </Button>
-          <Button className="bg-yammy-blue hover:bg-yammy-dark-blue" onClick={handleSubmit} disabled={isSubmitting}>
+          <Button type="submit" className="bg-yammy-blue hover:bg-yammy-dark-blue" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
-                <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving...
               </>
             ) : (
               <>
-                <Save className="mr-2 h-4 w-4" />
-                {articleData.status === "published" ? "Publish" : "Save Draft"}
+                <Check className="mr-2 h-4 w-4" />
+                Publish Article
               </>
             )}
           </Button>
         </div>
-      </div>
-
-      <form onSubmit={handleSubmit}>
-        <Tabs defaultValue="content" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="content">Content</TabsTrigger>
-            <TabsTrigger value="seo">SEO & Meta</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-
-          {/* Content Tab */}
-          <TabsContent value="content">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Article Content</CardTitle>
-                    <CardDescription>Write your article content</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Title</Label>
-                      <Input
-                        id="title"
-                        name="title"
-                        value={articleData.title}
-                        onChange={handleChange}
-                        placeholder="Enter article title"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="excerpt">Excerpt</Label>
-                      <Textarea
-                        id="excerpt"
-                        name="excerpt"
-                        value={articleData.excerpt}
-                        onChange={handleChange}
-                        placeholder="Enter a short excerpt"
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="content">Content</Label>
-                      <RichTextEditor value={articleData.content} onChange={handleContentChange} />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Featured Image</CardTitle>
-                    <CardDescription>Upload a featured image for your article</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {articleData.image ? (
-                        <div className="relative">
-                          <div className="aspect-video rounded-md overflow-hidden border">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={articleData.image || "/placeholder.svg"}
-                              alt="Featured image"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="absolute top-2 right-2"
-                            onClick={() => setArticleData({ ...articleData, image: "" })}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                          <Input
-                            id="image"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleImageUpload}
-                          />
-                          <Label htmlFor="image" className="cursor-pointer flex flex-col items-center">
-                            <Upload className="h-10 w-10 text-gray-400 mb-2" />
-                            <span className="text-sm font-medium">Click to upload</span>
-                            <span className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</span>
-                          </Label>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Categories & Tags</CardTitle>
-                    <CardDescription>Organize your article</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Category</Label>
-                      <Select
-                        value={articleData.category}
-                        onValueChange={(value) => handleSelectChange("category", value)}
-                      >
-                        <SelectTrigger id="category">
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="babyHealth">Baby Health</SelectItem>
-                          <SelectItem value="parentingTips">Parenting Tips</SelectItem>
-                          <SelectItem value="productInfo">Product Info</SelectItem>
-                          <SelectItem value="latestNews">Latest News</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Tags</Label>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {articleData.tags.map((tag, index) => (
-                          <div
-                            key={index}
-                            className="bg-yammy-light-blue text-yammy-blue px-3 py-1 rounded-full text-sm flex items-center"
-                          >
-                            {tag}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-5 w-5 ml-1 hover:bg-transparent"
-                              onClick={() => removeTag(tag)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <Input
-                          value={newTag}
-                          onChange={(e) => setNewTag(e.target.value)}
-                          placeholder="Add a tag"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault()
-                              addTag()
-                            }
-                          }}
-                        />
-                        <Button type="button" onClick={addTag} className="bg-yammy-blue hover:bg-yammy-dark-blue">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* SEO Tab */}
-          <TabsContent value="seo">
-            <Card>
-              <CardHeader>
-                <CardTitle>SEO & Meta Information</CardTitle>
-                <CardDescription>Optimize your article for search engines</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="metaTitle">Meta Title</Label>
-                  <Input id="metaTitle" placeholder="Enter meta title" />
-                  <p className="text-xs text-gray-500">Recommended length: 50-60 characters</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="metaDescription">Meta Description</Label>
-                  <Textarea id="metaDescription" placeholder="Enter meta description" rows={3} />
-                  <p className="text-xs text-gray-500">Recommended length: 150-160 characters</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="focusKeyword">Focus Keyword</Label>
-                  <Input id="focusKeyword" placeholder="Enter focus keyword" />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Article Settings</CardTitle>
-                <CardDescription>Configure article settings</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={articleData.status} onValueChange={(value) => handleSelectChange("status", value)}>
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="published">Published</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="date">Publish Date</Label>
-                  <div className="relative">
-                    <Input id="date" name="date" type="date" value={articleData.date} onChange={handleChange} />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="readTime">Read Time (minutes)</Label>
-                  <Input
-                    id="readTime"
-                    name="readTime"
-                    type="number"
-                    value={articleData.readTime}
-                    onChange={handleChange}
-                    placeholder="Estimated read time in minutes"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="featured"
-                    checked={articleData.featured}
-                    onCheckedChange={(checked) => handleSwitchChange("featured", checked)}
-                  />
-                  <Label htmlFor="featured">Feature this article</Label>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </form>
     </div>
   )

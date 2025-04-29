@@ -16,12 +16,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
 import { useStore } from "@/lib/store"
+import { useStoreSync } from "@/lib/store-sync"
 
 export default function EditProductPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
   const { state, loadProducts, updateProduct } = useStore()
+  const { notifyChange } = useStoreSync()
 
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -90,7 +92,7 @@ export default function EditProductPage() {
     }
 
     fetchProduct()
-  }, [params.id, loadProducts, router, toast])
+  }, [params.id, loadProducts, router, toast, state.products])
 
   // Handle form input changes
   const handleChange = (field: string, value: any) => {
@@ -143,6 +145,14 @@ export default function EditProductPage() {
 
     try {
       await updateProduct(formData)
+
+      // Notify about the change
+      notifyChange({
+        type: "product",
+        action: "update",
+        id: formData.id,
+      })
+
       toast({
         title: "Product updated",
         description: "The product has been updated successfully",

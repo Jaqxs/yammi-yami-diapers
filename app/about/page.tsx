@@ -40,6 +40,16 @@ const translations = {
     phoneNumber2: "+255 754 089 447",
     emailUs: "Email Us",
     visitUs: "Visit Us",
+    brandInfluencers: "Our Brand Influencers",
+    influencersDescription:
+      "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our influencers are passionate about quality, comfort, and family care.",
+    influencer: "Influencer",
+    brandInfluencer: "Brand Influencer",
+    influencerInterest:
+      "Interested in becoming a Yammy Yami brand influencer? Contact us to learn more about partnership opportunities.",
+    leadershipTeam: "Our Leadership Team",
+    leadershipDescription:
+      "Meet the dedicated professionals leading Yammy Yami Diaper TZ. Our leadership team brings together decades of experience and a shared passion for improving family care across Tanzania.",
   },
   sw: {
     aboutUs: "Kuhusu Sisi",
@@ -72,12 +82,22 @@ const translations = {
     phoneNumber2: "+255 754 089 447",
     emailUs: "Tuma Barua Pepe",
     visitUs: "Tembelea",
+    brandInfluencers: "Washawishi Wetu wa Bidhaa",
+    influencersDescription:
+      "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Washawishi wetu wana shauku juu ya ubora, faraja, na utunzaji wa familia.",
+    influencer: "Mshawishi",
+    brandInfluencer: "Mshawishi wa Biashara",
+    influencerInterest:
+      "Una nia ya kuwa mshawishi wa bidhaa za Yammy Yami? Wasiliana nasi kujifunza zaidi kuhusu fursa za ushirikiano.",
+    leadershipTeam: "Timu Yetu ya Uongozi",
+    leadershipDescription:
+      "Kutana na wataalamu wanaojitoa wanaoongoza Yammy Yami Diaper TZ. Timu yetu ya uongozi inaleta pamoja miongo ya uzoefu na shauku ya pamoja ya kuboresha utunzaji wa familia kote Tanzania.",
   },
 }
 
 export default function AboutPage() {
   const { language } = useLanguage()
-  const t = translations[language]
+  const t = translations[language || "en"] // Provide a default language if undefined
 
   return (
     <PageWrapper>
@@ -150,16 +170,10 @@ export default function AboutPage() {
 
         {/* Brand Influencers Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-10">
-            {language === "en" ? "Our Brand Influencers" : "Washawishi Wetu wa Bidhaa"}
-          </h2>
+          <h2 className="text-3xl font-bold text-center mb-10">{t.brandInfluencers}</h2>
 
           <div className="max-w-3xl mx-auto text-center mb-10">
-            <p className="text-gray-600">
-              {language === "en"
-                ? "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our influencers are passionate about quality, comfort, and family care."
-                : "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Washawishi wetu wana shauku juu ya ubora, faraja, na utunzaji wa familia."}
-            </p>
+            <p className="text-gray-600">{t.influencersDescription}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -179,12 +193,8 @@ export default function AboutPage() {
                 />
               </div>
               <div className="p-4 bg-yammy-pink/20">
-                <h3 className="font-bold text-yammy-dark-blue text-lg text-center">
-                  {language === "en" ? "Influencer" : "Mshawishi"}
-                </h3>
-                <p className="text-center text-yammy-blue">
-                  {language === "en" ? "Yammy Yami Diaper TZ" : "Yammy Yami Diaper TZ"}
-                </p>
+                <h3 className="font-bold text-yammy-dark-blue text-lg text-center">{t.influencer}</h3>
+                <p className="text-center text-yammy-blue">Yammy Yami Diaper TZ</p>
               </div>
             </motion.div>
 
@@ -204,40 +214,24 @@ export default function AboutPage() {
                 />
               </div>
               <div className="p-4 bg-yammy-pink/20">
-                <h3 className="font-bold text-yammy-dark-blue text-lg text-center">
-                  {language === "en" ? "Brand Influencer" : "Mshawishi wa Biashara"}
-                </h3>
-                <p className="text-center text-yammy-blue">
-                  {language === "en" ? "Yammy Yami Diaper TZ" : "Yammy Yami Diaper TZ"}
-                </p>
+                <h3 className="font-bold text-yammy-dark-blue text-lg text-center">{t.brandInfluencer}</h3>
+                <p className="text-center text-yammy-blue">Yammy Yami Diaper TZ</p>
               </div>
             </motion.div>
           </div>
 
           <div className="mt-12 text-center">
-            <p className="text-gray-600 mb-6">
-              {language === "en"
-                ? "Interested in becoming a Yammy Yami brand influencer? Contact us to learn more about partnership opportunities."
-                : "Una nia ya kuwa mshawishi wa bidhaa za Yammy Yami? Wasiliana nasi kujifunza zaidi kuhusu fursa za ushirikiano."}
-            </p>
-            <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white">
-              {language === "en" ? "Contact Us" : "Wasiliana Nasi"}
-            </Button>
+            <p className="text-gray-600 mb-6">{t.influencerInterest}</p>
+            <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white">{t.contactUs}</Button>
           </div>
         </div>
 
         {/* Team Members Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-10">
-            {language === "en" ? "Our Leadership Team" : "Timu Yetu ya Uongozi"}
-          </h2>
+          <h2 className="text-3xl font-bold text-center mb-10">{t.leadershipTeam}</h2>
 
           <div className="max-w-3xl mx-auto text-center mb-10">
-            <p className="text-gray-600">
-              {language === "en"
-                ? "Meet the dedicated professionals leading Yammy Yami Diaper TZ. Our leadership team brings together decades of experience and a shared passion for improving family care across Tanzania."
-                : "Kutana na wataalamu wanaojitoa wanaoongoza Yammy Yami Diaper TZ. Timu yetu ya uongozi inaleta pamoja miongo ya uzoefu na shauku ya pamoja ya kuboresha utunzaji wa familia kote Tanzania."}
-            </p>
+            <p className="text-gray-600">{t.leadershipDescription}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -266,7 +260,7 @@ export default function AboutPage() {
               className="bg-white rounded-xl overflow-hidden shadow-lg"
             >
               <div className="aspect-square relative">
-                <Image src="/images/fei-toto.jpeg" alt="Feisal salum abdalah" fill className="object-cover" />
+                <Image src="/images/fei-toto.png" alt="Feisal salum abdalah" fill className="object-cover" />
               </div>
               <div className="p-4">
                 <h3 className="font-bold text-yammy-dark-blue text-lg">Feisal salum abdalah</h3>
@@ -282,7 +276,7 @@ export default function AboutPage() {
               className="bg-white rounded-xl overflow-hidden shadow-lg"
             >
               <div className="aspect-square relative">
-                <Image src="/images/hassan.jpeg" alt="Hassan mwara katuju" fill className="object-cover" />
+                <Image src="/images/hassan.png" alt="Hassan mwara katuju" fill className="object-cover" />
               </div>
               <div className="p-4">
                 <h3 className="font-bold text-yammy-dark-blue text-lg">Hassan mwara katuju</h3>

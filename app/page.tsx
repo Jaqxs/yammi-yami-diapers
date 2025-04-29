@@ -11,6 +11,8 @@ import { useLanguage } from "@/components/language-provider"
 import { PageWrapper } from "@/components/page-wrapper"
 import { useStore } from "@/lib/store"
 import { useCart } from "@/components/cart-provider"
+import { useStoreSync } from "@/lib/store-sync"
+import { AdminChangeNotification } from "@/components/admin-change-notification"
 
 // Language translations
 const translations = {
@@ -47,6 +49,7 @@ const translations = {
     noFeaturedProducts: "No featured products available",
     noFeaturedPosts: "No featured blog posts available",
     addToCart: "Add to Cart",
+    viewAllBlogPosts: "View All Blog Posts",
   },
   sw: {
     heroTitle: "Penda Mtoto Wako, Penda Familia Yako",
@@ -81,6 +84,7 @@ const translations = {
     noFeaturedProducts: "Hakuna bidhaa zilizoangaziwa zinazopatikana",
     noFeaturedPosts: "Hakuna makala zilizoangaziwa zinazopatikana",
     addToCart: "Ongeza kwenye Kikapu",
+    viewAllBlogPosts: "Tazama Makala Zote",
   },
 }
 
@@ -151,11 +155,12 @@ const testimonials = [
 export default function Home() {
   const { language } = useLanguage()
   const { state, loadProducts, loadBlogPosts } = useStore()
+  const { lastEvent } = useStoreSync()
   const { addItem } = useCart()
   const [bubbles, setBubbles] = useState<Array<{ id: number; size: number; left: string; delay: number }>>([])
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [featuredBlogPosts, setFeaturedBlogPosts] = useState([])
-  const t = translations[language]
+  const t = translations[language || "en"]
 
   useEffect(() => {
     // Create random bubbles for background effect
@@ -172,8 +177,14 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Load products and blog posts
-        await Promise.all([loadProducts(), loadBlogPosts()])
+        // Load products and blog posts if they're not already loaded
+        if (state.products.length === 0) {
+          await loadProducts()
+        }
+
+        if (state.blogPosts.length === 0) {
+          await loadBlogPosts()
+        }
 
         // Filter featured items
         const featured = state.products.filter((product) => product.featured === true)
@@ -187,8 +198,29 @@ export default function Home() {
     }
 
     fetchData()
-    // Only depend on the loadProducts and loadBlogPosts functions, not the state itself
-  }, [loadProducts, loadBlogPosts])
+  }, [state.products, state.blogPosts, loadProducts, loadBlogPosts])
+
+  // Listen for sync events
+  useEffect(() => {
+    if (lastEvent) {
+      // Refresh data based on the event type
+      const refreshData = async () => {
+        if (lastEvent.type === "product") {
+          await loadProducts()
+          // Update featured products
+          const featured = state.products.filter((product) => product.featured === true)
+          setFeaturedProducts(featured.slice(0, 4))
+        } else if (lastEvent.type === "blogPost") {
+          await loadBlogPosts()
+          // Update featured blog posts
+          const featuredPosts = state.blogPosts.filter((post) => post.featured === true)
+          setFeaturedBlogPosts(featuredPosts.slice(0, 3))
+        }
+      }
+
+      refreshData()
+    }
+  }, [lastEvent, loadProducts, loadBlogPosts, state.products, state.blogPosts])
 
   const formatPrice = (price: number) => {
     return `TZS ${price.toLocaleString()}`
@@ -296,7 +328,7 @@ export default function Home() {
             {t.featuredProducts}
           </h2>
 
-          {featuredProducts.length > 0 ? (
+          {featuredProducts && featuredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {featuredProducts.map((product) => (
                 <motion.div
@@ -306,14 +338,16 @@ export default function Home() {
                 >
                   <div className="relative h-64 bg-yammy-light-blue">
                     <Image
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name[language]}
+                      src={product.image || "/placeholder.svg?height=300&width=300&query=product"}
+                      alt={product.name[language || "en"]}
                       fill
                       className="object-contain p-4"
                     />
                   </div>
                   <div className="p-6">
-                    <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">{product.name[language]}</h3>
+                    <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">
+                      {product.name[language || "en"]}
+                    </h3>
                     <div className="flex items-center justify-between">
                       <span className="text-yammy-blue font-bold">{formatPrice(product.price)}</span>
                       <Button
@@ -367,8 +401,8 @@ export default function Home() {
                 viewport={{ once: true }}
               >
                 <div className="text-4xl mb-4 animate-bounce-slow">{feature.icon}</div>
-                <h3 className="text-xl font-bubblegum mb-3 text-yammy-dark-blue">{feature.title[language]}</h3>
-                <p className="text-gray-600">{feature.description[language]}</p>
+                <h3 className="text-xl font-bubblegum mb-3 text-yammy-dark-blue">{feature.title[language || "en"]}</h3>
+                <p className="text-gray-600">{feature.description[language || "en"]}</p>
               </motion.div>
             ))}
           </div>
@@ -382,7 +416,7 @@ export default function Home() {
             {t.latestBlogPosts}
           </h2>
 
-          {featuredBlogPosts.length > 0 ? (
+          {featuredBlogPosts && featuredBlogPosts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {featuredBlogPosts.map((post) => (
                 <motion.div
@@ -392,16 +426,16 @@ export default function Home() {
                 >
                   <div className="relative h-48">
                     <Image
-                      src={post.image || "/placeholder.svg"}
-                      alt={post.title[language]}
+                      src={post.image || "/placeholder.svg?height=300&width=500&query=blog post"}
+                      alt={post.title[language || "en"]}
                       fill
                       className="object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                   </div>
                   <div className="p-6">
-                    <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">{post.title[language]}</h3>
-                    <p className="text-gray-600 mb-4 line-clamp-2">{post.excerpt[language]}</p>
+                    <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">{post.title[language || "en"]}</h3>
+                    <p className="text-gray-600 mb-4 line-clamp-2">{post.excerpt[language || "en"]}</p>
                     <div className="flex items-center justify-between text-sm text-gray-500">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />
@@ -433,7 +467,7 @@ export default function Home() {
                 variant="outline"
                 className="group border-yammy-blue text-yammy-blue hover:bg-yammy-blue hover:text-white"
               >
-                {language === "en" ? "View All Blog Posts" : "Tazama Makala Zote"}
+                {t.viewAllBlogPosts}
                 <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
@@ -507,7 +541,7 @@ export default function Home() {
                     <Star key={i} className="h-5 w-5 fill-yammy-orange text-yammy-orange" />
                   ))}
                 </div>
-                <p className="text-gray-600 mb-4">"{testimonial.text[language]}"</p>
+                <p className="text-gray-600 mb-4">"{testimonial.text[language || "en"]}"</p>
                 <p className="font-bold text-yammy-dark-blue">{testimonial.name}</p>
               </motion.div>
             ))}
@@ -560,6 +594,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Admin Change Notification */}
+      <AdminChangeNotification />
     </PageWrapper>
   )
 }

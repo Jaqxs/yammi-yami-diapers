@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { ShoppingCart, Filter, Search, Tag, Star } from "lucide-react"
+import { ShoppingCart, Filter, Search, Tag, Star, RefreshCw } from "lucide-react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,8 @@ import { PageWrapper } from "@/components/page-wrapper"
 import { useLanguage } from "@/components/language-provider"
 import { useCart } from "@/components/cart-provider"
 import { useStore } from "@/lib/store"
+import { useStoreSync } from "@/lib/store-sync"
+import { AdminChangeNotification } from "@/components/admin-change-notification"
 
 // Language translations
 const translations = {
@@ -61,6 +63,7 @@ const translations = {
     bundleSize: "Bundle Size",
     priceNote: "* Prices in Dar es Salaam/Kariakoo. See Pricing page for details.",
     loading: "Loading products...",
+    refresh: "Refresh Products",
   },
   sw: {
     products: "Bidhaa",
@@ -82,7 +85,7 @@ const translations = {
     noProducts: "Hakuna bidhaa zilizopatikana",
     newest: "Mpya Zaidi",
     priceHighToLow: "Bei: Juu hadi Chini",
-    priceLowToHigh: "Bei: Chini hadi Juu",
+    priceLowToHigh: "Bei: Chini hadi Chini",
     small: "Ndogo",
     medium: "Wastani",
     large: "Kubwa",
@@ -103,6 +106,7 @@ const translations = {
     bundleSize: "Ukubwa wa Kifurushi",
     priceNote: "* Bei hizi ni za Dar es Salaam/Kariakoo. Tazama ukurasa wa Bei kwa maelezo zaidi.",
     loading: "Inapakia bidhaa...",
+    refresh: "Onyesha Upya Bidhaa",
   },
 }
 
@@ -110,16 +114,18 @@ export default function ProductsPage() {
   const { language } = useLanguage()
   const { addItem } = useCart()
   const { state, loadProducts } = useStore()
+  const { lastEvent } = useStoreSync()
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [priceRange, setPriceRange] = useState([0, 30000])
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [sortOption, setSortOption] = useState("newest")
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const t = translations[language]
+  const t = translations[language || "en"]
 
-  // Load products on component mount
+  // Load products on component mount and when sync events occur
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true)
@@ -128,7 +134,40 @@ export default function ProductsPage() {
     }
 
     fetchProducts()
-  }, [loadProducts]) // Include loadProducts in dependency array
+  }, [loadProducts])
+
+  // Listen for sync events
+  useEffect(() => {
+    if (lastEvent && lastEvent.type === "product") {
+      // Refresh products when a product-related event occurs
+      const refreshProducts = async () => {
+        setIsRefreshing(true)
+        await loadProducts()
+        setIsRefreshing(false)
+
+        // If we received an "add" action, show a subtle notification
+        if (lastEvent.action === "add") {
+          // Reset filters to help user see the new product
+          if (searchQuery || activeTab !== "all" || selectedSize) {
+            // Optional: Show a toast or notification that filters are being reset to show new content
+            setSearchQuery("")
+            setActiveTab("all")
+            setSelectedSize(null)
+            setPriceRange([0, 30000])
+          }
+        }
+      }
+
+      refreshProducts()
+    }
+  }, [lastEvent, loadProducts])
+
+  // Function to refresh products
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    await loadProducts()
+    setIsRefreshing(false)
+  }, [loadProducts])
 
   const formatPrice = (price: number) => {
     return `TZS ${price.toLocaleString()}`
@@ -137,12 +176,20 @@ export default function ProductsPage() {
   // Filter products based on active filters
   const filteredProducts = state.products.filter((product) => {
     // Filter by category
-    if (activeTab !== "all" && product.category !== activeTab) {
-      return false
+    if (activeTab !== "all") {
+      if (activeTab === "wholesale") {
+        // For wholesale tab, show products with wholesalePrice
+        if (!product.wholesalePrice) {
+          return false
+        }
+      } else if (product.category !== activeTab) {
+        // For other tabs, filter by category
+        return false
+      }
     }
 
     // Filter by search query
-    if (searchQuery && !product.name[language].toLowerCase().includes(searchQuery.toLowerCase())) {
+    if (searchQuery && !product.name[language || "en"].toLowerCase().includes(searchQuery.toLowerCase())) {
       return false
     }
 
@@ -172,7 +219,7 @@ export default function ProductsPage() {
 
   // Handle WhatsApp order
   const handleWhatsAppOrder = (product: (typeof state.products)[0]) => {
-    const message = `Hello, I would like to order: ${product.name[language]} - ${formatPrice(product.price)}`
+    const message = `Hello, I would like to order: ${product.name[language || "en"]} - ${formatPrice(product.price)}`
     const whatsappUrl = `https://wa.me/255658181863?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
@@ -300,6 +347,16 @@ export default function ProductsPage() {
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-yammy-blue/30 text-yammy-blue"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+              {t.refresh}
+            </Button>
             <Select value={sortOption} onValueChange={setSortOption}>
               <SelectTrigger className="w-full md:w-[180px] border-yammy-blue/30 focus:ring-yammy-blue">
                 <SelectValue placeholder={t.sort} />
@@ -350,7 +407,7 @@ export default function ProductsPage() {
         </Tabs>
 
         {/* Products Grid */}
-        {isLoading ? (
+        {isLoading || isRefreshing ? (
           <div className="text-center py-12">
             <div className="animate-spin w-10 h-10 border-4 border-yammy-blue border-t-transparent rounded-full mx-auto mb-4"></div>
             <p className="text-gray-500 font-bubblegum text-xl">{t.loading}</p>
@@ -366,7 +423,7 @@ export default function ProductsPage() {
                 <div className="relative h-64 bg-yammy-light-blue">
                   <Image
                     src={product.image || "/placeholder.svg?height=300&width=300&query=product"}
-                    alt={product.name[language]}
+                    alt={product.name[language || "en"]}
                     fill
                     className="object-contain p-4"
                     onError={(e) => {
@@ -376,22 +433,22 @@ export default function ProductsPage() {
                   />
                   {/* Product tags */}
                   <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    {product.tags && product.tags.includes("bestSeller") && (
+                    {product.tags && Array.isArray(product.tags) && product.tags.includes("bestSeller") && (
                       <Badge className="bg-yammy-orange text-white">{t.bestSeller}</Badge>
                     )}
-                    {product.tags && product.tags.includes("newArrival") && (
+                    {product.tags && Array.isArray(product.tags) && product.tags.includes("newArrival") && (
                       <Badge className="bg-yammy-pink text-white">{t.newArrival}</Badge>
                     )}
                   </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="font-bubblegum text-xl mb-1 text-yammy-dark-blue">{product.name[language]}</h3>
+                  <h3 className="font-bubblegum text-xl mb-1 text-yammy-dark-blue">{product.name[language || "en"]}</h3>
 
                   {/* Product details */}
                   <div className="mb-3 text-sm text-gray-600">
                     {product.size && (
                       <div>
-                        {language === "en" ? "Size" : "Ukubwa"}: {t[product.size as keyof typeof t]}
+                        {language === "en" ? "Size" : "Ukubwa"}: {t[product.size as keyof typeof t] || product.size}
                         {product.weightRange && ` (${product.weightRange})`}
                         {product.hipSize && ` (${product.hipSize})`}
                       </div>
@@ -489,6 +546,9 @@ export default function ProductsPage() {
           </div>
         </div>
       </section>
+
+      {/* Admin Change Notification */}
+      <AdminChangeNotification />
     </PageWrapper>
   )
 }

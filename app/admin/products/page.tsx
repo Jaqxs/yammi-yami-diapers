@@ -23,9 +23,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
 import { Pagination } from "@/components/admin/pagination"
 import { useStore } from "@/lib/store"
+import { useStoreSync } from "@/lib/store-sync"
 
 export default function ProductsPage() {
   const { state, loadProducts, deleteProduct, updateProduct } = useStore()
+  const { notifyChange } = useStoreSync()
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -82,6 +84,13 @@ export default function ProductsPage() {
     try {
       if (productToDelete) {
         await deleteProduct(productToDelete)
+        // Notify about the change
+        notifyChange({
+          type: "product",
+          action: "delete",
+          id: productToDelete,
+        })
+
         toast({
           title: "Product deleted",
           description: "The product has been deleted successfully",
@@ -90,6 +99,12 @@ export default function ProductsPage() {
         // Delete multiple products
         for (const id of selectedProducts) {
           await deleteProduct(id)
+          // Notify about each deletion
+          notifyChange({
+            type: "product",
+            action: "delete",
+            id,
+          })
         }
         setSelectedProducts([])
         toast({
@@ -120,6 +135,13 @@ export default function ProductsPage() {
         }
         await updateProduct(updatedProduct)
 
+        // Notify about the change
+        notifyChange({
+          type: "product",
+          action: "update",
+          id,
+        })
+
         toast({
           title: updatedProduct.featured ? "Added to featured" : "Removed from featured",
           description: `"${product.name.en}" has been ${updatedProduct.featured ? "added to" : "removed from"} featured products`,
@@ -135,8 +157,8 @@ export default function ProductsPage() {
   }
 
   // Format currency
-  const formatCurrency = (amount: number) => {
-    return `TZS ${amount.toLocaleString()}`
+  const formatCurrency = (price: number) => {
+    return `TZS ${price.toLocaleString()}`
   }
 
   return (

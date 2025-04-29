@@ -23,9 +23,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
 import { Pagination } from "@/components/admin/pagination"
 import { useStore } from "@/lib/store"
+import { useStoreSync } from "@/lib/store-sync"
 
 export default function BlogPage() {
   const { state, loadBlogPosts, deleteBlogPost, updateBlogPost } = useStore()
+  const { notifyChange } = useStoreSync()
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -85,6 +87,14 @@ export default function BlogPage() {
     try {
       if (postToDelete) {
         await deleteBlogPost(postToDelete)
+
+        // Notify about the change
+        notifyChange({
+          type: "blogPost",
+          action: "delete",
+          id: postToDelete,
+        })
+
         toast({
           title: "Article deleted",
           description: "The article has been deleted successfully",
@@ -93,6 +103,13 @@ export default function BlogPage() {
         // Delete multiple posts
         for (const id of selectedPosts) {
           await deleteBlogPost(id)
+
+          // Notify about each deletion
+          notifyChange({
+            type: "blogPost",
+            action: "delete",
+            id,
+          })
         }
         setSelectedPosts([])
         toast({
@@ -122,6 +139,13 @@ export default function BlogPage() {
           featured: !post.featured,
         }
         await updateBlogPost(updatedPost)
+
+        // Notify about the change
+        notifyChange({
+          type: "blogPost",
+          action: "update",
+          id,
+        })
 
         toast({
           title: updatedPost.featured ? "Added to featured" : "Removed from featured",

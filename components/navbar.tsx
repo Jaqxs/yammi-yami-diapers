@@ -11,6 +11,16 @@ import { cn } from "@/lib/utils"
 
 type Props = {}
 
+const navigationItems = [
+  { name: { en: "Home", sw: "Nyumbani" }, href: "/" },
+  { name: { en: "Products", sw: "Bidhaa" }, href: "/products" },
+  { name: { en: "About", sw: "Kuhusu" }, href: "/about" },
+  { name: { en: "Blog", sw: "Blogu" }, href: "/blog" },
+  { name: { en: "Agents", sw: "Wakala" }, href: "/agents" },
+  { name: { en: "Agents List", sw: "Orodha ya Wakala" }, href: "/agents-list" },
+  { name: { en: "Contact", sw: "Wasiliana" }, href: "/contact" },
+]
+
 export function Navbar({}: Props) {
   const { language, setLanguage } = useLanguage()
 
@@ -25,13 +35,13 @@ export function Navbar({}: Props) {
             <span className="hidden font-bold sm:inline-block">{siteConfig.name}</span>
           </Link>
           <nav className="flex items-center space-x-6">
-            {siteConfig.mainNav.map((item) => (
+            {navigationItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className="text-sm font-medium transition-colors hover:text-yammy-blue"
               >
-                {item.title}
+                {item.name[language || "en"]}
               </Link>
             ))}
           </nav>

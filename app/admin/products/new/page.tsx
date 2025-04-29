@@ -4,170 +4,159 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Save, X, Upload, Plus } from "lucide-react"
+import { Loader2, Plus, X, Upload, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/components/ui/use-toast"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { useStore } from "@/lib/store"
+import { useToast } from "@/hooks/use-toast"
+import { useStoreSync } from "@/lib/store-sync"
 
 export default function NewProductPage() {
   const router = useRouter()
+  const { addProduct } = useStore()
+  const { notifyChange } = useStoreSync()
   const { toast } = useToast()
-  const { addProduct, loadProducts } = useStore()
+
+  // Form state
+  const [name, setName] = useState({ en: "", sw: "" })
+  const [description, setDescription] = useState({ en: "", sw: "" })
+  const [category, setCategory] = useState("")
+  const [price, setPrice] = useState("")
+  const [wholesalePrice, setWholesalePrice] = useState("")
+  const [size, setSize] = useState("")
+  const [bundleSize, setBundleSize] = useState("")
+  const [cartonSize, setCartonSize] = useState("")
+  const [weightRange, setWeightRange] = useState("")
+  const [hipSize, setHipSize] = useState("")
+  const [stock, setStock] = useState("")
+  const [status, setStatus] = useState<"active" | "low_stock" | "out_of_stock" | "draft">("active")
+  const [isCarton, setIsCarton] = useState(false)
+  const [featured, setFeatured] = useState(false)
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [productData, setProductData] = useState({
-    name: {
-      en: "",
-      sw: "",
-    },
-    category: "",
-    description: {
-      en: "",
-      sw: "",
-    },
-    price: "",
-    wholesalePrice: "",
-    size: "",
-    bundleSize: "",
-    stock: "",
-    status: "active",
-    isWholesale: false,
-    tags: [] as string[],
-    images: [] as string[],
-  })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [activeTab, setActiveTab] = useState("details")
 
-  // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+  // Image handling
+  const [images, setImages] = useState<string[]>([])
+  const [imageFiles, setImageFiles] = useState<File[]>([])
 
-    // Handle nested properties
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".")
-      setProductData({
-        ...productData,
-        [parent]: {
-          ...productData[parent as keyof typeof productData],
-          [child]: value,
-        },
-      })
-    } else {
-      setProductData({ ...productData, [name]: value })
-    }
-  }
-
-  // Handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    setProductData({ ...productData, [name]: value })
-  }
-
-  // Handle switch changes
-  const handleSwitchChange = (name: string, checked: boolean) => {
-    setProductData({ ...productData, [name]: checked })
-  }
-
-  // Handle tag changes
-  const [newTag, setNewTag] = useState("")
-
-  const addTag = () => {
-    if (newTag.trim() && !productData.tags.includes(newTag.trim())) {
-      setProductData({
-        ...productData,
-        tags: [...productData.tags, newTag.trim()],
-      })
-      setNewTag("")
-    }
-  }
-
-  const removeTag = (tagToRemove: string) => {
-    setProductData({
-      ...productData,
-      tags: productData.tags.filter((tag) => tag !== tagToRemove),
-    })
-  }
-
-  // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files) return
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files)
+      setImageFiles((prev) => [...prev, ...newFiles])
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setProductData({
-            ...productData,
-            images: [...productData.images, event.target.result as string],
-          })
+      // Create base64 data URLs for preview
+      newFiles.forEach((file) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImages((prev) => [...prev, reader.result as string])
         }
-      }
-      reader.readAsDataURL(file)
-    })
+        reader.readAsDataURL(file)
+      })
+    }
   }
 
-  const removeImage = (imageToRemove: string) => {
-    setProductData({
-      ...productData,
-      images: productData.images.filter((image) => image !== imageToRemove),
-    })
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index))
+    setImageFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  // Handle form submission
+  // Tag handling
+  const handleAddTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags((prev) => [...prev, tagInput.trim()])
+      setTagInput("")
+    }
+  }
+
+  const removeTag = (tag: string) => {
+    setTags((prev) => prev.filter((t) => t !== tag))
+  }
+
+  // Form validation
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!name.en) newErrors.nameEn = "English name is required"
+    if (!name.sw) newErrors.nameSw = "Swahili name is required"
+    if (!category) newErrors.category = "Category is required"
+    if (!price) newErrors.price = "Price is required"
+    else if (isNaN(Number(price))) newErrors.price = "Price must be a number"
+    if (wholesalePrice && isNaN(Number(wholesalePrice))) newErrors.wholesalePrice = "Wholesale price must be a number"
+    if (!bundleSize) newErrors.bundleSize = "Bundle size is required"
+    if (!stock) newErrors.stock = "Stock is required"
+    else if (isNaN(Number(stock))) newErrors.stock = "Stock must be a number"
+    if (!description.en) newErrors.descriptionEn = "English description is required"
+    if (!description.sw) newErrors.descriptionSw = "Swahili description is required"
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      // Validate required fields
-      if (!productData.name.en || !productData.category || !productData.price || !productData.stock) {
-        toast({
-          title: "Missing required fields",
-          description: "Please fill in all required fields",
-          variant: "destructive",
-        })
-        setIsSubmitting(false)
-        return
-      }
-
-      // Prepare product data
       const newProduct = {
-        name: productData.name,
-        category: productData.category,
-        description: productData.description,
-        price: Number(productData.price),
-        wholesalePrice: productData.wholesalePrice ? Number(productData.wholesalePrice) : undefined,
-        size: productData.size || undefined,
-        bundleSize: productData.bundleSize ? Number(productData.bundleSize) : undefined,
-        stock: Number(productData.stock),
-        status: productData.status as "active" | "low_stock" | "out_of_stock" | "draft",
-        tags: productData.tags,
-        image: productData.images.length > 0 ? productData.images[0] : "/assorted-products-display.png",
+        name,
+        description,
+        category,
+        price: Number(price),
+        wholesalePrice: wholesalePrice ? Number(wholesalePrice) : undefined,
+        size: size || undefined,
+        bundleSize,
+        cartonSize: cartonSize || undefined,
+        image: images.length > 0 ? images[0] : "/assorted-products-display.png",
+        tags,
+        weightRange: weightRange || undefined,
+        hipSize: hipSize || undefined,
+        stock: Number(stock),
+        status,
+        isCarton,
+        featured,
       }
 
-      // Add product to store
-      await addProduct(newProduct)
+      const addedProduct = await addProduct(newProduct)
 
-      toast({
-        title: "Product created",
-        description: "The product has been created successfully",
+      // Notify about the new product with the actual product ID
+      notifyChange({
+        type: "product",
+        action: "add",
+        id: addedProduct.id, // Now we have the real ID
       })
 
-      // Force a refresh of products by calling loadProducts before navigating
-      await loadProducts()
+      toast({
+        title: "Product Added",
+        description: "The product has been added successfully",
+      })
 
-      // Navigate back to products page
       router.push("/admin/products")
     } catch (error) {
-      console.error("Failed to add product:", error)
+      console.error("Error adding product:", error)
       toast({
         title: "Error",
-        description: "Failed to create product",
+        description: "Failed to add product. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -175,328 +164,350 @@ export default function NewProductPage() {
     }
   }
 
-  // Handle cancel
-  const handleCancel = () => {
-    router.push("/admin/products")
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bubblegum text-yammy-dark-blue">Add New Product</h1>
-          <p className="text-gray-500">Create a new product in your inventory</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleCancel}>
-            <X className="mr-2 h-4 w-4" />
-            Cancel
-          </Button>
-          <Button className="bg-yammy-blue hover:bg-yammy-dark-blue" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Product
-              </>
-            )}
-          </Button>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Add New Product</h1>
+        <Button variant="outline" onClick={() => router.push("/admin/products")}>
+          Cancel
+        </Button>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <Tabs defaultValue="general" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="pricing">Pricing & Inventory</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="details">Product Details</TabsTrigger>
+            <TabsTrigger value="description">Description</TabsTrigger>
             <TabsTrigger value="images">Images</TabsTrigger>
-            <TabsTrigger value="attributes">Attributes</TabsTrigger>
           </TabsList>
 
-          {/* General Tab */}
-          <TabsContent value="general">
+          <TabsContent value="details" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>General Information</CardTitle>
-                <CardDescription>Basic information about the product</CardDescription>
+                <CardTitle>Product Details</CardTitle>
+                <CardDescription>Enter the basic information about the product.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name.en">Product Name (English)</Label>
-                  <Input
-                    id="name.en"
-                    name="name.en"
-                    value={productData.name.en}
-                    onChange={handleChange}
-                    placeholder="Enter product name in English"
-                    required
-                  />
+                {/* Product Name */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name-en">Name (English)</Label>
+                    <Input
+                      id="name-en"
+                      value={name.en}
+                      onChange={(e) => setName({ ...name, en: e.target.value })}
+                      placeholder="Product name in English"
+                      className={errors.nameEn ? "border-red-500" : ""}
+                    />
+                    {errors.nameEn && <p className="text-sm text-red-500">{errors.nameEn}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name-sw">Name (Swahili)</Label>
+                    <Input
+                      id="name-sw"
+                      value={name.sw}
+                      onChange={(e) => setName({ ...name, sw: e.target.value })}
+                      placeholder="Product name in Swahili"
+                      className={errors.nameSw ? "border-red-500" : ""}
+                    />
+                    {errors.nameSw && <p className="text-sm text-red-500">{errors.nameSw}</p>}
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="name.sw">Product Name (Swahili)</Label>
-                  <Input
-                    id="name.sw"
-                    name="name.sw"
-                    value={productData.name.sw}
-                    onChange={handleChange}
-                    placeholder="Enter product name in Swahili"
-                    required
-                  />
-                </div>
-
+                {/* Category */}
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select value={productData.category} onValueChange={(value) => handleSelectChange("category", value)}>
-                    <SelectTrigger id="category">
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger id="category" className={errors.category ? "border-red-500" : ""}>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="babyDiapers">Baby Diapers</SelectItem>
                       <SelectItem value="babyPants">Baby Pants</SelectItem>
                       <SelectItem value="adultDiapers">Adult Diapers</SelectItem>
+                      <SelectItem value="ladyPads">Lady Pads</SelectItem>
                     </SelectContent>
                   </Select>
+                  {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="description.en">Description (English)</Label>
-                  <Textarea
-                    id="description.en"
-                    name="description.en"
-                    value={productData.description.en}
-                    onChange={handleChange}
-                    placeholder="Enter product description in English"
-                    rows={5}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description.sw">Description (Swahili)</Label>
-                  <Textarea
-                    id="description.sw"
-                    name="description.sw"
-                    value={productData.description.sw}
-                    onChange={handleChange}
-                    placeholder="Enter product description in Swahili"
-                    rows={5}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={productData.status} onValueChange={(value) => handleSelectChange("status", value)}>
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Pricing Tab */}
-          <TabsContent value="pricing">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pricing & Inventory</CardTitle>
-                <CardDescription>Set prices and manage inventory</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">Retail Price (TZS)</Label>
-                  <Input
-                    id="price"
-                    name="price"
-                    type="number"
-                    value={productData.price}
-                    onChange={handleChange}
-                    placeholder="Enter retail price"
-                    required
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2 mb-4">
-                  <Switch
-                    id="isWholesale"
-                    checked={productData.isWholesale}
-                    onCheckedChange={(checked) => handleSwitchChange("isWholesale", checked)}
-                  />
-                  <Label htmlFor="isWholesale">This product is available for wholesale</Label>
-                </div>
-
-                {productData.isWholesale && (
-                  <div className="space-y-2">
-                    <Label htmlFor="wholesalePrice">Wholesale Price (TZS)</Label>
-                    <Input
-                      id="wholesalePrice"
-                      name="wholesalePrice"
-                      type="number"
-                      value={productData.wholesalePrice}
-                      onChange={handleChange}
-                      placeholder="Enter wholesale price"
-                    />
-                  </div>
-                )}
-
+                {/* Price */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="bundleSize">Bundle Size (pieces)</Label>
+                    <Label htmlFor="price">Price (TZS)</Label>
                     <Input
-                      id="bundleSize"
-                      name="bundleSize"
-                      type="number"
-                      value={productData.bundleSize}
-                      onChange={handleChange}
-                      placeholder="Number of pieces per bundle"
+                      id="price"
+                      type="text"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="Retail price"
+                      className={errors.price ? "border-red-500" : ""}
+                    />
+                    {errors.price && <p className="text-sm text-red-500">{errors.price}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="wholesale-price">Wholesale Price (TZS)</Label>
+                    <Input
+                      id="wholesale-price"
+                      type="text"
+                      value={wholesalePrice}
+                      onChange={(e) => setWholesalePrice(e.target.value)}
+                      placeholder="Wholesale price (optional)"
+                      className={errors.wholesalePrice ? "border-red-500" : ""}
+                    />
+                    {errors.wholesalePrice && <p className="text-sm text-red-500">{errors.wholesalePrice}</p>}
+                  </div>
+                </div>
+
+                {/* Size */}
+                <div className="space-y-2">
+                  <Label htmlFor="size">Size</Label>
+                  <Select value={size} onValueChange={setSize}>
+                    <SelectTrigger id="size">
+                      <SelectValue placeholder="Select size (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                      <SelectItem value="extraLarge">Extra Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Bundle Size */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bundle-size">Bundle Size</Label>
+                    <Input
+                      id="bundle-size"
+                      value={bundleSize}
+                      onChange={(e) => setBundleSize(e.target.value)}
+                      placeholder="e.g., 10 pieces"
+                      className={errors.bundleSize ? "border-red-500" : ""}
+                    />
+                    {errors.bundleSize && <p className="text-sm text-red-500">{errors.bundleSize}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="carton-size">Carton Size</Label>
+                    <Input
+                      id="carton-size"
+                      value={cartonSize}
+                      onChange={(e) => setCartonSize(e.target.value)}
+                      placeholder="e.g., 100 pieces (optional)"
                     />
                   </div>
+                </div>
 
+                {/* Weight Range / Hip Size */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="size">Size</Label>
-                    <Select value={productData.size} onValueChange={(value) => handleSelectChange("size", value)}>
-                      <SelectTrigger id="size">
-                        <SelectValue placeholder="Select size" />
+                    <Label htmlFor="weight-range">Weight Range</Label>
+                    <Input
+                      id="weight-range"
+                      value={weightRange}
+                      onChange={(e) => setWeightRange(e.target.value)}
+                      placeholder="e.g., 3-6 kg (optional)"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hip-size">Hip Size</Label>
+                    <Input
+                      id="hip-size"
+                      value={hipSize}
+                      onChange={(e) => setHipSize(e.target.value)}
+                      placeholder="e.g., 60-90 cm (optional)"
+                    />
+                  </div>
+                </div>
+
+                {/* Stock & Status */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="stock">Stock</Label>
+                    <Input
+                      id="stock"
+                      type="text"
+                      value={stock}
+                      onChange={(e) => setStock(e.target.value)}
+                      placeholder="Available quantity"
+                      className={errors.stock ? "border-red-500" : ""}
+                    />
+                    {errors.stock && <p className="text-sm text-red-500">{errors.stock}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={status} onValueChange={(value) => setStatus(value as any)}>
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="small">Small</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="large">Large</SelectItem>
-                        <SelectItem value="extraLarge">Extra Large</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="low_stock">Low Stock</SelectItem>
+                        <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
+                {/* Tags */}
                 <div className="space-y-2">
-                  <Label htmlFor="stock">Stock Quantity</Label>
-                  <Input
-                    id="stock"
-                    name="stock"
-                    type="number"
-                    value={productData.stock}
-                    onChange={handleChange}
-                    placeholder="Enter stock quantity"
-                    required
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Images Tab */}
-          <TabsContent value="images">
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Images</CardTitle>
-                <CardDescription>Upload images of your product</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                  <Input
-                    id="images"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-                  <Label htmlFor="images" className="cursor-pointer flex flex-col items-center">
-                    <Upload className="h-10 w-10 text-gray-400 mb-2" />
-                    <span className="text-sm font-medium">Click to upload or drag and drop</span>
-                    <span className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</span>
-                  </Label>
-                </div>
-
-                {productData.images.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    {productData.images.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square rounded-md overflow-hidden border">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={image || "/placeholder.svg"}
-                            alt={`Product image ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => removeImage(image)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Attributes Tab */}
-          <TabsContent value="attributes">
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Attributes</CardTitle>
-                <CardDescription>Add additional information about the product</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Tags</Label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {productData.tags.map((tag, index) => (
-                      <div
-                        key={index}
-                        className="bg-yammy-light-blue text-yammy-blue px-3 py-1 rounded-full text-sm flex items-center"
-                      >
-                        {tag}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 ml-1 hover:bg-transparent"
-                          onClick={() => removeTag(tag)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                  <Label htmlFor="tags">Tags</Label>
                   <div className="flex gap-2">
                     <Input
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
+                      id="tags"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
                       placeholder="Add a tag"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault()
-                          addTag()
+                          handleAddTag()
                         }
                       }}
                     />
-                    <Button type="button" onClick={addTag} className="bg-yammy-blue hover:bg-yammy-dark-blue">
+                    <Button type="button" variant="outline" onClick={handleAddTag}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Examples: bestSeller, newArrival, highAbsorption, japanStandard
-                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Switches */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch id="is-carton" checked={isCarton} onCheckedChange={setIsCarton} />
+                    <Label htmlFor="is-carton">Sold as Carton</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch id="featured" checked={featured} onCheckedChange={setFeatured} />
+                    <Label htmlFor="featured">Featured Product</Label>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="description" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Description</CardTitle>
+                <CardDescription>Provide detailed information about the product.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="description-en">Description (English)</Label>
+                  <Textarea
+                    id="description-en"
+                    value={description.en}
+                    onChange={(e) => setDescription({ ...description, en: e.target.value })}
+                    placeholder="Detailed description in English"
+                    rows={6}
+                    className={errors.descriptionEn ? "border-red-500" : ""}
+                  />
+                  {errors.descriptionEn && <p className="text-sm text-red-500">{errors.descriptionEn}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description-sw">Description (Swahili)</Label>
+                  <Textarea
+                    id="description-sw"
+                    value={description.sw}
+                    onChange={(e) => setDescription({ ...description, sw: e.target.value })}
+                    placeholder="Detailed description in Swahili"
+                    rows={6}
+                    className={errors.descriptionSw ? "border-red-500" : ""}
+                  />
+                  {errors.descriptionSw && <p className="text-sm text-red-500">{errors.descriptionSw}</p>}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="images" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Images</CardTitle>
+                <CardDescription>Upload images of the product.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input
+                      type="file"
+                      id="image-upload"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <Label htmlFor="image-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                      <Upload className="h-10 w-10 text-gray-400 mb-2" />
+                      <span className="text-sm font-medium text-gray-600">Click to upload images</span>
+                      <span className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</span>
+                    </Label>
+                  </div>
+
+                  {images.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                      {images.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square rounded-md overflow-hidden bg-gray-100">
+                            <img
+                              src={image || "/placeholder.svg"}
+                              alt={`Product ${index + 1}`}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4 text-red-500" />
+                          </button>
+                          {index === 0 && <Badge className="absolute top-1 left-1 bg-blue-500">Primary</Badge>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        <div className="mt-6 flex justify-end gap-4">
+          <Button variant="outline" type="button" onClick={() => router.push("/admin/products")}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Save Product
+              </>
+            )}
+          </Button>
+        </div>
       </form>
     </div>
   )
