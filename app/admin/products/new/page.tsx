@@ -97,13 +97,17 @@ export default function NewProductPage() {
     const files = e.target.files
     if (!files) return
 
-    // In a real app, you would upload these to a storage service
-    // Here we're just creating object URLs for preview
-    const newImages = Array.from(files).map((file) => URL.createObjectURL(file))
-
-    setProductData({
-      ...productData,
-      images: [...productData.images, ...newImages],
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setProductData({
+            ...productData,
+            images: [...productData.images, event.target.result as string],
+          })
+        }
+      }
+      reader.readAsDataURL(file)
     })
   }
 
@@ -143,7 +147,7 @@ export default function NewProductPage() {
         stock: Number(productData.stock),
         status: productData.status as "active" | "low_stock" | "out_of_stock" | "draft",
         tags: productData.tags,
-        image: productData.images.length > 0 ? productData.images[0] : "/placeholder.svg",
+        image: productData.images.length > 0 ? productData.images[0] : "/assorted-products-display.png",
       }
 
       // Add product to store

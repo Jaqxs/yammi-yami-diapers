@@ -365,10 +365,14 @@ export default function ProductsPage() {
               >
                 <div className="relative h-64 bg-yammy-light-blue">
                   <Image
-                    src={product.image || "/placeholder.svg"}
+                    src={product.image || "/placeholder.svg?height=300&width=300&query=product"}
                     alt={product.name[language]}
                     fill
                     className="object-contain p-4"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src = "/assorted-products-display.png"
+                    }}
                   />
                   {/* Product tags */}
                   <div className="absolute top-2 left-2 flex flex-col gap-1">

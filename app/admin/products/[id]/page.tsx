@@ -34,8 +34,13 @@ export default function ViewProductPage() {
     const fetchProduct = async () => {
       setIsLoading(true)
       try {
-        await loadProducts()
         const productId = Number(params.id)
+
+        // Check if products are already loaded
+        if (state.products.length === 0) {
+          await loadProducts()
+        }
+
         const foundProduct = state.products.find((p) => p.id === productId)
 
         if (foundProduct) {
@@ -61,7 +66,7 @@ export default function ViewProductPage() {
     }
 
     fetchProduct()
-  }, [params.id, loadProducts, state.products, router, toast])
+  }, [params.id, loadProducts, router, toast])
 
   // Handle delete
   const handleDelete = async () => {

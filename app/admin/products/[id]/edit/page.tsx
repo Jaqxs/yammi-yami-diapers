@@ -4,16 +4,16 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Save, X, Upload, Plus } from "lucide-react"
+import { ArrowLeft, Save, Upload } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
 import { useStore } from "@/lib/store"
 
@@ -22,51 +22,53 @@ export default function EditProductPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { state, loadProducts, updateProduct } = useStore()
+
   const [isLoading, setIsLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [productData, setProductData] = useState({
+  const [isSaving, setIsSaving] = useState(false)
+  const [formData, setFormData] = useState({
     id: 0,
     name: {
       en: "",
       sw: "",
     },
     category: "",
+    price: 0,
+    wholesalePrice: 0,
+    size: "",
+    bundleSize: "",
+    cartonSize: "",
+    image: "",
+    tags: [] as string[],
+    weightRange: "",
+    hipSize: "",
     description: {
       en: "",
       sw: "",
     },
-    price: "",
-    wholesalePrice: "",
-    size: "",
-    bundleSize: "",
-    stock: "",
-    status: "active",
-    isWholesale: false,
-    tags: [] as string[],
-    images: [] as string[],
-    image: "",
+    stock: 0,
+    status: "active" as "active" | "low_stock" | "out_of_stock" | "draft",
+    isCarton: false,
     featured: false,
   })
+
+  const [tagInput, setTagInput] = useState("")
 
   // Load product data
   useEffect(() => {
     const fetchProduct = async () => {
       setIsLoading(true)
       try {
-        await loadProducts()
         const productId = Number(params.id)
+
+        // Check if products are already loaded
+        if (state.products.length === 0) {
+          await loadProducts()
+        }
+
         const foundProduct = state.products.find((p) => p.id === productId)
 
         if (foundProduct) {
-          setProductData({
-            ...foundProduct,
-            price: foundProduct.price.toString(),
-            wholesalePrice: foundProduct.wholesalePrice ? foundProduct.wholesalePrice.toString() : "",
-            bundleSize: foundProduct.bundleSize ? foundProduct.bundleSize.toString() : "",
-            stock: foundProduct.stock.toString(),
-            isWholesale: !!foundProduct.wholesalePrice,
-            images: foundProduct.image ? [foundProduct.image] : [],
-          })
+          setFormData(foundProduct)
         } else {
           toast({
             title: "Product not found",
@@ -88,126 +90,67 @@ export default function EditProductPage() {
     }
 
     fetchProduct()
-  }, [params.id, loadProducts, state.products, router, toast])
+  }, [params.id, loadProducts, router, toast])
 
   // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => {
+      if (field.includes(".")) {
+        const [parent, child] = field.split(".")
+        return {
+          ...prev,
+          [parent]: {
+            ...prev[parent as keyof typeof prev],
+            [child]: value,
+          },
+        }
+      }
+      return {
+        ...prev,
+        [field]: value,
+      }
+    })
+  }
 
-    // Handle nested properties
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".")
-      setProductData({
-        ...productData,
-        [parent]: {
-          ...productData[parent as keyof typeof productData],
-          [child]: value,
-        },
-      })
-    } else {
-      setProductData({ ...productData, [name]: value })
+  // Handle number input changes
+  const handleNumberChange = (field: string, value: string) => {
+    const numValue = value === "" ? 0 : Number(value)
+    handleChange(field, numValue)
+  }
+
+  // Handle tag input
+  const handleAddTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, tagInput.trim()],
+      }))
+      setTagInput("")
     }
   }
 
-  // Handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    setProductData({ ...productData, [name]: value })
-  }
-
-  // Handle switch changes
-  const handleSwitchChange = (name: string, checked: boolean) => {
-    setProductData({ ...productData, [name]: checked })
-  }
-
-  // Handle tag changes
-  const [newTag, setNewTag] = useState("")
-
-  const addTag = () => {
-    if (newTag.trim() && !productData.tags?.includes(newTag.trim())) {
-      setProductData({
-        ...productData,
-        tags: [...(productData.tags || []), newTag.trim()],
-      })
-      setNewTag("")
-    }
-  }
-
-  const removeTag = (tagToRemove: string) => {
-    setProductData({
-      ...productData,
-      tags: productData.tags?.filter((tag) => tag !== tagToRemove) || [],
-    })
-  }
-
-  // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files) return
-
-    // In a real app, you would upload these to a storage service
-    // Here we're just creating object URLs for preview
-    const newImages = Array.from(files).map((file) => URL.createObjectURL(file))
-
-    setProductData({
-      ...productData,
-      images: [...productData.images, ...newImages],
-    })
-  }
-
-  const removeImage = (imageToRemove: string) => {
-    setProductData({
-      ...productData,
-      images: productData.images.filter((image) => image !== imageToRemove),
-    })
+  const handleRemoveTag = (tag: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((t) => t !== tag),
+    }))
   }
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
+    setIsSaving(true)
 
     try {
-      // Validate required fields
-      if (!productData.name.en || !productData.category || !productData.price || !productData.stock) {
-        toast({
-          title: "Missing required fields",
-          description: "Please fill in all required fields",
-          variant: "destructive",
-        })
-        setIsSubmitting(false)
-        return
-      }
-
-      // Prepare product data
-      const updatedProduct = {
-        id: productData.id,
-        name: productData.name,
-        category: productData.category,
-        description: productData.description,
-        price: Number(productData.price),
-        wholesalePrice: productData.wholesalePrice ? Number(productData.wholesalePrice) : undefined,
-        size: productData.size || undefined,
-        bundleSize: productData.bundleSize ? productData.bundleSize.toString() : undefined,
-        stock: Number(productData.stock),
-        status: productData.status as "active" | "low_stock" | "out_of_stock" | "draft",
-        tags: productData.tags,
-        image: productData.images.length > 0 ? productData.images[0] : "/placeholder.svg",
-        featured: productData.featured,
-      }
-
-      // Update product in store
-      await updateProduct(updatedProduct)
-
+      await updateProduct(formData)
       toast({
         title: "Product updated",
         description: "The product has been updated successfully",
       })
 
-      // Force a refresh of products by calling loadProducts before navigating
+      // Refresh products data before navigating
       await loadProducts()
-
-      // Navigate back to product view page
-      router.push(`/admin/products/${productData.id}`)
+      router.push("/admin/products")
     } catch (error) {
       console.error("Failed to update product:", error)
       toast({
@@ -216,13 +159,26 @@ export default function EditProductPage() {
         variant: "destructive",
       })
     } finally {
-      setIsSubmitting(false)
+      setIsSaving(false)
     }
   }
 
-  // Handle cancel
-  const handleCancel = () => {
-    router.push(`/admin/products/${productData.id}`)
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setFormData({
+            ...formData,
+            image: event.target.result as string,
+          })
+        }
+      }
+      reader.readAsDataURL(file)
+    })
   }
 
   if (isLoading) {
@@ -245,127 +201,143 @@ export default function EditProductPage() {
           <p className="text-gray-500">Update product information</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleCancel}>
-            <X className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={() => router.push(`/admin/products/${params.id}`)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Cancel
           </Button>
-          <Button className="bg-yammy-blue hover:bg-yammy-dark-blue" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </>
-            )}
+          <Button className="bg-yammy-blue hover:bg-yammy-dark-blue" onClick={handleSubmit} disabled={isSaving}>
+            <Save className="mr-2 h-4 w-4" />
+            {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <Tabs defaultValue="general" className="space-y-4">
+        <Tabs defaultValue="details" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="pricing">Pricing & Inventory</TabsTrigger>
             <TabsTrigger value="images">Images</TabsTrigger>
-            <TabsTrigger value="attributes">Attributes</TabsTrigger>
           </TabsList>
 
-          {/* General Tab */}
-          <TabsContent value="general">
+          {/* Details Tab */}
+          <TabsContent value="details">
             <Card>
               <CardHeader>
-                <CardTitle>General Information</CardTitle>
+                <CardTitle>Product Information</CardTitle>
                 <CardDescription>Basic information about the product</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name.en">Product Name (English)</Label>
-                  <Input
-                    id="name.en"
-                    name="name.en"
-                    value={productData.name.en}
-                    onChange={handleChange}
-                    placeholder="Enter product name in English"
-                    required
-                  />
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="name-en">Product Name (English)</Label>
+                    <Input
+                      id="name-en"
+                      value={formData.name.en}
+                      onChange={(e) => handleChange("name.en", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name-sw">Product Name (Swahili)</Label>
+                    <Input
+                      id="name-sw"
+                      value={formData.name.sw}
+                      onChange={(e) => handleChange("name.sw", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={formData.category} onValueChange={(value) => handleChange("category", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="babyDiapers">Baby Diapers</SelectItem>
+                        <SelectItem value="babyPants">Baby Pants</SelectItem>
+                        <SelectItem value="adultDiapers">Adult Diapers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value: "active" | "low_stock" | "out_of_stock" | "draft") =>
+                        handleChange("status", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="low_stock">Low Stock</SelectItem>
+                        <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name.sw">Product Name (Swahili)</Label>
-                  <Input
-                    id="name.sw"
-                    name="name.sw"
-                    value={productData.name.sw}
-                    onChange={handleChange}
-                    placeholder="Enter product name in Swahili"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={productData.category} onValueChange={(value) => handleSelectChange("category", value)}>
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="babyDiapers">Baby Diapers</SelectItem>
-                      <SelectItem value="babyPants">Baby Pants</SelectItem>
-                      <SelectItem value="adultDiapers">Adult Diapers</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description.en">Description (English)</Label>
+                  <Label htmlFor="description-en">Description (English)</Label>
                   <Textarea
-                    id="description.en"
-                    name="description.en"
-                    value={productData.description.en}
-                    onChange={handleChange}
-                    placeholder="Enter product description in English"
-                    rows={5}
+                    id="description-en"
+                    value={formData.description.en}
+                    onChange={(e) => handleChange("description.en", e.target.value)}
+                    rows={4}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description.sw">Description (Swahili)</Label>
+                  <Label htmlFor="description-sw">Description (Swahili)</Label>
                   <Textarea
-                    id="description.sw"
-                    name="description.sw"
-                    value={productData.description.sw}
-                    onChange={handleChange}
-                    placeholder="Enter product description in Swahili"
-                    rows={5}
+                    id="description-sw"
+                    value={formData.description.sw}
+                    onChange={(e) => handleChange("description.sw", e.target.value)}
+                    rows={4}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={productData.status} onValueChange={(value) => handleSelectChange("status", value)}>
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="low_stock">Low Stock</SelectItem>
-                      <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="featured"
-                    checked={productData.featured}
-                    onCheckedChange={(checked) => handleSwitchChange("featured", checked)}
-                  />
-                  <Label htmlFor="featured">Featured product (shown on homepage)</Label>
+                  <Label htmlFor="tags">Tags</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="tags"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      placeholder="Add a tag"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          handleAddTag()
+                        }
+                      }}
+                    />
+                    <Button type="button" onClick={handleAddTag}>
+                      Add
+                    </Button>
+                  </div>
+                  {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.tags.map((tag, index) => (
+                        <div
+                          key={index}
+                          className="bg-yammy-light-blue text-yammy-blue px-3 py-1 rounded-full flex items-center gap-1"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tag)}
+                            className="text-yammy-blue hover:text-yammy-dark-blue"
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -376,86 +348,97 @@ export default function EditProductPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Pricing & Inventory</CardTitle>
-                <CardDescription>Set prices and manage inventory</CardDescription>
+                <CardDescription>Price and stock information</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">Retail Price (TZS)</Label>
-                  <Input
-                    id="price"
-                    name="price"
-                    type="number"
-                    value={productData.price}
-                    onChange={handleChange}
-                    placeholder="Enter retail price"
-                    required
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2 mb-4">
-                  <Switch
-                    id="isWholesale"
-                    checked={productData.isWholesale}
-                    onCheckedChange={(checked) => handleSwitchChange("isWholesale", checked)}
-                  />
-                  <Label htmlFor="isWholesale">This product is available for wholesale</Label>
-                </div>
-
-                {productData.isWholesale && (
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Retail Price (TZS)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      value={formData.price || ""}
+                      onChange={(e) => handleNumberChange("price", e.target.value)}
+                      required
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="wholesalePrice">Wholesale Price (TZS)</Label>
                     <Input
                       id="wholesalePrice"
-                      name="wholesalePrice"
                       type="number"
-                      value={productData.wholesalePrice}
-                      onChange={handleChange}
-                      placeholder="Enter wholesale price"
+                      value={formData.wholesalePrice || ""}
+                      onChange={(e) => handleNumberChange("wholesalePrice", e.target.value)}
                     />
                   </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="bundleSize">Bundle Size (pieces)</Label>
+                    <Label htmlFor="stock">Stock Quantity</Label>
                     <Input
-                      id="bundleSize"
-                      name="bundleSize"
+                      id="stock"
                       type="number"
-                      value={productData.bundleSize}
-                      onChange={handleChange}
-                      placeholder="Number of pieces per bundle"
+                      value={formData.stock || ""}
+                      onChange={(e) => handleNumberChange("stock", e.target.value)}
+                      required
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="size">Size</Label>
-                    <Select value={productData.size || ""} onValueChange={(value) => handleSelectChange("size", value)}>
-                      <SelectTrigger id="size">
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">None</SelectItem>
-                        <SelectItem value="small">Small</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="large">Large</SelectItem>
-                        <SelectItem value="extraLarge">Extra Large</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      id="size"
+                      value={formData.size || ""}
+                      onChange={(e) => handleChange("size", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bundleSize">Bundle Size</Label>
+                    <Input
+                      id="bundleSize"
+                      value={formData.bundleSize || ""}
+                      onChange={(e) => handleChange("bundleSize", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cartonSize">Carton Size</Label>
+                    <Input
+                      id="cartonSize"
+                      value={formData.cartonSize || ""}
+                      onChange={(e) => handleChange("cartonSize", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="weightRange">Weight Range</Label>
+                    <Input
+                      id="weightRange"
+                      value={formData.weightRange || ""}
+                      onChange={(e) => handleChange("weightRange", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hipSize">Hip Size</Label>
+                    <Input
+                      id="hipSize"
+                      value={formData.hipSize || ""}
+                      onChange={(e) => handleChange("hipSize", e.target.value)}
+                    />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="stock">Stock Quantity</Label>
-                  <Input
-                    id="stock"
-                    name="stock"
-                    type="number"
-                    value={productData.stock}
-                    onChange={handleChange}
-                    placeholder="Enter stock quantity"
-                    required
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="isCarton"
+                    checked={formData.isCarton}
+                    onCheckedChange={(checked) => handleChange("isCarton", checked)}
                   />
+                  <Label htmlFor="isCarton">Sell as Carton</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="featured"
+                    checked={formData.featured}
+                    onCheckedChange={(checked) => handleChange("featured", checked)}
+                  />
+                  <Label htmlFor="featured">Featured Product</Label>
                 </div>
               </CardContent>
             </Card>
@@ -471,96 +454,32 @@ export default function EditProductPage() {
               <CardContent className="space-y-4">
                 <div className="border-2 border-dashed rounded-lg p-6 text-center">
                   <Input
-                    id="images"
+                    id="image-upload"
                     type="file"
                     accept="image/*"
-                    multiple
                     className="hidden"
                     onChange={handleImageUpload}
                   />
-                  <Label htmlFor="images" className="cursor-pointer flex flex-col items-center">
+                  <Label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center">
                     <Upload className="h-10 w-10 text-gray-400 mb-2" />
                     <span className="text-sm font-medium">Click to upload or drag and drop</span>
                     <span className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</span>
                   </Label>
                 </div>
 
-                {productData.images.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    {productData.images.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square rounded-md overflow-hidden border">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={image || "/placeholder.svg"}
-                            alt={`Product image ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => removeImage(image)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
+                {formData.image && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium mb-2">Current Image</p>
+                    <div className="aspect-square w-full max-w-md mx-auto rounded-md overflow-hidden border">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={formData.image || "/placeholder.svg"}
+                        alt="Product preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Attributes Tab */}
-          <TabsContent value="attributes">
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Attributes</CardTitle>
-                <CardDescription>Add additional information about the product</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Tags</Label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {productData.tags?.map((tag, index) => (
-                      <div
-                        key={index}
-                        className="bg-yammy-light-blue text-yammy-blue px-3 py-1 rounded-full text-sm flex items-center"
-                      >
-                        {tag}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 ml-1 hover:bg-transparent"
-                          onClick={() => removeTag(tag)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="Add a tag"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault()
-                          addTag()
-                        }
-                      }}
-                    />
-                    <Button type="button" onClick={addTag} className="bg-yammy-blue hover:bg-yammy-dark-blue">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Examples: bestSeller, newArrival, highAbsorption, japanStandard
-                  </p>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
