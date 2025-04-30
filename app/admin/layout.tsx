@@ -4,7 +4,17 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { LayoutDashboard, Package, ShoppingCart, FileText, BarChart, Settings, LogOut, Menu } from "lucide-react"
+import {
+  LayoutDashboard,
+  Package,
+  FileText,
+  BarChart,
+  Settings,
+  LogOut,
+  Menu,
+  Users,
+  ClipboardCheck,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -105,8 +115,9 @@ export default function AdminLayout({
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
     { icon: Package, label: "Products", href: "/admin/products" },
-    { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
     { icon: FileText, label: "Blog Articles", href: "/admin/blog" },
+    { icon: Users, label: "Agents", href: "/admin/agents" },
+    { icon: ClipboardCheck, label: "Registrations", href: "/admin/registrations" },
     { icon: BarChart, label: "Analytics", href: "/admin/analytics" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ]

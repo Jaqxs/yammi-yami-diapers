@@ -4,6 +4,8 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 import { mockProducts } from "@/data/mock-products"
 import { mockOrders } from "@/data/mock-orders"
 import { mockBlogPosts } from "@/data/mock-blog-posts"
+import { mockAgents } from "@/data/mock-agents"
+import { mockRegistrations } from "@/data/mock-registrations"
 
 // Define types for our state
 export type Product = {
@@ -79,63 +81,121 @@ export type BlogPost = {
       }
 }
 
+export type Agent = {
+  id: number
+  name: string
+  location: string
+  phone: string
+  region: string
+}
+
+export type Registration = {
+  id: number
+  name: string
+  email: string
+  phone: string
+  paymentReference: string
+  status: "pending" | "approved" | "rejected"
+  date: string
+  notes?: string
+  reviewedBy?: string
+  reviewDate?: string
+}
+
 interface AppState {
   products: Product[]
   orders: Order[]
   blogPosts: BlogPost[]
+  agents: Agent[]
+  registrations: Registration[]
   lastUpdated: {
     products: number
     orders: number
     blogPosts: number
+    agents: number
+    registrations: number
   }
 }
 
-// Store context
-const StoreContext = createContext<{
+type NotifyChange = (payload: { type: string; action: string; id: number }) => void
+
+interface StoreContextType {
   state: AppState
   loadProducts: () => Promise<void>
   loadOrders: () => Promise<void>
   loadBlogPosts: () => Promise<void>
+  loadAgents: () => Promise<void>
+  loadRegistrations: () => Promise<void>
   addProduct: (product: Omit<Product, "id">) => Promise<Product>
   updateProduct: (product: Product) => Promise<void>
   deleteProduct: (id: number) => Promise<void>
   addBlogPost: (blogPost: Omit<BlogPost, "id">) => Promise<BlogPost>
   updateBlogPost: (blogPost: BlogPost) => Promise<void>
   deleteBlogPost: (id: number) => Promise<void>
+  addAgent: (agent: Omit<Agent, "id">) => Promise<Agent>
+  updateAgent: (agent: Agent) => Promise<void>
+  deleteAgent: (id: number) => Promise<void>
+  addRegistration: (registration: Omit<Registration, "id" | "date" | "status">) => Promise<Registration>
+  updateRegistration: (registration: Registration) => Promise<void>
+  deleteRegistration: (id: number) => Promise<void>
+  approveRegistration: (id: number, reviewedBy: string, notes?: string) => Promise<void>
+  rejectRegistration: (id: number, reviewedBy: string, notes?: string) => Promise<void>
   refreshData: () => Promise<void>
-}>({
+  notifyChange?: NotifyChange
+}
+
+// Store context
+const StoreContext = createContext<StoreContextType>({
   state: {
     products: [],
     orders: [],
     blogPosts: [],
+    agents: [],
+    registrations: [],
     lastUpdated: {
       products: 0,
       orders: 0,
       blogPosts: 0,
+      agents: 0,
+      registrations: 0,
     },
   },
   loadProducts: async () => {},
   loadOrders: async () => {},
   loadBlogPosts: async () => {},
+  loadAgents: async () => {},
+  loadRegistrations: async () => {},
   addProduct: async () => ({ id: 0 }) as Product,
   updateProduct: async () => {},
   deleteProduct: async () => {},
   addBlogPost: async () => ({ id: 0 }) as BlogPost,
   updateBlogPost: async () => {},
   deleteBlogPost: async () => {},
+  addAgent: async () => ({ id: 0 }) as Agent,
+  updateAgent: async () => {},
+  deleteAgent: async () => {},
+  addRegistration: async () => ({ id: 0 }) as Registration,
+  updateRegistration: async () => {},
+  deleteRegistration: async () => {},
+  approveRegistration: async () => {},
+  rejectRegistration: async () => {},
   refreshData: async () => {},
 })
 
 // Provider component
-export function StoreProvider({ children }: { children: ReactNode }) {
+export function StoreProvider({ children, notifyChange }: { children: ReactNode; notifyChange?: NotifyChange }) {
   const [state, setState] = useState<AppState>({
     products: [],
     orders: [],
     blogPosts: [],
+    agents: [],
+    registrations: [],
     lastUpdated: {
       products: 0,
       orders: 0,
       blogPosts: 0,
+      agents: 0,
+      registrations: 0,
     },
   })
 
@@ -226,10 +286,68 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Load agents from localStorage or mock data
+  const loadAgents = useCallback(async () => {
+    try {
+      const storedAgents = localStorage.getItem("yammy-agents")
+      if (storedAgents) {
+        setState((prev) => ({
+          ...prev,
+          agents: JSON.parse(storedAgents),
+          lastUpdated: {
+            ...prev.lastUpdated,
+            agents: Date.now(),
+          },
+        }))
+      } else {
+        setState((prev) => ({
+          ...prev,
+          agents: mockAgents,
+          lastUpdated: {
+            ...prev.lastUpdated,
+            agents: Date.now(),
+          },
+        }))
+        localStorage.setItem("yammy-agents", JSON.stringify(mockAgents))
+      }
+    } catch (error) {
+      console.error("Failed to load agents:", error)
+    }
+  }, [])
+
+  // Load registrations from localStorage or mock data
+  const loadRegistrations = useCallback(async () => {
+    try {
+      const storedRegistrations = localStorage.getItem("yammy-registrations")
+      if (storedRegistrations) {
+        setState((prev) => ({
+          ...prev,
+          registrations: JSON.parse(storedRegistrations),
+          lastUpdated: {
+            ...prev.lastUpdated,
+            registrations: Date.now(),
+          },
+        }))
+      } else {
+        setState((prev) => ({
+          ...prev,
+          registrations: mockRegistrations,
+          lastUpdated: {
+            ...prev.lastUpdated,
+            registrations: Date.now(),
+          },
+        }))
+        localStorage.setItem("yammy-registrations", JSON.stringify(mockRegistrations))
+      }
+    } catch (error) {
+      console.error("Failed to load registrations:", error)
+    }
+  }, [])
+
   // Refresh all data
   const refreshData = useCallback(async () => {
-    await Promise.all([loadProducts(), loadOrders(), loadBlogPosts()])
-  }, [loadProducts, loadOrders, loadBlogPosts])
+    await Promise.all([loadProducts(), loadOrders(), loadBlogPosts(), loadAgents(), loadRegistrations()])
+  }, [loadProducts, loadOrders, loadBlogPosts, loadAgents, loadRegistrations])
 
   // Add a new product
   const addProduct = useCallback(
@@ -398,6 +516,269 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [state.blogPosts],
   )
 
+  // Add a new agent
+  const addAgent = useCallback(
+    async (agent: Omit<Agent, "id">): Promise<Agent> => {
+      try {
+        const agents = [...state.agents]
+        const maxId = Math.max(...agents.map((a) => a.id), 0)
+        const newAgent = {
+          ...agent,
+          id: maxId + 1,
+        } as Agent
+
+        agents.push(newAgent)
+        localStorage.setItem("yammy-agents", JSON.stringify(agents))
+
+        setState((prev) => ({
+          ...prev,
+          agents,
+          lastUpdated: {
+            ...prev.lastUpdated,
+            agents: Date.now(),
+          },
+        }))
+
+        return newAgent
+      } catch (error) {
+        console.error("Failed to add agent:", error)
+        throw error
+      }
+    },
+    [state.agents],
+  )
+
+  // Update an existing agent
+  const updateAgent = useCallback(
+    async (agent: Agent) => {
+      try {
+        const agents = [...state.agents]
+        const index = agents.findIndex((a) => a.id === agent.id)
+
+        if (index !== -1) {
+          agents[index] = agent
+          localStorage.setItem("yammy-agents", JSON.stringify(agents))
+
+          setState((prev) => ({
+            ...prev,
+            agents,
+            lastUpdated: {
+              ...prev.lastUpdated,
+              agents: Date.now(),
+            },
+          }))
+        }
+      } catch (error) {
+        console.error("Failed to update agent:", error)
+        throw error
+      }
+    },
+    [state.agents],
+  )
+
+  // Delete an agent
+  const deleteAgent = useCallback(
+    async (id: number) => {
+      try {
+        const agents = state.agents.filter((a) => a.id !== id)
+        localStorage.setItem("yammy-agents", JSON.stringify(agents))
+
+        setState((prev) => ({
+          ...prev,
+          agents,
+          lastUpdated: {
+            ...prev.lastUpdated,
+            agents: Date.now(),
+          },
+        }))
+      } catch (error) {
+        console.error("Failed to delete agent:", error)
+        throw error
+      }
+    },
+    [state.agents],
+  )
+
+  // Add a new registration
+  const addRegistration = useCallback(
+    async (registration: Omit<Registration, "id" | "date" | "status">): Promise<Registration> => {
+      try {
+        const registrations = [...state.registrations]
+        const maxId = Math.max(...registrations.map((r) => r.id), 0)
+        const newRegistration = {
+          ...registration,
+          id: maxId + 1,
+          date: new Date().toISOString(),
+          status: "pending" as const,
+        }
+
+        registrations.push(newRegistration)
+        localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
+
+        setState((prev) => ({
+          ...prev,
+          registrations,
+          lastUpdated: {
+            ...prev.lastUpdated,
+            registrations: Date.now(),
+          },
+        }))
+
+        // Notify about the change
+        if (notifyChange) {
+          notifyChange({
+            type: "registration",
+            action: "add",
+            id: newRegistration.id,
+          })
+        }
+
+        return newRegistration
+      } catch (error) {
+        console.error("Failed to add registration:", error)
+        throw error
+      }
+    },
+    [state.registrations, notifyChange],
+  )
+
+  // Update an existing registration
+  const updateRegistration = useCallback(
+    async (registration: Registration) => {
+      try {
+        const registrations = [...state.registrations]
+        const index = registrations.findIndex((r) => r.id === registration.id)
+
+        if (index !== -1) {
+          registrations[index] = registration
+          localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
+
+          setState((prev) => ({
+            ...prev,
+            registrations,
+            lastUpdated: {
+              ...prev.lastUpdated,
+              registrations: Date.now(),
+            },
+          }))
+        }
+      } catch (error) {
+        console.error("Failed to update registration:", error)
+        throw error
+      }
+    },
+    [state.registrations],
+  )
+
+  // Delete a registration
+  const deleteRegistration = useCallback(
+    async (id: number) => {
+      try {
+        const registrations = state.registrations.filter((r) => r.id !== id)
+        localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
+
+        setState((prev) => ({
+          ...prev,
+          registrations,
+          lastUpdated: {
+            ...prev.lastUpdated,
+            registrations: Date.now(),
+          },
+        }))
+      } catch (error) {
+        console.error("Failed to delete registration:", error)
+        throw error
+      }
+    },
+    [state.registrations],
+  )
+
+  // Approve a registration
+  const approveRegistration = useCallback(
+    async (id: number, reviewedBy: string, notes?: string) => {
+      try {
+        const registrations = [...state.registrations]
+        const index = registrations.findIndex((r) => r.id === id)
+
+        if (index !== -1) {
+          registrations[index] = {
+            ...registrations[index],
+            status: "approved",
+            reviewedBy,
+            notes,
+            reviewDate: new Date().toISOString(),
+          }
+          localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
+
+          setState((prev) => ({
+            ...prev,
+            registrations,
+            lastUpdated: {
+              ...prev.lastUpdated,
+              registrations: Date.now(),
+            },
+          }))
+
+          // Notify about the change
+          if (notifyChange) {
+            notifyChange({
+              type: "registration",
+              action: "update",
+              id,
+            })
+          }
+        }
+      } catch (error) {
+        console.error("Failed to approve registration:", error)
+        throw error
+      }
+    },
+    [state.registrations, notifyChange],
+  )
+
+  // Reject a registration
+  const rejectRegistration = useCallback(
+    async (id: number, reviewedBy: string, notes?: string) => {
+      try {
+        const registrations = [...state.registrations]
+        const index = registrations.findIndex((r) => r.id === id)
+
+        if (index !== -1) {
+          registrations[index] = {
+            ...registrations[index],
+            status: "rejected",
+            reviewedBy,
+            notes,
+            reviewDate: new Date().toISOString(),
+          }
+          localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
+
+          setState((prev) => ({
+            ...prev,
+            registrations,
+            lastUpdated: {
+              ...prev.lastUpdated,
+              registrations: Date.now(),
+            },
+          }))
+
+          // Notify about the change
+          if (notifyChange) {
+            notifyChange({
+              type: "registration",
+              action: "update",
+              id,
+            })
+          }
+        }
+      } catch (error) {
+        console.error("Failed to reject registration:", error)
+        throw error
+      }
+    },
+    [state.registrations, notifyChange],
+  )
+
   return (
     <StoreContext.Provider
       value={{
@@ -405,13 +786,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         loadProducts,
         loadOrders,
         loadBlogPosts,
+        loadAgents,
+        loadRegistrations,
         addProduct,
         updateProduct,
         deleteProduct,
         addBlogPost,
         updateBlogPost,
         deleteBlogPost,
+        addAgent,
+        updateAgent,
+        deleteAgent,
+        addRegistration,
+        updateRegistration,
+        deleteRegistration,
+        approveRegistration,
+        rejectRegistration,
         refreshData,
+        notifyChange,
       }}
     >
       {children}

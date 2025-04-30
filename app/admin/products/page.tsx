@@ -80,6 +80,7 @@ export default function ProductsPage() {
     setIsDeleteDialogOpen(true)
   }
 
+  // Update the handleDeleteConfirm function to refresh the product list after deletion
   const handleDeleteConfirm = async () => {
     try {
       if (productToDelete) {
@@ -95,6 +96,9 @@ export default function ProductsPage() {
           title: "Product deleted",
           description: "The product has been deleted successfully",
         })
+
+        // Refresh the product list
+        await fetchProducts()
       } else if (selectedProducts.length > 0) {
         // Delete multiple products
         for (const id of selectedProducts) {
@@ -111,6 +115,9 @@ export default function ProductsPage() {
           title: "Products deleted",
           description: `${selectedProducts.length} products have been deleted successfully`,
         })
+
+        // Refresh the product list
+        await fetchProducts()
       }
     } catch (error) {
       toast({
@@ -124,7 +131,7 @@ export default function ProductsPage() {
     }
   }
 
-  // Handle toggle featured
+  // Update the handleToggleFeatured function to refresh the product list after update
   const handleToggleFeatured = async (id: number) => {
     try {
       const product = state.products.find((p) => p.id === id)
@@ -146,6 +153,9 @@ export default function ProductsPage() {
           title: updatedProduct.featured ? "Added to featured" : "Removed from featured",
           description: `"${product.name.en}" has been ${updatedProduct.featured ? "added to" : "removed from"} featured products`,
         })
+
+        // Refresh the product list
+        await fetchProducts()
       }
     } catch (error) {
       toast({
