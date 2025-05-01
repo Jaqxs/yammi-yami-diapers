@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import Image from "next/image"
-import Link from "next/link"
 import { motion } from "framer-motion"
 import { Search, Calendar, Clock, ChevronRight } from "lucide-react"
 
@@ -16,6 +14,8 @@ import { useLanguage } from "@/components/language-provider"
 import { useStore } from "@/lib/store"
 import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
+import { BlogPostModal } from "@/components/blog-post-modal"
+import type { BlogPost } from "@/lib/store"
 
 // Language translations
 const translations = {
@@ -58,7 +58,6 @@ const translations = {
 }
 
 export default function BlogPage() {
-  const router = useRouter()
   const { language } = useLanguage()
   const { state, loadBlogPosts } = useStore()
   const { lastEvent } = useStoreSync()
@@ -66,6 +65,8 @@ export default function BlogPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("all")
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const t = translations[language || "en"]
 
   // Load blog posts on component mount
@@ -98,6 +99,17 @@ export default function BlogPage() {
     const date = new Date(dateString)
     const options: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" }
     return date.toLocaleDateString(language === "en" ? "en-US" : "sw-TZ", options)
+  }
+
+  // Handle opening the modal with the selected post
+  const handleOpenModal = (post: BlogPost) => {
+    setSelectedPost(post)
+    setIsModalOpen(true)
+  }
+
+  // Handle closing the modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
   }
 
   // Filter blog posts based on search, category, and active tab
@@ -203,7 +215,7 @@ export default function BlogPage() {
                 className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
                 whileHover={{ y: -5 }}
               >
-                <Link href={`/blog/${post.id}`} className="block">
+                <div className="block">
                   <div className="relative h-48">
                     <Image
                       src={post.image || "/placeholder.svg?height=300&width=500&query=blog post"}
@@ -234,12 +246,13 @@ export default function BlogPage() {
                       <Button
                         variant="link"
                         className="p-0 h-auto text-yammy-blue hover:text-yammy-dark-blue font-medium"
+                        onClick={() => handleOpenModal(post)}
                       >
                         {t.readMore} <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
                     </div>
                   </div>
-                </Link>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -249,6 +262,10 @@ export default function BlogPage() {
           </div>
         )}
       </div>
+
+      {/* Blog Post Modal */}
+      <BlogPostModal post={selectedPost} isOpen={isModalOpen} onClose={handleCloseModal} />
+
       {/* Admin Change Notification */}
       <AdminChangeNotification />
     </PageWrapper>

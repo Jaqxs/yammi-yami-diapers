@@ -193,7 +193,7 @@ export default function AboutPage() {
                 />
               </div>
               <div className="p-4 bg-yammy-pink/20">
-                <h3 className="font-bold text-yammy-dark-blue text-lg text-center">{t.influencer}</h3>
+                <h3 className="font-bold text-yammy-dark-blue text-lg text-center">Brand ambasoder</h3>
                 <p className="text-center text-yammy-blue">Yammy Yami Diaper TZ</p>
               </div>
             </motion.div>
