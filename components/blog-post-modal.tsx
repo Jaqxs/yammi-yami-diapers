@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
-import Image from "next/image"
+import { useEffect, useRef } from "react"
 import { Calendar, Clock, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
+import { OptimizedImage } from "@/components/optimized-image"
+import { useIsMobile } from "@/hooks/use-media-query"
 import type { BlogPost } from "@/lib/store"
 
 interface BlogPostModalProps {
@@ -17,6 +18,8 @@ interface BlogPostModalProps {
 
 export function BlogPostModal({ post, isOpen, onClose }: BlogPostModalProps) {
   const { language } = useLanguage()
+  const modalRef = useRef<HTMLDivElement>(null)
+  const isMobile = useIsMobile()
 
   // Close modal on escape key press
   useEffect(() => {
@@ -26,14 +29,23 @@ export function BlogPostModal({ post, isOpen, onClose }: BlogPostModalProps) {
       }
     }
 
+    // Handle click outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose()
+      }
+    }
+
     if (isOpen) {
       document.addEventListener("keydown", handleEscKey)
+      document.addEventListener("mousedown", handleClickOutside)
       // Prevent scrolling when modal is open
       document.body.style.overflow = "hidden"
     }
 
     return () => {
       document.removeEventListener("keydown", handleEscKey)
+      document.removeEventListener("mousedown", handleClickOutside)
       document.body.style.overflow = "auto"
     }
   }, [isOpen, onClose])
@@ -73,8 +85,9 @@ export function BlogPostModal({ post, isOpen, onClose }: BlogPostModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <motion.div
+            ref={modalRef}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
@@ -88,24 +101,28 @@ export function BlogPostModal({ post, isOpen, onClose }: BlogPostModalProps) {
               size="icon"
               className="absolute top-4 right-4 z-10 bg-white/80 hover:bg-white rounded-full"
               onClick={onClose}
+              aria-label="Close"
             >
               <X className="h-5 w-5" />
               <span className="sr-only">Close</span>
             </Button>
 
             {/* Header image */}
-            <div className="relative h-64 w-full">
-              <Image
+            <div className="relative h-48 md:h-64 w-full">
+              <OptimizedImage
                 src={post.image || "/placeholder.svg?height=300&width=500&query=blog post"}
                 alt={post.title[language || "en"]}
                 fill
                 className="object-cover"
+                fallbackSrc="/blog-post-concept.png"
               />
             </div>
 
             {/* Content */}
-            <div className="p-6 md:p-8 overflow-y-auto max-h-[calc(90vh-16rem)]">
-              <h1 className="font-bubblegum text-3xl mb-4 text-yammy-dark-blue">{post.title[language || "en"]}</h1>
+            <div className="p-4 md:p-8 overflow-y-auto max-h-[calc(90vh-16rem)]">
+              <h1 className="font-bubblegum text-2xl md:text-3xl mb-4 text-yammy-dark-blue">
+                {post.title[language || "en"]}
+              </h1>
 
               <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
                 <div className="flex items-center">

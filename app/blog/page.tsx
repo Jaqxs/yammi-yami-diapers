@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import { motion } from "framer-motion"
 import { Search, Calendar, Clock, ChevronRight } from "lucide-react"
+import dynamic from "next/dynamic"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,8 +14,15 @@ import { useLanguage } from "@/components/language-provider"
 import { useStore } from "@/lib/store"
 import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
-import { BlogPostModal } from "@/components/blog-post-modal"
-import type { BlogPost } from "@/lib/store"
+import { OptimizedImage } from "@/components/optimized-image"
+import { useIsMobile } from "@/hooks/use-media-query"
+import { throttle } from "@/lib/performance"
+
+// Dynamically import the modal for better performance
+const BlogPostModal = dynamic(() => import("@/components/blog-post-modal").then((mod) => mod.BlogPostModal), {
+  ssr: false,
+  loading: () => null,
+})
 
 // Language translations
 const translations = {
@@ -57,6 +64,31 @@ const translations = {
   },
 }
 
+// Blog post skeleton component
+function BlogPostSkeleton() {
+  const isMobile = useIsMobile()
+  const columns = isMobile ? 1 : 3
+
+  return (
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-8`}>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="bg-white rounded-2xl shadow-md overflow-hidden">
+          <div className="h-48 bg-gray-200 animate-pulse"></div>
+          <div className="p-6 space-y-4">
+            <div className="h-6 bg-gray-200 animate-pulse rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 animate-pulse rounded w-full"></div>
+            <div className="h-4 bg-gray-200 animate-pulse rounded w-2/3"></div>
+            <div className="flex justify-between">
+              <div className="h-4 bg-gray-200 animate-pulse rounded w-1/3"></div>
+              <div className="h-4 bg-gray-200 animate-pulse rounded w-1/4"></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function BlogPage() {
   const { language } = useLanguage()
   const { state, loadBlogPosts } = useStore()
@@ -65,16 +97,22 @@ export default function BlogPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("all")
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null)
+  const [selectedPost, setSelectedPost] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const isMobile = useIsMobile()
   const t = translations[language || "en"]
 
   // Load blog posts on component mount
   useEffect(() => {
     const fetchBlogPosts = async () => {
       setIsLoading(true)
-      await loadBlogPosts()
-      setIsLoading(false)
+      try {
+        await loadBlogPosts()
+      } catch (error) {
+        console.error("Error loading blog posts:", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     fetchBlogPosts()
@@ -86,8 +124,13 @@ export default function BlogPage() {
       // Refresh blog posts when a blog-related event occurs
       const refreshBlogPosts = async () => {
         setIsLoading(true)
-        await loadBlogPosts()
-        setIsLoading(false)
+        try {
+          await loadBlogPosts()
+        } catch (error) {
+          console.error("Error refreshing blog posts:", error)
+        } finally {
+          setIsLoading(false)
+        }
       }
 
       refreshBlogPosts()
@@ -95,22 +138,32 @@ export default function BlogPage() {
   }, [lastEvent, loadBlogPosts])
 
   // Format date function
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const options: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" }
-    return date.toLocaleDateString(language === "en" ? "en-US" : "sw-TZ", options)
-  }
+  const formatDate = useCallback(
+    (dateString: string) => {
+      const date = new Date(dateString)
+      const options: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" }
+      return date.toLocaleDateString(language === "en" ? "en-US" : "sw-TZ", options)
+    },
+    [language],
+  )
 
   // Handle opening the modal with the selected post
-  const handleOpenModal = (post: BlogPost) => {
+  const handleOpenModal = useCallback((post) => {
     setSelectedPost(post)
     setIsModalOpen(true)
-  }
+  }, [])
 
   // Handle closing the modal
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false)
-  }
+    // Wait for animation to complete before clearing the selected post
+    setTimeout(() => setSelectedPost(null), 300)
+  }, [])
+
+  // Throttled search handler
+  const handleSearchChange = throttle((e) => {
+    setSearchQuery(e.target.value)
+  }, 300)
 
   // Filter blog posts based on search, category, and active tab
   const filteredPosts = state.blogPosts.filter((post) => {
@@ -183,8 +236,7 @@ export default function BlogPage() {
               type="text"
               placeholder={t.search}
               className="pl-10 border-yammy-blue/30 focus:ring-yammy-blue"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
             />
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -203,25 +255,26 @@ export default function BlogPage() {
 
         {/* Blog Posts */}
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin w-10 h-10 border-4 border-yammy-blue border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-500 font-bubblegum text-xl">{t.loading}</p>
-          </div>
+          <BlogPostSkeleton />
         ) : sortedPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {sortedPosts.map((post) => (
               <motion.div
                 key={post.id}
-                className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col"
                 whileHover={{ y: -5 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                <div className="block">
+                <div className="block h-full flex flex-col">
                   <div className="relative h-48">
-                    <Image
+                    <OptimizedImage
                       src={post.image || "/placeholder.svg?height=300&width=500&query=blog post"}
                       alt={post.title[language || "en"]}
                       fill
                       className="object-cover"
+                      fallbackSrc="/blog-post-concept.png"
                     />
                     {post.featured && (
                       <Badge className="absolute top-2 left-2 bg-yammy-orange text-white">
@@ -229,9 +282,9 @@ export default function BlogPage() {
                       </Badge>
                     )}
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 flex-grow flex flex-col">
                     <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">{post.title[language || "en"]}</h3>
-                    <p className="text-gray-600 mb-4 line-clamp-2">{post.excerpt[language || "en"]}</p>
+                    <p className="text-gray-600 mb-4 line-clamp-2 flex-grow">{post.excerpt[language || "en"]}</p>
                     <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />
@@ -242,7 +295,7 @@ export default function BlogPage() {
                         {post.readTime} {t.minutes}
                       </div>
                     </div>
-                    <div className="flex justify-end">
+                    <div className="flex justify-end mt-auto">
                       <Button
                         variant="link"
                         className="p-0 h-auto text-yammy-blue hover:text-yammy-dark-blue font-medium"
@@ -264,7 +317,9 @@ export default function BlogPage() {
       </div>
 
       {/* Blog Post Modal */}
-      <BlogPostModal post={selectedPost} isOpen={isModalOpen} onClose={handleCloseModal} />
+      <Suspense fallback={null}>
+        {selectedPost && <BlogPostModal post={selectedPost} isOpen={isModalOpen} onClose={handleCloseModal} />}
+      </Suspense>
 
       {/* Admin Change Notification */}
       <AdminChangeNotification />

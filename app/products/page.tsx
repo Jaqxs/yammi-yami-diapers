@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import Image from "next/image"
-import { motion } from "framer-motion"
-import { ShoppingCart, Filter, Search, Tag, Star, RefreshCw } from "lucide-react"
+import { useState, useEffect, useCallback, Suspense } from "react"
+import { Filter, Search, Tag, RefreshCw } from "lucide-react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,13 +11,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Slider } from "@/components/ui/slider"
-import { Badge } from "@/components/ui/badge"
 import { PageWrapper } from "@/components/page-wrapper"
 import { useLanguage } from "@/components/language-provider"
-import { useCart } from "@/components/cart-provider"
 import { useStore } from "@/lib/store"
 import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
+import { ProductCard } from "@/components/product-card"
+import { useIsMobile, useIsTablet } from "@/hooks/use-media-query"
+
+// Dynamically import heavy components
+const BrandAmbassadorSection = dynamic(() => import("@/components/brand-ambassador-section"), {
+  loading: () => <div className="h-[400px] bg-yammy-light-blue animate-pulse rounded-lg"></div>,
+  ssr: false,
+})
 
 // Language translations
 const translations = {
@@ -37,30 +42,11 @@ const translations = {
     apply: "Apply Filters",
     reset: "Reset",
     priceRange: "Price Range",
-    addToCart: "Add to Cart",
-    orderViaWhatsApp: "Order via WhatsApp",
     noProducts: "No products found",
     newest: "Newest",
     priceHighToLow: "Price: High to Low",
     priceLowToHigh: "Price: Low to High",
-    small: "Small",
-    medium: "Medium",
-    large: "Large",
-    extraLarge: "Extra Large",
-    viewPricing: "View Pricing",
-    wholesale: "Wholesale Available",
-    japanStandard: "Japan Standard",
-    highAbsorption: "High Absorption",
-    viewDetails: "View Details",
-    pieces: "pieces",
-    bestSeller: "Best Seller",
-    newArrival: "New Arrival",
-    internationalQuality: "International Quality",
     viewAllPricing: "View All Pricing",
-    retailPrice: "Retail Price",
-    wholesalePrice: "Wholesale Price",
-    perBundle: "per bundle",
-    bundleSize: "Bundle Size",
     priceNote: "* Prices in Dar es Salaam/Kariakoo. See Pricing page for details.",
     loading: "Loading products...",
     refresh: "Refresh Products",
@@ -76,43 +62,50 @@ const translations = {
     search: "Tafuta bidhaa...",
     sort: "Panga Kwa",
     price: "Bei",
-    size: "Ukubwa",
+    size: "Size",
     apply: "Tumia Vichujio",
     reset: "Anza Upya",
     priceRange: "Kipimo cha Bei",
-    addToCart: "Ongeza kwenye Kikapu",
-    orderViaWhatsApp: "Agiza kupitia WhatsApp",
     noProducts: "Hakuna bidhaa zilizopatikana",
     newest: "Mpya Zaidi",
     priceHighToLow: "Bei: Juu hadi Chini",
     priceLowToHigh: "Bei: Chini hadi Chini",
-    small: "Ndogo",
-    medium: "Wastani",
-    large: "Kubwa",
-    extraLarge: "Kubwa Zaidi",
-    viewPricing: "Tazama Bei",
-    wholesale: "Jumla Inapatikana",
-    japanStandard: "Kiwango cha Japan",
-    highAbsorption: "Unyonywaji wa Hali ya Juu",
-    viewDetails: "Tazama Maelezo",
-    pieces: "vipande",
-    bestSeller: "Inayouzwa Zaidi",
-    newArrival: "Mpya Sokoni",
-    internationalQuality: "Ubora wa Kimataifa",
     viewAllPricing: "Tazama Bei Zote",
-    retailPrice: "Bei ya Rejareja",
-    wholesalePrice: "Bei ya Jumla",
-    perBundle: "kwa kifurushi",
-    bundleSize: "Ukubwa wa Kifurushi",
     priceNote: "* Bei hizi ni za Dar es Salaam/Kariakoo. Tazama ukurasa wa Bei kwa maelezo zaidi.",
     loading: "Inapakia bidhaa...",
     refresh: "Onyesha Upya Bidhaa",
   },
 }
 
+// Loading skeleton component
+function ProductsSkeleton() {
+  const isMobile = useIsMobile()
+  const isTablet = useIsTablet()
+
+  let columns = 4
+  if (isMobile) columns = 1
+  else if (isTablet) columns = 2
+
+  return (
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6`}>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="bg-white rounded-2xl shadow-md overflow-hidden h-[500px]">
+          <div className="h-64 bg-gray-200 animate-pulse"></div>
+          <div className="p-6 space-y-4">
+            <div className="h-6 bg-gray-200 animate-pulse rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 animate-pulse rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200 animate-pulse rounded w-2/3"></div>
+            <div className="h-10 bg-gray-200 animate-pulse rounded"></div>
+            <div className="h-10 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function ProductsPage() {
   const { language } = useLanguage()
-  const { addItem } = useCart()
   const { state, loadProducts } = useStore()
   const { lastEvent } = useStoreSync()
   const [activeTab, setActiveTab] = useState("all")
@@ -122,8 +115,7 @@ export default function ProductsPage() {
   const [sortOption, setSortOption] = useState("newest")
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [imageLoadError, setImageLoadError] = useState<Record<number, boolean>>({})
-
+  const isMobile = useIsMobile()
   const t = translations[language || "en"]
 
   // Load products on component mount and when sync events occur
@@ -153,9 +145,8 @@ export default function ProductsPage() {
 
           // If we received an "add" action, show a subtle notification
           if (lastEvent.action === "add") {
-            // Reset filters to help user see the new product
+            // Optional: Show a toast or notification that filters are being reset to show new content
             if (searchQuery || activeTab !== "all" || selectedSize) {
-              // Optional: Show a toast or notification that filters are being reset to show new content
               setSearchQuery("")
               setActiveTab("all")
               setSelectedSize(null)
@@ -185,18 +176,15 @@ export default function ProductsPage() {
     }
   }, [loadProducts])
 
-  const formatPrice = (price: number) => {
-    return `TZS ${price.toLocaleString()}`
-  }
-
-  // Handle image load error
-  const handleImageError = (productId: number) => {
-    console.log(`Image load error for product ${productId}`)
-    setImageLoadError((prev) => ({
-      ...prev,
-      [productId]: true,
-    }))
-  }
+  // Handle WhatsApp order
+  const handleWhatsAppOrder = useCallback(
+    (product) => {
+      const message = `Hello, I would like to order: ${product.name[language || "en"]} - TZS ${product.price.toLocaleString()}`
+      const whatsappUrl = `https://wa.me/255773181863?text=${encodeURIComponent(message)}`
+      window.open(whatsappUrl, "_blank")
+    },
+    [language],
+  )
 
   // Filter products based on active filters
   const filteredProducts = state.products.filter((product) => {
@@ -242,36 +230,25 @@ export default function ProductsPage() {
     return b.id - a.id
   })
 
-  // Handle WhatsApp order
-  const handleWhatsAppOrder = (product: (typeof state.products)[0]) => {
-    const message = `Hello, I would like to order: ${product.name[language || "en"]} - ${formatPrice(product.price)}`
-    const whatsappUrl = `https://wa.me/255773181863?text=${encodeURIComponent(message)}`
-    window.open(whatsappUrl, "_blank")
-  }
+  // Process product images to ensure they have proper URLs
+  const processedProducts = sortedProducts.map((product) => {
+    // Make a copy of the product to avoid mutating the original
+    const processedProduct = { ...product }
 
-  const handleAddToCart = (product: (typeof state.products)[0]) => {
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.image,
-      size: product.size,
-      bundleSize: product.bundleSize,
-    })
-  }
-
-  // Get fallback image based on product category
-  const getFallbackImage = (product: (typeof state.products)[0]) => {
-    if (product.category === "babyDiapers") {
-      return "/images/products/baby-diaper-m.png"
-    } else if (product.category === "babyPants") {
-      return "/images/products/baby-diaper-l.png"
-    } else if (product.category === "adultDiapers") {
-      return "/images/products/adult-pants-l.png"
+    // Ensure image has a valid URL or use a placeholder
+    if (!processedProduct.image || processedProduct.image.trim() === "") {
+      // Set category-specific placeholder
+      if (processedProduct.category === "babyDiapers") {
+        processedProduct.image = "/images/baby-diapers.png"
+      } else if (processedProduct.category === "adultDiapers") {
+        processedProduct.image = "/images/diaper-features.png"
+      } else {
+        processedProduct.image = "/assorted-products-display.png"
+      }
     }
-    return "/assorted-products-display.png"
-  }
+
+    return processedProduct
+  })
 
   return (
     <PageWrapper>
@@ -343,8 +320,8 @@ export default function ProductsPage() {
                       className="[&>span]:bg-yammy-blue"
                     />
                     <div className="flex justify-between text-sm text-gray-500">
-                      <span>{formatPrice(priceRange[0])}</span>
-                      <span>{formatPrice(priceRange[1])}</span>
+                      <span>TZS {priceRange[0].toLocaleString()}</span>
+                      <span>TZS {priceRange[1].toLocaleString()}</span>
                     </div>
                   </div>
 
@@ -360,10 +337,10 @@ export default function ProductsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">{language === "en" ? "All sizes" : "Ukubwa wote"}</SelectItem>
-                        <SelectItem value="small">{t.small}</SelectItem>
-                        <SelectItem value="medium">{t.medium}</SelectItem>
-                        <SelectItem value="large">{t.large}</SelectItem>
-                        <SelectItem value="extraLarge">{t.extraLarge}</SelectItem>
+                        <SelectItem value="small">{language === "en" ? "Small" : "Ndogo"}</SelectItem>
+                        <SelectItem value="medium">{language === "en" ? "Medium" : "Wastani"}</SelectItem>
+                        <SelectItem value="large">{language === "en" ? "Large" : "Kubwa"}</SelectItem>
+                        <SelectItem value="extraLarge">{language === "en" ? "Extra Large" : "Kubwa Zaidi"}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -412,7 +389,7 @@ export default function ProductsPage() {
 
         {/* Category Tabs */}
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid w-full grid-cols-5 bg-yammy-light-blue">
+          <TabsList className={`grid w-full ${isMobile ? "grid-cols-2 gap-2" : "grid-cols-5"} bg-yammy-light-blue`}>
             <TabsTrigger
               value="all"
               className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
@@ -425,128 +402,101 @@ export default function ProductsPage() {
             >
               {t.babyDiapers}
             </TabsTrigger>
-            <TabsTrigger
-              value="babyPants"
-              className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
-            >
-              {t.babyPants}
-            </TabsTrigger>
-            <TabsTrigger
-              value="adultDiapers"
-              className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
-            >
-              {t.adultDiapers}
-            </TabsTrigger>
-            <TabsTrigger
-              value="wholesale"
-              className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
-            >
-              {t.wholesale}
-            </TabsTrigger>
+            {!isMobile && (
+              <>
+                <TabsTrigger
+                  value="babyPants"
+                  className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
+                >
+                  {t.babyPants}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="adultDiapers"
+                  className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
+                >
+                  {t.adultDiapers}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="wholesale"
+                  className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
+                >
+                  {language === "en" ? "Wholesale" : "Jumla"}
+                </TabsTrigger>
+              </>
+            )}
+            {isMobile && (
+              <>
+                <TabsTrigger
+                  value="more"
+                  className="font-bubblegum data-[state=active]:bg-yammy-blue data-[state=active]:text-white"
+                  onClick={() => {
+                    // Show a sheet with more category options for mobile
+                    document.getElementById("more-categories-trigger")?.click()
+                  }}
+                >
+                  {language === "en" ? "More..." : "Zaidi..."}
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
         </Tabs>
 
+        {/* Mobile: More Categories Sheet */}
+        {isMobile && (
+          <Sheet>
+            <SheetTrigger id="more-categories-trigger" className="hidden"></SheetTrigger>
+            <SheetContent side="bottom">
+              <SheetHeader>
+                <SheetTitle>{language === "en" ? "Categories" : "Jamii"}</SheetTitle>
+              </SheetHeader>
+              <div className="grid grid-cols-1 gap-2 py-4">
+                <Button
+                  variant={activeTab === "babyPants" ? "default" : "outline"}
+                  className={activeTab === "babyPants" ? "bg-yammy-blue" : ""}
+                  onClick={() => {
+                    setActiveTab("babyPants")
+                    document.getElementById("more-categories-close")?.click()
+                  }}
+                >
+                  {t.babyPants}
+                </Button>
+                <Button
+                  variant={activeTab === "adultDiapers" ? "default" : "outline"}
+                  className={activeTab === "adultDiapers" ? "bg-yammy-blue" : ""}
+                  onClick={() => {
+                    setActiveTab("adultDiapers")
+                    document.getElementById("more-categories-close")?.click()
+                  }}
+                >
+                  {t.adultDiapers}
+                </Button>
+                <Button
+                  variant={activeTab === "wholesale" ? "default" : "outline"}
+                  className={activeTab === "wholesale" ? "bg-yammy-blue" : ""}
+                  onClick={() => {
+                    setActiveTab("wholesale")
+                    document.getElementById("more-categories-close")?.click()
+                  }}
+                >
+                  {language === "en" ? "Wholesale" : "Jumla"}
+                </Button>
+              </div>
+              <Button id="more-categories-close" className="hidden">
+                Close
+              </Button>
+            </SheetContent>
+          </Sheet>
+        )}
+
         {/* Products Grid */}
         {isLoading || isRefreshing ? (
-          <div className="text-center py-12">
-            <div className="animate-spin w-10 h-10 border-4 border-yammy-blue border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-500 font-bubblegum text-xl">{t.loading}</p>
-          </div>
-        ) : sortedProducts.length > 0 ? (
+          <ProductsSkeleton />
+        ) : processedProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sortedProducts.map((product) => (
-              <motion.div
-                key={product.id}
-                className="product-card bg-white rounded-2xl shadow-md overflow-hidden"
-                whileHover={{ y: -10 }}
-              >
-                <div className="relative h-64 bg-yammy-light-blue">
-                  {imageLoadError[product.id] ? (
-                    <Image
-                      src={`${getFallbackImage(product)}?v=${Date.now()}`}
-                      alt={product.name[language || "en"]}
-                      fill
-                      className="object-contain p-4"
-                      onError={() => {
-                        // If even the fallback fails, use a generic placeholder
-                        const img = document.getElementById(`product-img-${product.id}`) as HTMLImageElement
-                        if (img) {
-                          img.src = `/assorted-products-display.png?v=${Date.now()}`
-                        }
-                      }}
-                    />
-                  ) : (
-                    <Image
-                      id={`product-img-${product.id}`}
-                      src={`${product.image || "/placeholder.svg"}?v=${Date.now()}`}
-                      alt={product.name[language || "en"]}
-                      fill
-                      className="object-contain p-4"
-                      onError={() => handleImageError(product.id)}
-                    />
-                  )}
-                  {/* Product tags */}
-                  <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    {product.tags && Array.isArray(product.tags) && product.tags.includes("bestSeller") && (
-                      <Badge className="bg-yammy-orange text-white">{t.bestSeller}</Badge>
-                    )}
-                    {product.tags && Array.isArray(product.tags) && product.tags.includes("newArrival") && (
-                      <Badge className="bg-yammy-pink text-white">{t.newArrival}</Badge>
-                    )}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-bubblegum text-xl mb-1 text-yammy-dark-blue">{product.name[language || "en"]}</h3>
-
-                  {/* Product details */}
-                  <div className="mb-3 text-sm text-gray-600">
-                    {product.size && (
-                      <div>
-                        {language === "en" ? "Size" : "Ukubwa"}: {t[product.size as keyof typeof t] || product.size}
-                        {product.weightRange && ` (${product.weightRange})`}
-                        {product.hipSize && ` (${product.hipSize})`}
-                      </div>
-                    )}
-                    <div>
-                      {language === "en" ? "Bundle Size" : "Ukubwa wa Kifurushi"}: {product.bundleSize} {t.pieces}
-                      {product.cartonSize && ` (${product.cartonSize})`}
-                    </div>
-                  </div>
-
-                  {/* Pricing */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">{t.retailPrice}:</span>
-                      <span className="text-yammy-blue font-bold">{formatPrice(product.price)}</span>
-                    </div>
-                    {product.wholesalePrice && (
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">{t.wholesalePrice}:</span>
-                        <span className="text-yammy-orange font-medium">{formatPrice(product.wholesalePrice)}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      size="sm"
-                      className="w-full bg-yammy-blue hover:bg-yammy-dark-blue rounded-full"
-                      onClick={() => handleAddToCart(product)}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      {t.addToCart}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full border-yammy-blue text-yammy-blue hover:bg-yammy-blue hover:text-white rounded-full"
-                      onClick={() => handleWhatsAppOrder(product)}
-                    >
-                      {t.orderViaWhatsApp}
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
+            {processedProducts.map((product) => (
+              <div key={product.id} className="h-full">
+                <ProductCard product={product} onWhatsAppOrder={handleWhatsAppOrder} />
+              </div>
             ))}
           </div>
         ) : (
@@ -567,43 +517,9 @@ export default function ProductsPage() {
       </div>
 
       {/* Brand Ambassador Testimonial */}
-      <section className="py-12 bg-yammy-light-blue">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="relative h-[400px]">
-              <Image
-                src={`https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-21%20at%2004.17.11_e98c889a.jpg-qImS0ea607vm0WJyywYVFZ0KBHG2zi.jpeg?v=${Date.now()}`}
-                alt="Brand Ambassador with Yammy Yami Products"
-                fill
-                className="object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = `/images/ambassador-6.png?v=${Date.now()}`
-                }}
-              />
-            </div>
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bubblegum text-yammy-dark-blue mb-4">
-                {language === "en" ? "Trusted by Our Ambassadors" : "Inaaminiwa na Mabalozi Wetu"}
-              </h2>
-              <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-yammy-orange text-yammy-orange" />
-                ))}
-              </div>
-              <blockquote className="text-lg italic text-gray-700 mb-6">
-                {language === "en"
-                  ? "I love Yammy Yami products because they provide the perfect combination of comfort, quality, and affordability. As a brand ambassador, I'm proud to represent a company that truly cares about Tanzanian families."
-                  : "Ninapenda bidhaa za Yammy Yami kwa sababu zinatoa mchanganyiko kamili wa faraja, ubora, na bei nafuu. Kama balozi wa bidhaa, ninajivunia kuwakilisha kampuni inayojali kweli familia za Kitanzania."}
-              </blockquote>
-              <p className="font-bold text-yammy-dark-blue">
-                {language === "en" ? "Brand Ambassador" : "Balozi wa Bidhaa"}
-              </p>
-              <p className="text-yammy-blue">Yammy Yami Diaper TZ</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Suspense fallback={<div className="h-[400px] bg-yammy-light-blue animate-pulse rounded-lg"></div>}>
+        <BrandAmbassadorSection />
+      </Suspense>
 
       {/* Admin Change Notification */}
       <AdminChangeNotification />

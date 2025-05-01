@@ -1,13 +1,16 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { siteConfig } from "@/config/site"
 import { CartButton } from "./cart-button"
 import { useLanguage } from "./language-provider"
 import { Button } from "@/components/ui/button"
-import { Globe } from "lucide-react"
+import { Globe, Menu, X } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-media-query"
+import { motion, AnimatePresence } from "framer-motion"
 
 type Props = {}
 
@@ -23,9 +26,47 @@ const navigationItems = [
 
 export function Navbar({}: Props) {
   const { language, setLanguage } = useLanguage()
+  const isMobile = useIsMobile()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  // Close mobile menu when switching to desktop
+  useEffect(() => {
+    if (!isMobile && isMenuOpen) {
+      setIsMenuOpen(false)
+    }
+  }, [isMobile, isMenuOpen])
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "auto"
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"
+    }
+  }, [isMenuOpen])
 
   return (
-    <div className="border-b">
+    <header
+      className={cn(
+        "sticky top-0 z-40 w-full transition-all duration-200",
+        scrolled ? "bg-white/95 backdrop-blur-sm shadow-sm" : "bg-white",
+      )}
+    >
       <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
         <div className="flex flex-1 items-center space-x-0">
           <Link href="/" className="mr-6 flex items-center space-x-2">
@@ -34,20 +75,26 @@ export function Navbar({}: Props) {
             </div>
             <span className="hidden font-bold sm:inline-block">{siteConfig.name}</span>
           </Link>
-          <nav className="flex items-center space-x-6">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-sm font-medium transition-colors hover:text-yammy-blue"
-              >
-                {item.name[language || "en"]}
-              </Link>
-            ))}
-          </nav>
+
+          {/* Desktop Navigation */}
+          {!isMobile && (
+            <nav className="flex items-center space-x-6">
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-sm font-medium transition-colors hover:text-yammy-blue"
+                >
+                  {item.name[language || "en"]}
+                </Link>
+              ))}
+            </nav>
+          )}
         </div>
+
         <div className="flex items-center gap-2">
           <CartButton />
+
           {/* Language Toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -65,8 +112,47 @@ export function Navbar({}: Props) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Mobile Menu Button */}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          )}
         </div>
       </div>
-    </div>
+
+      {/* Mobile Navigation Menu */}
+      <AnimatePresence>
+        {isMobile && isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 top-16 bg-white z-30 overflow-y-auto pb-6"
+          >
+            <nav className="container py-6 flex flex-col space-y-4">
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-lg font-medium py-2 border-b border-gray-100 transition-colors hover:text-yammy-blue"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.name[language || "en"]}
+                </Link>
+              ))}
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
   )
 }
