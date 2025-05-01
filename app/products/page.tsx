@@ -191,6 +191,7 @@ export default function ProductsPage() {
 
   // Handle image load error
   const handleImageError = (productId: number) => {
+    console.log(`Image load error for product ${productId}`)
     setImageLoadError((prev) => ({
       ...prev,
       [productId]: true,
@@ -462,7 +463,7 @@ export default function ProductsPage() {
                 <div className="relative h-64 bg-yammy-light-blue">
                   {imageLoadError[product.id] ? (
                     <Image
-                      src={getFallbackImage(product) || "/placeholder.svg"}
+                      src={`${getFallbackImage(product)}?v=${Date.now()}`}
                       alt={product.name[language || "en"]}
                       fill
                       className="object-contain p-4"
@@ -470,14 +471,14 @@ export default function ProductsPage() {
                         // If even the fallback fails, use a generic placeholder
                         const img = document.getElementById(`product-img-${product.id}`) as HTMLImageElement
                         if (img) {
-                          img.src = "/assorted-products-display.png"
+                          img.src = `/assorted-products-display.png?v=${Date.now()}`
                         }
                       }}
                     />
                   ) : (
                     <Image
                       id={`product-img-${product.id}`}
-                      src={product.image || "/placeholder.svg"}
+                      src={`${product.image || "/placeholder.svg"}?v=${Date.now()}`}
                       alt={product.name[language || "en"]}
                       fill
                       className="object-contain p-4"
@@ -571,13 +572,13 @@ export default function ProductsPage() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="relative h-[400px]">
               <Image
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-21%20at%2004.17.11_e98c889a.jpg-qImS0ea607vm0WJyywYVFZ0KBHG2zi.jpeg"
+                src={`https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-21%20at%2004.17.11_e98c889a.jpg-qImS0ea607vm0WJyywYVFZ0KBHG2zi.jpeg?v=${Date.now()}`}
                 alt="Brand Ambassador with Yammy Yami Products"
                 fill
                 className="object-contain"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
-                  target.src = "/images/ambassador-6.png"
+                  target.src = `/images/ambassador-6.png?v=${Date.now()}`
                 }}
               />
             </div>

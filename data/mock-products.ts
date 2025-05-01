@@ -12,7 +12,8 @@ export const mockProducts: Product[] = [
     wholesalePrice: 16000,
     size: "small",
     bundleSize: 50,
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1024.jpg-94bnV5nZQDqKIH6o41Ex8XXXAC8IUa.jpeg",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1024.jpg-94bnV5nZQDqKIH6o41Ex8XXXAC8IUa.jpeg?v=1",
     tags: ["bestSeller", "highAbsorption"],
     weightRange: "4-8kg",
     description: {
@@ -33,7 +34,8 @@ export const mockProducts: Product[] = [
     wholesalePrice: 17000,
     size: "medium",
     bundleSize: 50,
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1012.jpg-ES0dluaBooNTot5s1D4osLe125JMM4.jpeg",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1012.jpg-ES0dluaBooNTot5s1D4osLe125JMM4.jpeg?v=1",
     tags: ["japanStandard", "highAbsorption"],
     weightRange: "6-11kg",
     description: {
@@ -54,7 +56,8 @@ export const mockProducts: Product[] = [
     wholesalePrice: 17000,
     size: "large",
     bundleSize: 50,
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1016.jpg-N7AFkyLYxdcxtB9xZpOyAB7xo2TYYZ.jpeg",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1016.jpg-N7AFkyLYxdcxtB9xZpOyAB7xo2TYYZ.jpeg?v=1",
     tags: ["bestSeller", "highAbsorption"],
     weightRange: "9-14kg",
     description: {
@@ -75,7 +78,8 @@ export const mockProducts: Product[] = [
     wholesalePrice: 17000,
     size: "extraLarge",
     bundleSize: 50,
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1009.jpg-BIK0Z64A1WCzCs1Id2cgiGSKGHHL2Z.jpeg",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1009.jpg-BIK0Z64A1WCzCs1Id2cgiGSKGHHL2Z.jpeg?v=1",
     tags: ["japanStandard"],
     weightRange: "12-17kg",
     description: {
@@ -96,7 +100,8 @@ export const mockProducts: Product[] = [
     wholesalePrice: 22000,
     size: "large",
     bundleSize: 20,
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1022.jpg-ACW4aUFuZSJnBBpx7KHHpriGFYTAgE.jpeg",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1022.jpg-ACW4aUFuZSJnBBpx7KHHpriGFYTAgE.jpeg?v=1",
     tags: ["internationalQuality"],
     hipSize: "80-105cm",
     description: {
@@ -116,7 +121,8 @@ export const mockProducts: Product[] = [
     price: 4000,
     wholesalePrice: 3500,
     bundleSize: 120,
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1025.jpg-AhNojXnbDx5fyKY8p4xiXzW0sMdXk0.jpeg",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1025.jpg-AhNojXnbDx5fyKY8p4xiXzW0sMdXk0.jpeg?v=1",
     tags: ["newArrival"],
     description: {
       en: "Soft and gentle baby wipes for cleaning your baby's delicate skin. Pack of 120 sheets.",
@@ -136,7 +142,8 @@ export const mockProducts: Product[] = [
     wholesalePrice: 19000,
     size: "large",
     bundleSize: 50,
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1011.jpg-kyHylrVCgJKZGHSxfOAMQ6GEz7jRUZ.jpeg",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1011.jpg-kyHylrVCgJKZGHSxfOAMQ6GEz7jRUZ.jpeg?v=1",
     tags: ["bestSeller", "internationalQuality", "highAbsorption"],
     weightRange: "12-17kg",
     description: {
@@ -157,7 +164,8 @@ export const mockProducts: Product[] = [
     wholesalePrice: 25000,
     size: "extraLarge",
     bundleSize: 20,
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1020.jpg-d0BiyLZoj7T35mr3ZDsASJHCNLsn9j.jpeg",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1020.jpg-d0BiyLZoj7T35mr3ZDsASJHCNLsn9j.jpeg?v=1",
     tags: ["internationalQuality"],
     hipSize: ">110cm",
     description: {
@@ -178,7 +186,8 @@ export const mockProducts: Product[] = [
     wholesalePrice: 21000,
     size: "extraLarge",
     bundleSize: 50,
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1015.jpg-MrDwEHu3Gt9fjrXcq7CwoswxVdePaz.jpeg",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1015.jpg-MrDwEHu3Gt9fjrXcq7CwoswxVdePaz.jpeg?v=1",
     tags: ["newArrival", "highAbsorption"],
     weightRange: "19kg+",
     description: {
