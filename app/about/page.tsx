@@ -187,7 +187,7 @@ export default function AboutPage() {
               <div className="aspect-[3/4] relative">
                 <Image
                   src="/images/influencer-1.jpeg"
-                  alt="Yammy Yami Brand Influencer"
+                  alt="Yammy Yami Brand Ambassador"
                   fill
                   className="object-cover"
                 />
@@ -260,7 +260,7 @@ export default function AboutPage() {
               className="bg-white rounded-xl overflow-hidden shadow-lg"
             >
               <div className="aspect-square relative">
-                <Image src="/images/fei-toto.png" alt="Feisal salum abdalah" fill className="object-cover" />
+                <Image src="/images/feitoto.png" alt="Feisal salum abdalah" fill className="object-cover" />
               </div>
               <div className="p-4">
                 <h3 className="font-bold text-yammy-dark-blue text-lg">Feisal salum abdalah</h3>

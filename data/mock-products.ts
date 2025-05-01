@@ -12,8 +12,7 @@ export const mockProducts: Product[] = [
     wholesalePrice: 16000,
     size: "small",
     bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/baby%20diaper.jpg-8TUQ8NXCalui3IondSW0pGQKZezKI1.jpeg",
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1024.jpg-94bnV5nZQDqKIH6o41Ex8XXXAC8IUa.jpeg",
     tags: ["bestSeller", "highAbsorption"],
     weightRange: "4-8kg",
     description: {
@@ -34,10 +33,9 @@ export const mockProducts: Product[] = [
     wholesalePrice: 17000,
     size: "medium",
     bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.41_542754ce.jpg-SYaYX5HxpNniNUoMc0trj7485kedRl.jpeg",
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1012.jpg-ES0dluaBooNTot5s1D4osLe125JMM4.jpeg",
     tags: ["japanStandard", "highAbsorption"],
-    weightRange: "9-14kg",
+    weightRange: "6-11kg",
     description: {
       en: "Medium-sized pull-up pants designed for active babies who need comfort and mobility.",
       sw: "Pants za ukubwa wa kati zimeundwa kwa watoto wanaocheza wanaohitaji faraja na urahisi wa kutembea.",
@@ -56,10 +54,9 @@ export const mockProducts: Product[] = [
     wholesalePrice: 17000,
     size: "large",
     bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.43_dd271f0f.jpg-EYQ4FIQyCghuaa0E0kwbpKWsBDNaPZ.jpeg",
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1016.jpg-N7AFkyLYxdcxtB9xZpOyAB7xo2TYYZ.jpeg",
     tags: ["bestSeller", "highAbsorption"],
-    weightRange: "12-17kg",
+    weightRange: "9-14kg",
     description: {
       en: "Large-sized pull-up pants for growing toddlers. Easy to put on and take off.",
       sw: "Pants za ukubwa mkubwa kwa watoto wanaokua. Rahisi kuvaa na kuvua.",
@@ -78,10 +75,9 @@ export const mockProducts: Product[] = [
     wholesalePrice: 17000,
     size: "extraLarge",
     bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.43_3881eb83.jpg-ZdF7ILkVtnX1FsSUkScmxFA9hZhGVe.jpeg",
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1009.jpg-BIK0Z64A1WCzCs1Id2cgiGSKGHHL2Z.jpeg",
     tags: ["japanStandard"],
-    weightRange: ">15kg",
+    weightRange: "12-17kg",
     description: {
       en: "Extra-large pull-up pants for bigger toddlers. Maximum absorption and comfort.",
       sw: "Pants za ukubwa mkubwa zaidi kwa watoto wakubwa. Unyonywaji na faraja ya hali ya juu.",
@@ -100,8 +96,7 @@ export const mockProducts: Product[] = [
     wholesalePrice: 22000,
     size: "large",
     bundleSize: 20,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adult%20pants.jpg-eYvgmKtmGCITzb488aMf7pcNvB16Y2.jpeg",
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1022.jpg-ACW4aUFuZSJnBBpx7KHHpriGFYTAgE.jpeg",
     tags: ["internationalQuality"],
     hipSize: "80-105cm",
     description: {
@@ -121,8 +116,7 @@ export const mockProducts: Product[] = [
     price: 4000,
     wholesalePrice: 3500,
     bundleSize: 120,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.35_9bc82b01.jpg-UGTLfNsjPhFwjcUEg1g1UZu7SxWXrS.jpeg",
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1025.jpg-AhNojXnbDx5fyKY8p4xiXzW0sMdXk0.jpeg",
     tags: ["newArrival"],
     description: {
       en: "Soft and gentle baby wipes for cleaning your baby's delicate skin. Pack of 120 sheets.",
@@ -142,10 +136,9 @@ export const mockProducts: Product[] = [
     wholesalePrice: 19000,
     size: "large",
     bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.41_542754ce.jpg-SYaYX5HxpNniNUoMc0trj7485kedRl.jpeg",
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1011.jpg-kyHylrVCgJKZGHSxfOAMQ6GEz7jRUZ.jpeg",
     tags: ["bestSeller", "internationalQuality", "highAbsorption"],
-    weightRange: "9-14kg",
+    weightRange: "12-17kg",
     description: {
       en: "Our highest quality pants with premium absorption and extra softness. Royal quality.",
       sw: "Pants zetu za ubora wa juu zaidi zenye unyonywaji wa hali ya juu na ulaini wa ziada. Ubora wa kifalme.",
@@ -156,22 +149,43 @@ export const mockProducts: Product[] = [
   {
     id: 8,
     name: {
-      en: "Wholesale Carton - Baby Pants",
-      sw: "Kartoni ya Jumla - Pants za Watoto",
+      en: "Adult Pants XXL",
+      sw: "Pants za Watu Wazima XXL",
+    },
+    category: "adultDiapers",
+    price: 28000,
+    wholesalePrice: 25000,
+    size: "extraLarge",
+    bundleSize: 20,
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1020.jpg-d0BiyLZoj7T35mr3ZDsASJHCNLsn9j.jpeg",
+    tags: ["internationalQuality"],
+    hipSize: ">110cm",
+    description: {
+      en: "Extra-large adult pants for maximum comfort and protection. Ideal for those with mobility issues or incontinence.",
+      sw: "Pants kubwa zaidi za watu wazima kwa faraja na ulinzi wa hali ya juu. Nzuri kwa wenye matatizo ya kutembea au kukojoa bila kujizuia.",
+    },
+    stock: 25,
+    status: "active",
+  },
+  {
+    id: 9,
+    name: {
+      en: "Baby Diaper XXXL",
+      sw: "Diaper za Watoto XXXL",
     },
     category: "babyPants",
-    price: 103000,
-    isCarton: true,
-    size: "medium",
-    cartonSize: "50pcs x 6 packs",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.33_052ce928.jpg-JNRalaEhieJuq7sRcGf2ZHIm0Erups.jpeg",
-    tags: ["wholesale", "internationalQuality"],
+    price: 24000,
+    wholesalePrice: 21000,
+    size: "extraLarge",
+    bundleSize: 50,
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1015.jpg-MrDwEHu3Gt9fjrXcq7CwoswxVdePaz.jpeg",
+    tags: ["newArrival", "highAbsorption"],
+    weightRange: "19kg+",
     description: {
-      en: "Wholesale carton containing 6 packs of 50 medium-sized baby pants each. Great value for retailers.",
-      sw: "Kartoni ya jumla yenye pakiti 6 za pants 50 za watoto, ukubwa wa kati. Thamani kubwa kwa wafanyabiashara.",
+      en: "Our largest size baby diapers for older toddlers. Maximum comfort and absorption for active children.",
+      sw: "Diaper zetu za ukubwa mkubwa zaidi kwa watoto wakubwa. Faraja na unyonywaji wa hali ya juu kwa watoto wanaocheza.",
     },
-    stock: 8,
+    stock: 30,
     status: "active",
   },
 ]

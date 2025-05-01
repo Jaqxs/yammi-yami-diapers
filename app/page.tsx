@@ -293,7 +293,7 @@ export default function Home() {
             >
               <div className="relative h-[500px] w-full">
                 <Image
-                  src="/images/ambassador-1.png"
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-21%20at%2004.17.11_e98c889a.jpg-qImS0ea607vm0WJyywYVFZ0KBHG2zi.jpeg"
                   alt="Yammy Yami Brand Ambassador"
                   fill
                   className="object-contain"
