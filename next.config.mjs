@@ -17,10 +17,10 @@ const nextConfig = {
         hostname: '**',
       },
     ],
-    minimumCacheTTL: 60,
   },
+  // Remove the optimizeCss experimental feature that requires critters
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Removing this line as it requires critters
     optimizePackageImports: ['framer-motion', 'lucide-react', 'recharts'],
   },
   // Enable React strict mode for better development experience
