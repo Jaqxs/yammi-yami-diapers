@@ -122,6 +122,7 @@ export default function ProductsPage() {
   const [sortOption, setSortOption] = useState("newest")
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [imageLoadError, setImageLoadError] = useState<Record<number, boolean>>({})
 
   const t = translations[language || "en"]
 
@@ -129,8 +130,13 @@ export default function ProductsPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true)
-      await loadProducts()
-      setIsLoading(false)
+      try {
+        await loadProducts()
+      } catch (error) {
+        console.error("Error loading products:", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     fetchProducts()
@@ -142,35 +148,53 @@ export default function ProductsPage() {
       // Refresh products when a product-related event occurs
       const refreshProducts = async () => {
         setIsRefreshing(true)
-        await loadProducts()
-        setIsRefreshing(false)
+        try {
+          await loadProducts()
 
-        // If we received an "add" action, show a subtle notification
-        if (lastEvent.action === "add") {
-          // Reset filters to help user see the new product
-          if (searchQuery || activeTab !== "all" || selectedSize) {
-            // Optional: Show a toast or notification that filters are being reset to show new content
-            setSearchQuery("")
-            setActiveTab("all")
-            setSelectedSize(null)
-            setPriceRange([0, 30000])
+          // If we received an "add" action, show a subtle notification
+          if (lastEvent.action === "add") {
+            // Reset filters to help user see the new product
+            if (searchQuery || activeTab !== "all" || selectedSize) {
+              // Optional: Show a toast or notification that filters are being reset to show new content
+              setSearchQuery("")
+              setActiveTab("all")
+              setSelectedSize(null)
+              setPriceRange([0, 30000])
+            }
           }
+        } catch (error) {
+          console.error("Error refreshing products:", error)
+        } finally {
+          setIsRefreshing(false)
         }
       }
 
       refreshProducts()
     }
-  }, [lastEvent, loadProducts])
+  }, [lastEvent, loadProducts, activeTab, searchQuery, selectedSize])
 
   // Function to refresh products
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
-    await loadProducts()
-    setIsRefreshing(false)
+    try {
+      await loadProducts()
+    } catch (error) {
+      console.error("Error refreshing products:", error)
+    } finally {
+      setIsRefreshing(false)
+    }
   }, [loadProducts])
 
   const formatPrice = (price: number) => {
     return `TZS ${price.toLocaleString()}`
+  }
+
+  // Handle image load error
+  const handleImageError = (productId: number) => {
+    setImageLoadError((prev) => ({
+      ...prev,
+      [productId]: true,
+    }))
   }
 
   // Filter products based on active filters
@@ -220,7 +244,7 @@ export default function ProductsPage() {
   // Handle WhatsApp order
   const handleWhatsAppOrder = (product: (typeof state.products)[0]) => {
     const message = `Hello, I would like to order: ${product.name[language || "en"]} - ${formatPrice(product.price)}`
-    const whatsappUrl = `https://wa.me/255658181863?text=${encodeURIComponent(message)}`
+    const whatsappUrl = `https://wa.me/255773181863?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 
@@ -234,6 +258,18 @@ export default function ProductsPage() {
       size: product.size,
       bundleSize: product.bundleSize,
     })
+  }
+
+  // Get fallback image based on product category
+  const getFallbackImage = (product: (typeof state.products)[0]) => {
+    if (product.category === "babyDiapers") {
+      return "/images/products/baby-diaper-m.png"
+    } else if (product.category === "babyPants") {
+      return "/images/products/baby-diaper-l.png"
+    } else if (product.category === "adultDiapers") {
+      return "/images/products/adult-pants-l.png"
+    }
+    return "/assorted-products-display.png"
   }
 
   return (
@@ -314,7 +350,10 @@ export default function ProductsPage() {
                   {/* Size Filter */}
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium text-yammy-dark-blue">{t.size}</h3>
-                    <Select value={selectedSize || "all"} onValueChange={setSelectedSize}>
+                    <Select
+                      value={selectedSize || "all"}
+                      onValueChange={(value) => setSelectedSize(value === "all" ? null : value)}
+                    >
                       <SelectTrigger className="border-yammy-blue/30 focus:ring-yammy-blue">
                         <SelectValue placeholder={language === "en" ? "Select size" : "Chagua ukubwa"} />
                       </SelectTrigger>
@@ -421,16 +460,30 @@ export default function ProductsPage() {
                 whileHover={{ y: -10 }}
               >
                 <div className="relative h-64 bg-yammy-light-blue">
-                  <Image
-                    src={product.image || "/placeholder.svg?height=300&width=300&query=product"}
-                    alt={product.name[language || "en"]}
-                    fill
-                    className="object-contain p-4"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.src = "/assorted-products-display.png"
-                    }}
-                  />
+                  {imageLoadError[product.id] ? (
+                    <Image
+                      src={getFallbackImage(product) || "/placeholder.svg"}
+                      alt={product.name[language || "en"]}
+                      fill
+                      className="object-contain p-4"
+                      onError={() => {
+                        // If even the fallback fails, use a generic placeholder
+                        const img = document.getElementById(`product-img-${product.id}`) as HTMLImageElement
+                        if (img) {
+                          img.src = "/assorted-products-display.png"
+                        }
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      id={`product-img-${product.id}`}
+                      src={product.image || "/placeholder.svg"}
+                      alt={product.name[language || "en"]}
+                      fill
+                      className="object-contain p-4"
+                      onError={() => handleImageError(product.id)}
+                    />
+                  )}
                   {/* Product tags */}
                   <div className="absolute top-2 left-2 flex flex-col gap-1">
                     {product.tags && Array.isArray(product.tags) && product.tags.includes("bestSeller") && (
@@ -518,10 +571,14 @@ export default function ProductsPage() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="relative h-[400px]">
               <Image
-                src="/images/ambassador-6.png"
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-21%20at%2004.17.11_e98c889a.jpg-qImS0ea607vm0WJyywYVFZ0KBHG2zi.jpeg"
                 alt="Brand Ambassador with Yammy Yami Products"
                 fill
                 className="object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = "/images/ambassador-6.png"
+                }}
               />
             </div>
             <div>
