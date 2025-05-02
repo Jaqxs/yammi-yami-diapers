@@ -1,11 +1,25 @@
 "use client"
 import Image from "next/image"
-import { motion } from "framer-motion"
+import { motion, useScroll, useTransform } from "framer-motion"
+import {
+  ChevronRight,
+  Quote,
+  MapPin,
+  Phone,
+  Mail,
+  Users,
+  Heart,
+  Shield,
+  TrendingUp,
+  ShoppingBag,
+  Award,
+} from "lucide-react"
+import CountUp from "@/components/count-up"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageWrapper } from "@/components/page-wrapper"
 import { useLanguage } from "@/components/language-provider"
+import { ImageSlider } from "@/components/image-slider"
 
 // Language translations
 const translations = {
@@ -40,16 +54,72 @@ const translations = {
     phoneNumber2: "+255 754 089 447",
     emailUs: "Email Us",
     visitUs: "Visit Us",
+    brandAmbassadors: "Our Brand Ambassadors",
     brandInfluencers: "Our Brand Influencers",
+    ambassadorsDescription:
+      "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our ambassadors are passionate about quality, comfort, and family care.",
     influencersDescription:
-      "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our influencers are passionate about quality, comfort, and family care.",
-    influencer: "Influencer",
+      "Our influencers help spread the word about Yammy Yami products across Tanzania. They share their authentic experiences with our products and help us reach new customers.",
+    brandAmbassador: "Brand ambasoder",
     brandInfluencer: "Brand Influencer",
+    ambassadorInterest:
+      "Interested in becoming a Yammy Yami brand ambassador? Contact us to learn more about partnership opportunities.",
     influencerInterest:
-      "Interested in becoming a Yammy Yami brand influencer? Contact us to learn more about partnership opportunities.",
+      "Want to collaborate with us as an influencer? We're always looking for authentic voices to share our products.",
     leadershipTeam: "Our Leadership Team",
     leadershipDescription:
       "Meet the dedicated professionals leading Yammy Yami Diaper TZ. Our leadership team brings together decades of experience and a shared passion for improving family care across Tanzania.",
+    ourJourney: "Our Journey",
+    founded: "Founded",
+    expansion: "Expansion",
+    nationwide: "Nationwide",
+    international: "International",
+    foundedDesc:
+      "Yammy Yami Diaper TZ was established in Dar es Salaam with a vision to provide quality hygiene products.",
+    expansionDesc: "Expanded operations to multiple locations in Dar es Salaam and increased product range.",
+    nationwideDesc: "Achieved nationwide distribution across Tanzania with a network of dedicated agents.",
+    internationalDesc: "Looking forward to expanding to neighboring East African countries.",
+    testimonials: "What People Say",
+    testimonial1:
+      "Yammy Yami diapers have been a game-changer for my family. The quality is excellent and the price is affordable.",
+    testimonial2:
+      "As a brand ambassador, I'm proud to represent Yammy Yami. Their commitment to quality and community is unmatched.",
+    testimonial3:
+      "The team at Yammy Yami truly understands the needs of Tanzanian families. Their products are reliable and comfortable.",
+    meetOurTeam: "Meet Our Team",
+    ourCommunity: "Our Community",
+    communityDesc:
+      "At Yammy Yami, we believe in giving back to the communities we serve. Through various initiatives, we support local families and contribute to community development.",
+    joinUs: "Join Our Community",
+    ourProducts: "Our Products",
+    babyDiapers: "Baby Diapers",
+    ladyPads: "Lady Pads",
+    adultDiapers: "Adult Diapers",
+    productDesc:
+      "We offer a comprehensive range of hygiene products designed to meet the needs of every family member.",
+    ourAmbassadors: "Our Ambassadors",
+    ambassadorQuote: "I'm proud to represent a brand that truly cares about Tanzanian families.",
+    becomeAmbassador: "Become an Ambassador",
+    becomeInfluencer: "Become an Influencer",
+    ourAgents: "Our Agents",
+    becomeAgent: "Become an Agent",
+    agentDesc:
+      "Our network of dedicated agents helps us reach families across Tanzania. Join our team and be part of our success story.",
+    ourHistory: "Our History",
+    historyDesc:
+      "From humble beginnings to becoming a trusted household name, our journey has been driven by a commitment to quality and affordability.",
+    readMore: "Read More",
+    ambassadorName1: "Fatima Hassan",
+    ambassadorName2: "Amina Juma",
+    influencerName: "Zainab Omar",
+    ourAchievements: "Our Achievements",
+    achievementsDesc:
+      "Since our founding in 2018, Yammy Yami has grown to become a trusted household name across Tanzania.",
+    happyCustomers: "Happy Customers",
+    regionsServed: "Regions Served",
+    productTypes: "Product Types",
+    yearsOfExcellence: "Years of Excellence",
+    ourGrowth: "Our Growth Journey",
   },
   sw: {
     aboutUs: "Kuhusu Sisi",
@@ -82,305 +152,757 @@ const translations = {
     phoneNumber2: "+255 754 089 447",
     emailUs: "Tuma Barua Pepe",
     visitUs: "Tembelea",
+    brandAmbassadors: "Mabalozi Wetu wa Bidhaa",
     brandInfluencers: "Washawishi Wetu wa Bidhaa",
+    ambassadorsDescription:
+      "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Mabalozi wetu wana shauku juu ya ubora, faraja, na utunzaji wa familia.",
     influencersDescription:
-      "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Washawishi wetu wana shauku juu ya ubora, faraja, na utunzaji wa familia.",
-    influencer: "Mshawishi",
-    brandInfluencer: "Mshawishi wa Biashara",
+      "Washawishi wetu husaidia kueneza habari kuhusu bidhaa za Yammy Yami kote Tanzania. Wanashiriki uzoefu wao halisi na bidhaa zetu na kutusaidia kufikia wateja wapya.",
+    brandAmbassador: "Brand ambasoder",
+    brandInfluencer: "Mshawishi wa Bidhaa",
+    ambassadorInterest:
+      "Una nia ya kuwa balozi wa bidhaa za Yammy Yami? Wasiliana nasi kujifunza zaidi kuhusu fursa za ushirikiano.",
     influencerInterest:
-      "Una nia ya kuwa mshawishi wa bidhaa za Yammy Yami? Wasiliana nasi kujifunza zaidi kuhusu fursa za ushirikiano.",
+      "Unataka kushirikiana nasi kama mshawishi? Tunatarajia daima sauti halisi kushiriki bidhaa zetu.",
     leadershipTeam: "Timu Yetu ya Uongozi",
     leadershipDescription:
       "Kutana na wataalamu wanaojitoa wanaoongoza Yammy Yami Diaper TZ. Timu yetu ya uongozi inaleta pamoja miongo ya uzoefu na shauku ya pamoja ya kuboresha utunzaji wa familia kote Tanzania.",
+    ourJourney: "Safari Yetu",
+    founded: "Kuanzishwa",
+    expansion: "Upanuzi",
+    nationwide: "Kitaifa",
+    international: "Kimataifa",
+    foundedDesc: "Yammy Yami Diaper TZ ilianzishwa Dar es Salaam na maono ya kutoa bidhaa bora za usafi.",
+    expansionDesc: "Tulipanua shughuli zetu hadi maeneo mengi ya Dar es Salaam na kuongeza aina za bidhaa.",
+    nationwideDesc: "Tulifikia usambazaji wa kitaifa Tanzania nzima na mtandao wa mawakala wanaojitoa.",
+    internationalDesc: "Tunatazamia kupanua hadi nchi jirani za Afrika Mashariki.",
+    testimonials: "Watu Wanasema Nini",
+    testimonial1: "Diapers za Yammy Yami zimekuwa mabadiliko makubwa kwa familia yangu. Ubora ni bora na bei ni nafuu.",
+    testimonial2:
+      "Kama balozi wa bidhaa, ninajivunia kuwakilisha Yammy Yami. Kujitolea kwao kwa ubora na jamii hakuna kifani.",
+    testimonial3:
+      "Timu ya Yammy Yami inaelewa kweli mahitaji ya familia za Kitanzania. Bidhaa zao ni za kuaminika na faraja.",
+    meetOurTeam: "Kutana na Timu Yetu",
+    ourCommunity: "Jamii Yetu",
+    communityDesc:
+      "Katika Yammy Yami, tunaamini katika kurudisha kwa jamii tunazohudumia. Kupitia mipango mbalimbali, tunasaidia familia za mitaa na kuchangia maendeleo ya jamii.",
+    joinUs: "Jiunge na Jamii Yetu",
+    ourProducts: "Bidhaa Zetu",
+    babyDiapers: "Diapers za Watoto",
+    ladyPads: "Pedi za Wanawake",
+    adultDiapers: "Diapers za Watu Wazima",
+    productDesc: "Tunatoa aina kamili ya bidhaa za usafi zilizoundwa kukidhi mahitaji ya kila mwanafamilia.",
+    ourAmbassadors: "Mabalozi Wetu",
+    ambassadorQuote: "Ninajivunia kuwakilisha chapa inayojali kweli familia za Kitanzania.",
+    becomeAmbassador: "Kuwa Balozi",
+    becomeInfluencer: "Kuwa Mshawishi",
+    ourAgents: "Mawakala Wetu",
+    becomeAgent: "Kuwa Wakala",
+    agentDesc:
+      "Mtandao wetu wa mawakala wanaojitoa unatusaidia kufikia familia kote Tanzania. Jiunge na timu yetu na uwe sehemu ya hadithi yetu ya mafanikio.",
+    ourHistory: "Historia Yetu",
+    historyDesc:
+      "Kutoka mwanzo mdogo hadi kuwa jina la nyumbani linaloaminika, safari yetu imeendeshwa na kujitolea kwa ubora na bei nafuu.",
+    readMore: "Soma Zaidi",
+    ambassadorName1: "Fatima Hassan",
+    ambassadorName2: "Amina Juma",
+    influencerName: "Zainab Omar",
+    ourAchievements: "Mafanikio Yetu",
+    achievementsDesc:
+      "Tangu kuanzishwa kwetu mwaka 2018, Yammy Yami imekua na kuwa jina la nyumbani linaloaminika Tanzania nzima.",
+    happyCustomers: "Wateja Walioridhika",
+    regionsServed: "Mikoa Tunayohudumia",
+    productTypes: "Aina za Bidhaa",
+    yearsOfExcellence: "Miaka ya Ubora",
+    ourGrowth: "Safari Yetu ya Ukuaji",
   },
 }
+
+// Ambassador images - using only the confirmed existing images
+const ambassadorImages = [
+  "/images/brand-ambassador-1.jpeg",
+  "/images/brand-ambassador-2.jpeg",
+  "/images/brand-ambassador-3.jpeg",
+  "/images/brand-ambassador-4.jpeg",
+  "/images/brand-ambassador-5.jpeg",
+]
+
+// Ambassador names for the slider
+const ambassadorNames = ["Fatima Hassan", "Fatima Hassan", "Fatima Hassan", "Amina Juma", "Amina Juma"]
+
+// Influencer images - using only the confirmed existing images
+const influencerImages = [
+  "/images/brand-influencer-1.jpeg",
+  "/images/brand-influencer-2.jpeg",
+  "/images/brand-influencer-3.jpeg",
+  "/images/brand-influencer-4.jpeg",
+]
+
+// Influencer names - all are Zainab Omar
+const influencerNames = Array(influencerImages.length).fill("Zainab Omar")
+
+// Testimonials
+const testimonials = [
+  {
+    name: "Maria Joseph",
+    role: "Mother of two",
+    image: "/images/ambassador-1.png",
+    quote: "testimonial1",
+  },
+  {
+    name: "Fatima Hassan",
+    role: "Brand Ambassador",
+    image: "/images/brand-ambassador-1.jpeg",
+    quote: "testimonial2",
+  },
+  {
+    name: "Amina Juma",
+    role: "Brand Ambassador",
+    image: "/images/ambassador-1.png", // Changed to use a known existing image
+    quote: "testimonial3",
+  },
+]
+
+// Team members
+const teamMembers = [
+  {
+    name: "Feisal salum abdalah",
+    role: "CEO and Director",
+    nickname: "Feitoto",
+    image: "/images/hassan-new.jpeg",
+  },
+  {
+    name: "Hassan mwara katuju",
+    role: "Chief Financial Officer (CFO)",
+    nickname: "",
+    image: "/images/feisal-new.jpeg",
+  },
+  {
+    name: "Juma ramadhan iddi",
+    role: "Chief Operations Officer (COO)",
+    nickname: "",
+    image: null,
+  },
+]
+
+// Timeline items
+const timelineItems = [
+  {
+    year: "2018",
+    title: "founded",
+    description: "foundedDesc",
+    icon: "🚀",
+  },
+  {
+    year: "2020",
+    title: "expansion",
+    description: "expansionDesc",
+    icon: "📈",
+  },
+  {
+    year: "2022",
+    title: "nationwide",
+    description: "nationwideDesc",
+    icon: "🇹🇿",
+  },
+  {
+    year: "2025",
+    title: "international",
+    description: "internationalDesc",
+    icon: "🌍",
+  },
+]
+
+// Values with icons
+const values = [
+  { title: "qualityTitle", content: "qualityContent", icon: <Shield className="h-8 w-8" /> },
+  { title: "affordabilityTitle", content: "affordabilityContent", icon: <TrendingUp className="h-8 w-8" /> },
+  { title: "familyTitle", content: "familyContent", icon: <Users className="h-8 w-8" /> },
+  { title: "tanzanianTitle", content: "tanzanianContent", icon: <Heart className="h-8 w-8" /> },
+]
 
 export default function AboutPage() {
   const { language } = useLanguage()
   const t = translations[language || "en"] // Provide a default language if undefined
+  const { scrollYProgress } = useScroll()
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [0, 1])
 
   return (
     <PageWrapper>
-      <div className="container mx-auto px-4 py-12">
-        <h1 className="text-4xl font-bold text-center mb-12">{t.aboutUs}</h1>
-
-        {/* Our Story Section */}
-        <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
-          <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-            <h2 className="text-3xl font-bold mb-6">{t.ourStory}</h2>
-            <p className="text-gray-600 mb-6">{t.storyContent}</p>
-            <h3 className="text-2xl font-bold mb-4">{t.ourMission}</h3>
-            <p className="text-gray-600">{t.missionContent}</p>
-          </motion.div>
-          <motion.div
-            className="relative h-80 rounded-xl overflow-hidden shadow-xl"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <Image src="/images/mother-with-baby.png" alt="Yammy Yami Diaper TZ team" fill className="object-cover" />
+      {/* Hero Section */}
+      <section className="relative h-[70vh] min-h-[500px] w-full overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/mother-with-baby.png"
+            alt="Yammy Yami Hero"
+            fill
+            className="object-cover brightness-50"
+            priority
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/70 z-10"></div>
+        <div className="container mx-auto px-4 h-full flex flex-col justify-end pb-16 relative z-20">
+          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">{t.aboutUs}</h1>
+            <div className="w-24 h-2 bg-yammy-pink mb-6"></div>
+            <p className="text-xl text-white max-w-2xl">{t.storyContent}</p>
           </motion.div>
         </div>
+      </section>
 
-        {/* Our Values Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-10">{t.ourValues}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { title: t.qualityTitle, content: t.qualityContent, icon: "✨", color: "from-pink-500 to-pink-300" },
-              {
-                title: t.affordabilityTitle,
-                content: t.affordabilityContent,
-                icon: "💰",
-                color: "from-blue-500 to-blue-300",
-              },
-              {
-                title: t.familyTitle,
-                content: t.familyContent,
-                icon: "👨‍👩‍👧‍👦",
-                color: "from-purple-500 to-purple-300",
-              },
-              {
-                title: t.tanzanianTitle,
-                content: t.tanzanianContent,
-                icon: "🇹🇿",
-                color: "from-green-500 to-green-300",
-              },
-            ].map((value, index) => (
+      {/* Our Story & Mission Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-4xl font-bold mb-6 text-yammy-dark-blue">{t.ourStory}</h2>
+              <div className="w-16 h-1 bg-yammy-pink mb-8"></div>
+              <p className="text-lg text-gray-700 mb-8">{t.storyContent}</p>
+
+              <h3 className="text-2xl font-bold mb-4 text-yammy-dark-blue">{t.ourMission}</h3>
+              <p className="text-lg text-gray-700">{t.missionContent}</p>
+
+              <div className="mt-8">
+                <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white">
+                  {t.readMore} <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </motion.div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="relative h-64 rounded-lg overflow-hidden shadow-lg"
+              >
+                <Image
+                  src={ambassadorImages[0] || "/placeholder.svg"}
+                  alt="Yammy Yami Brand Ambassador"
+                  className="object-cover"
+                  fill
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="relative h-64 rounded-lg overflow-hidden shadow-lg mt-8"
+              >
+                <Image
+                  src={ambassadorImages[1] || "/placeholder.svg"}
+                  alt="Yammy Yami Brand Ambassador"
+                  className="object-cover"
+                  fill
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="relative h-64 rounded-lg overflow-hidden shadow-lg"
+              >
+                <Image
+                  src={ambassadorImages[2] || "/placeholder.svg"}
+                  alt="Yammy Yami Ambassador"
+                  className="object-cover"
+                  fill
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="relative h-64 rounded-lg overflow-hidden shadow-lg mt-8"
+              >
+                <Image
+                  src={ambassadorImages[3] || "/placeholder.svg"}
+                  alt="Yammy Yami Ambassador"
+                  className="object-cover"
+                  fill
+                />
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Brand Ambassadors & Influencers Section */}
+      <section className="py-20 bg-yammy-light-blue/30">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-6 text-yammy-dark-blue">{t.ourAmbassadors}</h2>
+            <div className="w-16 h-1 bg-yammy-pink mx-auto mb-8"></div>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-12">
+            {/* Brand Ambassadors */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="flex flex-col items-center"
+            >
+              <h3 className="text-2xl font-bold text-yammy-dark-blue mb-6">{t.brandAmbassadors}</h3>
+              <p className="text-gray-700 mb-8 text-center max-w-md">{t.ambassadorsDescription}</p>
+
+              <div className="w-full max-w-md">
+                <ImageSlider
+                  images={ambassadorImages}
+                  title={t.brandAmbassador}
+                  names={ambassadorNames}
+                  className="mb-8"
+                />
+              </div>
+
+              <div className="mt-4">
+                <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white">{t.becomeAmbassador}</Button>
+              </div>
+            </motion.div>
+
+            {/* Brand Influencers */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex flex-col items-center"
+            >
+              <h3 className="text-2xl font-bold text-yammy-dark-blue mb-6">{t.brandInfluencers}</h3>
+              <p className="text-gray-700 mb-8 text-center max-w-md">{t.influencersDescription}</p>
+
+              <div className="w-full max-w-md">
+                <ImageSlider
+                  images={influencerImages}
+                  title={t.brandInfluencer}
+                  names={influencerNames}
+                  className="mb-8"
+                />
+              </div>
+
+              <div className="mt-4">
+                <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white">{t.becomeInfluencer}</Button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Key Statistics Section with Parallax Effect */}
+      <section className="py-20 relative overflow-hidden">
+        {/* Parallax Background */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-yammy-pink/10 to-yammy-blue/10" />
+          <motion.div
+            initial={{ y: 0 }}
+            animate={{
+              backgroundPosition: ["0% 0%", "100% 100%"],
+            }}
+            transition={{
+              duration: 20,
+              ease: "linear",
+              repeat: Number.POSITIVE_INFINITY,
+              repeatType: "reverse",
+            }}
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: "url('/images/baby-diapers.png')",
+              backgroundSize: "60%",
+              backgroundRepeat: "repeat",
+            }}
+          />
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-6 text-yammy-dark-blue">{t.ourAchievements}</h2>
+            <div className="w-16 h-1 bg-yammy-pink mx-auto mb-8"></div>
+            <p className="text-lg text-gray-700 max-w-3xl mx-auto">{t.achievementsDesc}</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Animated Stat 1 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="bg-white rounded-2xl shadow-xl p-8 text-center transform hover:scale-105 transition-transform duration-300 border-b-4 border-yammy-pink"
+            >
+              <div className="mb-4 text-yammy-blue flex justify-center">
+                <Users className="h-12 w-12" />
+              </div>
+              <motion.h3
+                className="text-5xl font-bold text-yammy-dark-blue mb-2"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 2,
+                  delay: 0.2,
+                }}
+              >
+                <CountUp start={0} end={500000} duration={2.5} separator="," />+
+              </motion.h3>
+              <p className="text-lg font-medium text-yammy-blue">{t.happyCustomers}</p>
+            </motion.div>
+
+            {/* Animated Stat 2 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="bg-white rounded-2xl shadow-xl p-8 text-center transform hover:scale-105 transition-transform duration-300 border-b-4 border-yammy-blue"
+            >
+              <div className="mb-4 text-yammy-blue flex justify-center">
+                <MapPin className="h-12 w-12" />
+              </div>
+              <motion.h3
+                className="text-5xl font-bold text-yammy-dark-blue mb-2"
+                itial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 2,
+                  delay: 0.3,
+                }}
+              >
+                <CountUp start={0} end={26} duration={2} />
+              </motion.h3>
+              <p className="text-lg font-medium text-yammy-blue">{t.regionsServed}</p>
+            </motion.div>
+
+            {/* Animated Stat 3 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="bg-white rounded-2xl shadow-xl p-8 text-center transform hover:scale-105 transition-transform duration-300 border-b-4 border-yammy-pink"
+            >
+              <div className="mb-4 text-yammy-blue flex justify-center">
+                <ShoppingBag className="h-12 w-12" />
+              </div>
+              <motion.h3
+                className="text-5xl font-bold text-yammy-dark-blue mb-2"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 2,
+                  delay: 0.4,
+                }}
+              >
+                <CountUp start={0} end={15} duration={2} />+
+              </motion.h3>
+              <p className="text-lg font-medium text-yammy-blue">{t.productTypes}</p>
+            </motion.div>
+
+            {/* Animated Stat 4 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="bg-white rounded-2xl shadow-xl p-8 text-center transform hover:scale-105 transition-transform duration-300 border-b-4 border-yammy-blue"
+            >
+              <div className="mb-4 text-yammy-blue flex justify-center">
+                <Award className="h-12 w-12" />
+              </div>
+              <motion.h3
+                className="text-5xl font-bold text-yammy-dark-blue mb-2"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 2,
+                  delay: 0.5,
+                }}
+              >
+                <CountUp start={0} end={6} duration={2} />
+              </motion.h3>
+              <p className="text-lg font-medium text-yammy-blue">{t.yearsOfExcellence}</p>
+            </motion.div>
+          </div>
+
+          {/* Visual Growth Indicator */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mt-16 bg-white p-8 rounded-2xl shadow-xl"
+          >
+            <h3 className="text-2xl font-bold text-yammy-dark-blue mb-6 text-center">{t.ourGrowth}</h3>
+            <div className="relative h-24 flex items-center">
+              {/* Growth Line */}
+              <div className="absolute h-2 bg-gradient-to-r from-yammy-pink via-yammy-blue to-yammy-dark-blue w-full rounded-full"></div>
+
+              {/* Milestone Points */}
+              {[2018, 2020, 2022, 2023, 2025].map((year, index) => {
+                const position = `${index * 25}%`
+                return (
+                  <motion.div
+                    key={year}
+                    initial={{ scale: 0, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
+                    className="absolute flex flex-col items-center"
+                    style={{ left: position }}
+                  >
+                    <div
+                      className={`w-6 h-6 rounded-full ${index % 2 === 0 ? "bg-yammy-pink" : "bg-yammy-blue"} z-10`}
+                    ></div>
+                    <p className="mt-2 font-bold text-yammy-dark-blue">{year}</p>
+                    <p className="text-xs text-yammy-blue">
+                      {index === 0 ? t.founded : index === 4 ? t.international : index === 2 ? t.nationwide : ""}
+                    </p>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Our Values Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-6 text-yammy-dark-blue">{t.ourValues}</h2>
+            <div className="w-16 h-1 bg-yammy-pink mx-auto mb-8"></div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {values.map((value, index) => (
               <motion.div
                 key={index}
-                className="h-full"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 * index }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-white rounded-lg shadow-lg p-8 border-t-4 border-yammy-pink hover:shadow-xl transition-shadow"
               >
-                <Card className="h-full">
-                  <CardHeader className={`bg-gradient-to-r ${value.color} text-white`}>
-                    <div className="text-4xl mb-2">{value.icon}</div>
-                    <CardTitle>{value.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <p className="text-gray-600">{value.content}</p>
-                  </CardContent>
-                </Card>
+                <div className="text-yammy-blue mb-4">{value.icon}</div>
+                <h3 className="text-xl font-bold text-yammy-dark-blue mb-4">{t[value.title]}</h3>
+                <p className="text-gray-700">{t[value.content]}</p>
               </motion.div>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* Brand Influencers Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-10">{t.brandInfluencers}</h2>
+      {/* Testimonials Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-6 text-yammy-dark-blue">{t.testimonials}</h2>
+            <div className="w-16 h-1 bg-yammy-pink mx-auto mb-8"></div>
+          </motion.div>
 
-          <div className="max-w-3xl mx-auto text-center mb-10">
-            <p className="text-gray-600">{t.influencersDescription}</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* First Influencer */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white rounded-xl overflow-hidden shadow-lg"
-            >
-              <div className="aspect-[3/4] relative">
-                <Image
-                  src="/images/influencer-1.jpeg"
-                  alt="Yammy Yami Brand Ambassador"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-4 bg-yammy-pink/20">
-                <h3 className="font-bold text-yammy-dark-blue text-lg text-center">Brand ambasoder</h3>
-                <p className="text-center text-yammy-blue">Yammy Yami Diaper TZ</p>
-              </div>
-            </motion.div>
-
-            {/* Second Influencer */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white rounded-xl overflow-hidden shadow-lg"
-            >
-              <div className="aspect-[3/4] relative">
-                <Image
-                  src="/images/influencer-2.jpeg"
-                  alt="Yammy Yami Brand Influencer"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-4 bg-yammy-pink/20">
-                <h3 className="font-bold text-yammy-dark-blue text-lg text-center">{t.brandInfluencer}</h3>
-                <p className="text-center text-yammy-blue">Yammy Yami Diaper TZ</p>
-              </div>
-            </motion.div>
-          </div>
-
-          <div className="mt-12 text-center">
-            <p className="text-gray-600 mb-6">{t.influencerInterest}</p>
-            <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white">{t.contactUs}</Button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-white rounded-lg shadow-lg p-8 relative"
+              >
+                <div className="absolute top-4 right-4 text-yammy-pink opacity-30">
+                  <Quote className="h-16 w-16" />
+                </div>
+                <div className="flex items-center mb-6">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden mr-4">
+                    <Image
+                      src={testimonial.image || "/placeholder.svg"}
+                      alt={testimonial.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-yammy-dark-blue">{testimonial.name}</h3>
+                    <p className="text-yammy-blue text-sm">{testimonial.role}</p>
+                  </div>
+                </div>
+                <p className="text-gray-700 italic">{t[testimonial.quote]}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
+      </section>
 
-        {/* Team Members Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-10">{t.leadershipTeam}</h2>
-
-          <div className="max-w-3xl mx-auto text-center mb-10">
-            <p className="text-gray-600">{t.leadershipDescription}</p>
-          </div>
+      {/* Leadership Team Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-6 text-yammy-dark-blue">{t.leadershipTeam}</h2>
+            <div className="w-16 h-1 bg-yammy-pink mx-auto mb-8"></div>
+            <p className="text-lg text-gray-700 max-w-3xl mx-auto">{t.leadershipDescription}</p>
+          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white rounded-xl overflow-hidden shadow-lg"
-            >
-              <div className="aspect-square relative bg-yammy-light-blue/20">
-                <div className="flex items-center justify-center h-full bg-gray-100">
-                  <div className="text-4xl text-gray-300">CEO</div>
+            {teamMembers.map((member, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-white rounded-lg overflow-hidden shadow-lg"
+              >
+                <div className="relative h-64">
+                  <Image
+                    src={member.image || "/images/ambassador-1.png"}
+                    alt={member.name}
+                    fill
+                    className={`object-cover ${member.name.includes("Feisal") ? "object-top" : ""}`}
+                  />
+                  {!member.image && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-yammy-blue/10">
+                      <p className="text-2xl font-bold text-yammy-dark-blue">
+                        {member.name.split(" ")[0][0]}
+                        {member.name.split(" ")[1][0]}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-yammy-dark-blue text-lg">Mohamed yahya ali</h3>
-                <p className="text-yammy-blue">Chief Executive Officer (CEO)</p>
-                <p className="text-gray-600 mt-2 text-sm">Known as "Jack ma"</p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white rounded-xl overflow-hidden shadow-lg"
-            >
-              <div className="aspect-square relative">
-                <Image src="/images/feitoto.png" alt="Feisal salum abdalah" fill className="object-cover" />
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-yammy-dark-blue text-lg">Feisal salum abdalah</h3>
-                <p className="text-yammy-blue">Chief Growth Officer (CGO)</p>
-                <p className="text-gray-600 mt-2 text-sm">Known as "Feitoto"</p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white rounded-xl overflow-hidden shadow-lg"
-            >
-              <div className="aspect-square relative">
-                <Image src="/images/hassan.png" alt="Hassan mwara katuju" fill className="object-cover" />
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-yammy-dark-blue text-lg">Hassan mwara katuju</h3>
-                <p className="text-yammy-blue">Chief Financial Officer (CFO)</p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="bg-white rounded-xl overflow-hidden shadow-lg"
-            >
-              <div className="aspect-square relative bg-yammy-light-blue/20">
-                <div className="flex items-center justify-center h-full bg-gray-100">
-                  <div className="text-4xl text-gray-300">COO</div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-yammy-dark-blue">{member.name}</h3>
+                  <p className="text-yammy-blue text-sm">{member.role}</p>
+                  {member.nickname && <p className="text-gray-700 text-sm">({member.nickname})</p>}
                 </div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-yammy-dark-blue text-lg">Juma ramadhan iddi</h3>
-                <p className="text-yammy-blue">Chief Operations Officer (COO)</p>
-              </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Us Section */}
+      <section className="py-20 bg-yammy-light-blue/30">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-6 text-yammy-dark-blue">{t.contactUs}</h2>
+            <div className="w-16 h-1 bg-yammy-pink mx-auto mb-8"></div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Location 1 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="bg-white rounded-lg shadow-lg p-8"
+            >
+              <h3 className="text-xl font-bold text-yammy-dark-blue mb-4">{t.kariakooTitle}</h3>
+              <p className="text-gray-700 mb-2">
+                <MapPin className="inline-block mr-1 h-4 w-4 text-yammy-blue" /> {t.kariakooAddress}
+              </p>
+              <p className="text-gray-700 mb-2">
+                <Phone className="inline-block mr-1 h-4 w-4 text-yammy-blue" /> {t.phoneNumber1}
+              </p>
+              <p className="text-gray-700">
+                <Mail className="inline-block mr-1 h-4 w-4 text-yammy-blue" />{" "}
+                <a href="mailto:info@yammyyami.co.tz">info@yammyyami.co.tz</a>
+              </p>
+            </motion.div>
+
+            {/* Location 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="bg-white rounded-lg shadow-lg p-8"
+            >
+              <h3 className="text-xl font-bold text-yammy-dark-blue mb-4">{t.sukumaTitle}</h3>
+              <p className="text-gray-700 mb-2">
+                <MapPin className="inline-block mr-1 h-4 w-4 text-yammy-blue" /> {t.sukumaAddress}
+              </p>
+              <p className="text-gray-700 mb-2">
+                <Phone className="inline-block mr-1 h-4 w-4 text-yammy-blue" /> {t.phoneNumber2}
+              </p>
+              <p className="text-gray-700">
+                <Mail className="inline-block mr-1 h-4 w-4 text-yammy-blue" />{" "}
+                <a href="mailto:sales@yammyyami.co.tz">sales@yammyyami.co.tz</a>
+              </p>
+            </motion.div>
+
+            {/* General Contact */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="bg-white rounded-lg shadow-lg p-8"
+            >
+              <h3 className="text-xl font-bold text-yammy-dark-blue mb-4">{t.visitUs}</h3>
+              <p className="text-gray-700 mb-2">{t.storyContent}</p>
+              <p className="text-gray-700 mb-2">
+                <Phone className="inline-block mr-1 h-4 w-4 text-yammy-blue" /> {t.phoneNumber1} / {t.phoneNumber2}
+              </p>
+              <p className="text-gray-700">
+                <Mail className="inline-block mr-1 h-4 w-4 text-yammy-blue" />{" "}
+                <a href="mailto:info@yammyyami.co.tz">info@yammyyami.co.tz</a>
+              </p>
             </motion.div>
           </div>
         </div>
-
-        {/* Locations Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-10">{t.locations}</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t.kariakooTitle}</CardTitle>
-                  <CardDescription>{t.kariakooAddress}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="aspect-video relative rounded-md overflow-hidden">
-                    <Image src="/images/model-with-diapers.png" alt="Kariakoo location" fill className="object-cover" />
-                  </div>
-                  <Button className="mt-4 w-full">{t.visitUs}</Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t.sukumaTitle}</CardTitle>
-                  <CardDescription>{t.sukumaAddress}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="aspect-video relative rounded-md overflow-hidden">
-                    <Image src="/images/baby-with-products.png" alt="Sukuma location" fill className="object-cover" />
-                  </div>
-                  <Button className="mt-4 w-full">{t.visitUs}</Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Contact Section */}
-        <div>
-          <h2 className="text-3xl font-bold text-center mb-10">{t.contactUs}</h2>
-          <div className="max-w-md mx-auto">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <Button className="w-full bg-green-500 hover:bg-green-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="w-5 h-5 mr-2"
-                    >
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm1-9.5h-2v5h2v-5z" />
-                    </svg>
-                    {t.phoneNumber1}
-                  </Button>
-                  <Button className="w-full bg-green-500 hover:bg-green-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="w-5 h-5 mr-2"
-                    >
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm1-9.5h-2v5h2v-5z" />
-                    </svg>
-                    {t.phoneNumber2}
-                  </Button>
-                  <Button className="w-full" variant="outline">
-                    {t.emailUs}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
+      </section>
     </PageWrapper>
   )
 }
