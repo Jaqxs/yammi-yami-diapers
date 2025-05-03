@@ -10,15 +10,17 @@ interface ImageSliderProps {
   title?: string
   subtitle?: string
   names?: string[]
+  nicknames?: string[]
   autoplaySpeed?: number
   className?: string
 }
 
-export function ImageSlider({
+export default function ImageSlider({
   images,
   title,
   subtitle,
   names = [],
+  nicknames = [],
   autoplaySpeed = 3000,
   className = "",
 }: ImageSliderProps) {
@@ -75,7 +77,6 @@ export function ImageSlider({
               fill
               className="object-cover"
               priority={currentIndex === 0}
-              onError={() => handleImageError(currentIndex)}
             />
           </motion.div>
         </AnimatePresence>
@@ -116,6 +117,9 @@ export function ImageSlider({
         <p className="text-center text-yammy-blue">{subtitle}</p>
         {names && names[currentIndex] && (
           <p className="text-center text-yammy-dark-blue font-medium mt-1">{names[currentIndex]}</p>
+        )}
+        {nicknames && nicknames[currentIndex] && (
+          <p className="text-center text-gray-600 text-sm mt-0.5">({nicknames[currentIndex]})</p>
         )}
       </div>
     </div>

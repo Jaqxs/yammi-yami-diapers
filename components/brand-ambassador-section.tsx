@@ -39,10 +39,8 @@ export default function BrandAmbassadorSection() {
                 ? "I love Yammy Yami products because they provide the perfect combination of comfort, quality, and affordability. As a brand ambassador, I'm proud to represent a company that truly cares about Tanzanian families."
                 : "Ninapenda bidhaa za Yammy Yami kwa sababu zinatoa mchanganyiko kamili wa faraja, ubora, na bei nafuu. Kama balozi wa bidhaa, ninajivunia kuwakilisha kampuni inayojali kweli familia za Kitanzania."}
             </blockquote>
-            <p className="font-bold text-yammy-dark-blue">
-              {language === "en" ? "Brand Ambassador" : "Balozi wa Bidhaa"}
-            </p>
-            <p className="text-yammy-blue">Yammy Yami Diaper TZ</p>
+            <p className="font-bold text-yammy-dark-blue">{language === "en" ? "Nasma Hassan" : "Nasma Hassan"}</p>
+            <p className="text-yammy-blue">Nana_dollz</p>
           </div>
         </div>
       </div>

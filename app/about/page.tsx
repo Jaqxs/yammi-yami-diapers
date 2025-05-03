@@ -19,7 +19,7 @@ import CountUp from "@/components/count-up"
 import { Button } from "@/components/ui/button"
 import { PageWrapper } from "@/components/page-wrapper"
 import { useLanguage } from "@/components/language-provider"
-import { ImageSlider } from "@/components/image-slider"
+import ImageSlider from "@/components/image-slider"
 
 // Language translations
 const translations = {
@@ -54,13 +54,13 @@ const translations = {
     phoneNumber2: "+255 754 089 447",
     emailUs: "Email Us",
     visitUs: "Visit Us",
-    brandAmbassadors: "Our Brand Ambassadors",
-    brandInfluencers: "Our Brand Influencers",
+    brandAmbassadors: "Our Brand Ambassador",
+    brandInfluencers: "Our Brand Influencer",
     ambassadorsDescription:
-      "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our ambassadors are passionate about quality, comfort, and family care.",
+      "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our ambassador is passionate about quality, comfort, and family care.",
     influencersDescription:
-      "Our influencers help spread the word about Yammy Yami products across Tanzania. They share their authentic experiences with our products and help us reach new customers.",
-    brandAmbassador: "Brand ambasoder",
+      "Our influencer helps spread the word about Yammy Yami products across Tanzania. They share their authentic experiences with our products and help us reach new customers.",
+    brandAmbassador: "Brand Ambassador",
     brandInfluencer: "Brand Influencer",
     ambassadorInterest:
       "Interested in becoming a Yammy Yami brand ambassador? Contact us to learn more about partnership opportunities.",
@@ -97,7 +97,7 @@ const translations = {
     adultDiapers: "Adult Diapers",
     productDesc:
       "We offer a comprehensive range of hygiene products designed to meet the needs of every family member.",
-    ourAmbassadors: "Our Ambassadors",
+    ourAmbassadors: "Our Brand Representatives",
     ambassadorQuote: "I'm proud to represent a brand that truly cares about Tanzanian families.",
     becomeAmbassador: "Become an Ambassador",
     becomeInfluencer: "Become an Influencer",
@@ -109,9 +109,8 @@ const translations = {
     historyDesc:
       "From humble beginnings to becoming a trusted household name, our journey has been driven by a commitment to quality and affordability.",
     readMore: "Read More",
-    ambassadorName1: "Fatima Hassan",
-    ambassadorName2: "Amina Juma",
-    influencerName: "Zainab Omar",
+    ambassadorName: "Nasma Hassan",
+    influencerName: "Evanche Dange",
     ourAchievements: "Our Achievements",
     achievementsDesc:
       "Since our founding in 2018, Yammy Yami has grown to become a trusted household name across Tanzania.",
@@ -152,13 +151,13 @@ const translations = {
     phoneNumber2: "+255 754 089 447",
     emailUs: "Tuma Barua Pepe",
     visitUs: "Tembelea",
-    brandAmbassadors: "Mabalozi Wetu wa Bidhaa",
-    brandInfluencers: "Washawishi Wetu wa Bidhaa",
+    brandAmbassadors: "Balozi Wetu wa Bidhaa",
+    brandInfluencers: "Mshawishi Wetu wa Bidhaa",
     ambassadorsDescription:
-      "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Mabalozi wetu wana shauku juu ya ubora, faraja, na utunzaji wa familia.",
+      "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Balozi wetu ana shauku juu ya ubora, faraja, na utunzaji wa familia.",
     influencersDescription:
-      "Washawishi wetu husaidia kueneza habari kuhusu bidhaa za Yammy Yami kote Tanzania. Wanashiriki uzoefu wao halisi na bidhaa zetu na kutusaidia kufikia wateja wapya.",
-    brandAmbassador: "Brand ambasoder",
+      "Mshawishi wetu husaidia kueneza habari kuhusu bidhaa za Yammy Yami kote Tanzania. Wanashiriki uzoefu wao halisi na bidhaa zetu na kutusaidia kufikia wateja wapya.",
+    brandAmbassador: "Brand Ambassador",
     brandInfluencer: "Mshawishi wa Bidhaa",
     ambassadorInterest:
       "Una nia ya kuwa balozi wa bidhaa za Yammy Yami? Wasiliana nasi kujifunza zaidi kuhusu fursa za ushirikiano.",
@@ -192,7 +191,7 @@ const translations = {
     ladyPads: "Pedi za Wanawake",
     adultDiapers: "Diapers za Watu Wazima",
     productDesc: "Tunatoa aina kamili ya bidhaa za usafi zilizoundwa kukidhi mahitaji ya kila mwanafamilia.",
-    ourAmbassadors: "Mabalozi Wetu",
+    ourAmbassadors: "Wawakilishi Wetu wa Biashara",
     ambassadorQuote: "Ninajivunia kuwakilisha chapa inayojali kweli familia za Kitanzania.",
     becomeAmbassador: "Kuwa Balozi",
     becomeInfluencer: "Kuwa Mshawishi",
@@ -204,9 +203,8 @@ const translations = {
     historyDesc:
       "Kutoka mwanzo mdogo hadi kuwa jina la nyumbani linaloaminika, safari yetu imeendeshwa na kujitolea kwa ubora na bei nafuu.",
     readMore: "Soma Zaidi",
-    ambassadorName1: "Fatima Hassan",
-    ambassadorName2: "Amina Juma",
-    influencerName: "Zainab Omar",
+    ambassadorName: "Nasma Hassan",
+    influencerName: "Evanche Dange",
     ourAchievements: "Mafanikio Yetu",
     achievementsDesc:
       "Tangu kuanzishwa kwetu mwaka 2018, Yammy Yami imekua na kuwa jina la nyumbani linaloaminika Tanzania nzima.",
@@ -227,9 +225,6 @@ const ambassadorImages = [
   "/images/brand-ambassador-5.jpeg",
 ]
 
-// Ambassador names for the slider
-const ambassadorNames = ["Fatima Hassan", "Fatima Hassan", "Fatima Hassan", "Amina Juma", "Amina Juma"]
-
 // Influencer images - using only the confirmed existing images
 const influencerImages = [
   "/images/brand-influencer-1.jpeg",
@@ -238,47 +233,30 @@ const influencerImages = [
   "/images/brand-influencer-4.jpeg",
 ]
 
-// Influencer names - all are Zainab Omar
-const influencerNames = Array(influencerImages.length).fill("Zainab Omar")
+// Update the ambassador names array to consistently use "Nasma Hassan"
+const ambassadorNames = Array(ambassadorImages.length).fill("Nasma Hassan")
+const ambassadorNicknames = Array(ambassadorImages.length).fill("Nana_dollz")
 
-// Testimonials
-const testimonials = [
-  {
-    name: "Maria Joseph",
-    role: "Mother of two",
-    image: "/images/ambassador-1.png",
-    quote: "testimonial1",
-  },
-  {
-    name: "Fatima Hassan",
-    role: "Brand Ambassador",
-    image: "/images/brand-ambassador-1.jpeg",
-    quote: "testimonial2",
-  },
-  {
-    name: "Amina Juma",
-    role: "Brand Ambassador",
-    image: "/images/ambassador-1.png", // Changed to use a known existing image
-    quote: "testimonial3",
-  },
-]
+// Update the influencer names array to consistently use "Evanche Dange" (with proper capitalization)
+const influencerNames = Array(influencerImages.length).fill("Evanche Dange")
+const influencerNicknames = Array(influencerImages.length).fill("lissahacttress")
 
 // Team members
 const teamMembers = [
   {
-    name: "Feisal salum abdalah",
+    name: "Feisal Salum Abdalah",
     role: "CEO and Director",
     nickname: "Feitoto",
     image: "/images/hassan-new.jpeg",
   },
   {
-    name: "Hassan mwara katuju",
+    name: "Hassan Mwara Katuju",
     role: "Chief Financial Officer (CFO)",
-    nickname: "",
+    nickname: "bossjuma",
     image: "/images/feisal-new.jpeg",
   },
   {
-    name: "Juma ramadhan iddi",
+    name: "Juma Ramadhan Iddi",
     role: "Chief Operations Officer (COO)",
     nickname: "",
     image: null,
@@ -319,6 +297,30 @@ const values = [
   { title: "affordabilityTitle", content: "affordabilityContent", icon: <TrendingUp className="h-8 w-8" /> },
   { title: "familyTitle", content: "familyContent", icon: <Users className="h-8 w-8" /> },
   { title: "tanzanianTitle", content: "tanzanianContent", icon: <Heart className="h-8 w-8" /> },
+]
+
+// Testimonials
+const testimonials = [
+  {
+    name: "Maria Joseph",
+    role: "Mother of two",
+    image: "/images/ambassador-1.png",
+    quote: "testimonial1",
+  },
+  {
+    name: "Nasma Hassan",
+    role: "Brand Ambassador",
+    nickname: "Nana_dollz",
+    image: "/images/brand-ambassador-1.jpeg",
+    quote: "testimonial2",
+  },
+  {
+    name: "Evanche Dange",
+    role: "Brand Influencer",
+    nickname: "lissahacttress",
+    image: "/images/ambassador-1.png", // Changed to use a known existing image
+    quote: "testimonial3",
+  },
 ]
 
 export default function AboutPage() {
@@ -385,7 +387,7 @@ export default function AboutPage() {
                 <Image
                   src={ambassadorImages[0] || "/placeholder.svg"}
                   alt="Yammy Yami Brand Ambassador"
-                  className="object-cover"
+                  className="object-cover object-top"
                   fill
                 />
               </motion.div>
@@ -400,7 +402,7 @@ export default function AboutPage() {
                 <Image
                   src={ambassadorImages[1] || "/placeholder.svg"}
                   alt="Yammy Yami Brand Ambassador"
-                  className="object-cover"
+                  className="object-cover object-top"
                   fill
                 />
               </motion.div>
@@ -415,7 +417,7 @@ export default function AboutPage() {
                 <Image
                   src={ambassadorImages[2] || "/placeholder.svg"}
                   alt="Yammy Yami Ambassador"
-                  className="object-cover"
+                  className="object-cover object-top"
                   fill
                 />
               </motion.div>
@@ -430,7 +432,7 @@ export default function AboutPage() {
                 <Image
                   src={ambassadorImages[3] || "/placeholder.svg"}
                   alt="Yammy Yami Ambassador"
-                  className="object-cover"
+                  className="object-cover object-top"
                   fill
                 />
               </motion.div>
@@ -454,7 +456,7 @@ export default function AboutPage() {
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-12">
-            {/* Brand Ambassadors */}
+            {/* Brand Ambassador */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -470,6 +472,7 @@ export default function AboutPage() {
                   images={ambassadorImages}
                   title={t.brandAmbassador}
                   names={ambassadorNames}
+                  nicknames={ambassadorNicknames}
                   className="mb-8"
                 />
               </div>
@@ -479,7 +482,7 @@ export default function AboutPage() {
               </div>
             </motion.div>
 
-            {/* Brand Influencers */}
+            {/* Brand Influencer */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -495,6 +498,7 @@ export default function AboutPage() {
                   images={influencerImages}
                   title={t.brandInfluencer}
                   names={influencerNames}
+                  nicknames={influencerNicknames}
                   className="mb-8"
                 />
               </div>
@@ -585,7 +589,7 @@ export default function AboutPage() {
               </div>
               <motion.h3
                 className="text-5xl font-bold text-yammy-dark-blue mb-2"
-                itial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{
@@ -764,6 +768,7 @@ export default function AboutPage() {
                   <div>
                     <h3 className="font-bold text-yammy-dark-blue">{testimonial.name}</h3>
                     <p className="text-yammy-blue text-sm">{testimonial.role}</p>
+                    {testimonial.nickname && <p className="text-gray-600 text-xs">({testimonial.nickname})</p>}
                   </div>
                 </div>
                 <p className="text-gray-700 italic">{t[testimonial.quote]}</p>
@@ -803,7 +808,13 @@ export default function AboutPage() {
                     src={member.image || "/images/ambassador-1.png"}
                     alt={member.name}
                     fill
-                    className={`object-cover ${member.name.includes("Feisal") ? "object-top" : ""}`}
+                    className={`object-cover ${
+                      member.name.includes("Feisal")
+                        ? "object-top"
+                        : member.name.includes("Hassan")
+                          ? "object-center"
+                          : ""
+                    }`}
                   />
                   {!member.image && (
                     <div className="absolute inset-0 flex items-center justify-center bg-yammy-blue/10">
