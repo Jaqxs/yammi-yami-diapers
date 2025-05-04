@@ -245,20 +245,20 @@ const influencerNicknames = Array(influencerImages.length).fill("lissahacttress"
 const teamMembers = [
   {
     name: "Feisal Salum Abdalah",
-    role: "CEO and Director",
+    role: "Director and CEO",
     nickname: "Feitoto",
     image: "/images/hassan-new.jpeg",
   },
   {
     name: "Hassan Mwara Katuju",
     role: "Chief Financial Officer (CFO)",
-    nickname: "bossjuma",
+    nickname: "Boss Hassan",
     image: "/images/feisal-new.jpeg",
   },
   {
     name: "Juma Ramadhan Iddi",
     role: "Chief Operations Officer (COO)",
-    nickname: "",
+    nickname: "Boss Juma",
     image: null,
   },
 ]
