@@ -9,6 +9,7 @@ import { useLanguage } from "@/components/language-provider"
 import { useCart } from "@/components/cart-provider"
 import { OptimizedImage } from "@/components/optimized-image"
 import type { Product } from "@/lib/store"
+import { toast } from "@/components/ui/use-toast"
 
 interface ProductCardProps {
   product: Product
@@ -39,6 +40,17 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
       image: product.image,
       size: product.size,
       bundleSize: product.bundleSize,
+    })
+
+    // Show confirmation toast
+    toast({
+      title: language === "en" ? "Added to Cart" : "Imeongezwa kwenye Kikapu",
+      description:
+        language === "en"
+          ? `${product.name.en} has been added to your cart`
+          : `${product.name.sw} imeongezwa kwenye kikapu chako`,
+      variant: "default",
+      duration: 3000,
     })
   }
 
