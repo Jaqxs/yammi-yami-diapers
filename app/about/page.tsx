@@ -809,27 +809,13 @@ export default function AboutPage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="bg-white rounded-lg overflow-hidden shadow-lg"
               >
-                <div className="relative h-64">
+                <div className="relative h-[300px] w-full mb-4 rounded-lg overflow-hidden">
                   <Image
                     src={member.image || "/images/ambassador-1.png"}
                     alt={member.name}
                     fill
-                    className={`object-cover ${
-                      member.name.includes("Feisal")
-                        ? "object-top"
-                        : member.name.includes("Hassan")
-                          ? "object-center"
-                          : ""
-                    }`}
+                    className="object-cover object-top"
                   />
-                  {!member.image && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-yammy-blue/10">
-                      <p className="text-2xl font-bold text-yammy-dark-blue">
-                        {member.name.split(" ")[0][0]}
-                        {member.name.split(" ")[1][0]}
-                      </p>
-                    </div>
-                  )}
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-yammy-dark-blue">{member.name}</h3>
