@@ -95,128 +95,200 @@ self.addEventListener("message", (event) => {
 // This is a service worker file to help with caching and offline support
 
 // Cache version - change this when you update assets
-const CACHE_VERSION = "v2"
-const CACHE_NAME = `yammy-yami-cache-${CACHE_VERSION}`
+const CACHE_NAME = "yammy-yami-cache-v1"
+const IMAGE_CACHE_NAME = "yammy-yami-image-cache-v1"
+const STATIC_CACHE_NAME = "yammy-yami-static-cache-v1"
 
-// Assets to cache on install
-const STATIC_ASSETS = [
-  "/",
-  "/products",
-  "/pricing",
-  "/about",
-  "/contact",
-  "/images/baby-diapers.png",
-  "/images/diaper-features.png",
-  "/images/lady-pads.png",
-  "/assorted-products-display.png",
-]
-
-// Install event - cache static assets
+// Add event listener for install event
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS)
-    }),
-  )
+  // Skip waiting to activate the new service worker immediately
+  self.skipWaiting()
+
+  console.log("Service worker installed")
 })
 
-// Activate event - clean up old caches
+// Add event listener for activate event
 self.addEventListener("activate", (event) => {
+  // Claim clients to control all open tabs
+  event.waitUntil(self.clients.claim())
+
+  // Delete old caches
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames
-          .filter((name) => name.startsWith("yammy-yami-cache-") && name !== CACHE_NAME)
-          .map((name) => caches.delete(name)),
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME && cacheName !== IMAGE_CACHE_NAME && cacheName !== STATIC_CACHE_NAME) {
+            console.log("Deleting old cache:", cacheName)
+            return caches.delete(cacheName)
+          }
+          return Promise.resolve()
+        }),
       )
     }),
   )
+
+  console.log("Service worker activated")
 })
 
-// Fetch event - serve from cache or network
+// Add event listener for fetch event
 self.addEventListener("fetch", (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== "GET") return
-
-  // Skip browser-sync and analytics requests
   const url = new URL(event.request.url)
-  if (
-    url.pathname.startsWith("/browser-sync") ||
-    url.pathname.startsWith("/analytics") ||
-    url.hostname.includes("google-analytics") ||
-    url.hostname.includes("googletagmanager")
-  ) {
+
+  // Skip non-GET requests
+  if (event.request.method !== "GET") {
     return
   }
 
-  // Special handling for image requests
-  if (event.request.url.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i) || event.request.destination === "image") {
-    // For images, use network first, then cache
+  // Handle image requests
+  if (event.request.destination === "image" || url.pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)$/i)) {
+    // Add cache busting parameter to image URLs
+    const bustedUrl = new URL(event.request.url)
+    bustedUrl.searchParams.set("t", Date.now().toString())
+
+    const bustedRequest = new Request(bustedUrl.toString(), {
+      method: event.request.method,
+      headers: event.request.headers,
+      mode: event.request.mode,
+      credentials: event.request.credentials,
+      redirect: event.request.redirect,
+      referrer: event.request.referrer,
+      integrity: event.request.integrity,
+    })
+
+    // Network first, then cache
     event.respondWith(
-      fetch(event.request)
+      fetch(bustedRequest)
         .then((response) => {
-          // Clone the response to store in cache
-          const clonedResponse = response.clone()
+          // Clone the response
+          const responseToCache = response.clone()
 
-          // Open the cache and store the new response
-          caches.open(CACHE_NAME).then((cache) => {
-            // Add timestamp to URL to prevent caching issues
-            const timestamp = new Date().getTime()
-            const urlWithTimestamp = new URL(event.request.url)
-            urlWithTimestamp.searchParams.set("_sw_cache", timestamp.toString())
-
-            // Store in cache with timestamp
-            cache.put(new Request(urlWithTimestamp.toString()), clonedResponse)
+          // Cache the response
+          caches.open(IMAGE_CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache)
           })
 
           return response
         })
         .catch(() => {
-          // If network fails, try the cache
+          // If network fails, try to get from cache
           return caches.match(event.request)
         }),
     )
     return
   }
 
-  // For other requests, try cache first, then network
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse
-      }
+  // Handle CSS and JS requests with stale-while-revalidate
+  if (
+    event.request.destination === "style" ||
+    event.request.destination === "script" ||
+    url.pathname.match(/\.(css|js)$/i)
+  ) {
+    event.respondWith(
+      caches.open(STATIC_CACHE_NAME).then((cache) => {
+        return cache.match(event.request).then((cachedResponse) => {
+          const fetchPromise = fetch(event.request).then((networkResponse) => {
+            cache.put(event.request, networkResponse.clone())
+            return networkResponse
+          })
 
-      return fetch(event.request).then((response) => {
-        // Don't cache non-successful responses
+          return cachedResponse || fetchPromise
+        })
+      }),
+    )
+    return
+  }
+
+  // Default: network first, then cache
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // Don't cache if not a success response
         if (!response || response.status !== 200 || response.type !== "basic") {
           return response
         }
 
-        // Clone the response to store in cache
-        const clonedResponse = response.clone()
+        // Clone the response
+        const responseToCache = response.clone()
 
-        // Open the cache and store the new response
+        // Cache the response
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, clonedResponse)
+          cache.put(event.request, responseToCache)
         })
 
         return response
       })
-    }),
+      .catch(() => {
+        // If network fails, try to get from cache
+        return caches.match(event.request)
+      }),
   )
 })
 
-// Clear image cache on message
+// Add event listener for message event
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "CLEAR_IMAGE_CACHE") {
-    caches.open(CACHE_NAME).then((cache) => {
-      cache.keys().then((requests) => {
-        requests.forEach((request) => {
-          if (request.url.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i)) {
-            cache.delete(request)
-          }
-        })
-      })
-    })
+    event.waitUntil(
+      caches.open(IMAGE_CACHE_NAME).then((cache) => {
+        return cache
+          .keys()
+          .then((keys) => {
+            return Promise.all(
+              keys.map((request) => {
+                return cache.delete(request)
+              }),
+            )
+          })
+          .then(() => {
+            // Notify clients that cache was cleared
+            self.clients.matchAll().then((clients) => {
+              clients.forEach((client) => {
+                client.postMessage({
+                  type: "CACHE_CLEARED",
+                })
+              })
+            })
+          })
+      }),
+    )
   }
+})
+
+// Add event listener for push event
+self.addEventListener("push", (event) => {
+  const data = event.data?.json() ?? {}
+
+  const title = data.title || "Yammy Yami Diapers"
+  const options = {
+    body: data.body || "New notification from Yammy Yami Diapers",
+    icon: "/icons/icon-192x192.png",
+    badge: "/icons/badge-72x72.png",
+    data: {
+      url: data.url || "/",
+    },
+  }
+
+  event.waitUntil(self.registration.showNotification(title, options))
+})
+
+// Add event listener for notificationclick event
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close()
+
+  const url = event.notification.data?.url || "/"
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clientList) => {
+      // Check if there is already a window/tab open with the target URL
+      for (const client of clientList) {
+        if (client.url === url && "focus" in client) {
+          return client.focus()
+        }
+      }
+
+      // If no window/tab is open with the target URL, open a new one
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(url)
+      }
+    }),
+  )
 })

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { ShoppingCart, ChevronRight, Phone, Instagram, Star, Calendar, Clock } from "lucide-react"
@@ -13,6 +12,8 @@ import { useStore } from "@/lib/store"
 import { useCart } from "@/components/cart-provider"
 import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
+import { ForceReloadImage } from "@/components/force-reload-image"
+import { forceReloadImages } from "@/utils/cache-buster"
 
 // Language translations
 const translations = {
@@ -162,6 +163,11 @@ export default function Home() {
   const [featuredBlogPosts, setFeaturedBlogPosts] = useState([])
   const t = translations[language || "en"]
 
+  // Force refresh images on page load
+  useEffect(() => {
+    forceReloadImages()
+  }, [])
+
   useEffect(() => {
     // Create random bubbles for background effect
     const newBubbles = Array.from({ length: 15 }, (_, i) => ({
@@ -292,12 +298,13 @@ export default function Home() {
               className="relative"
             >
               <div className="relative h-[500px] w-full">
-                <Image
+                <ForceReloadImage
                   src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-21%20at%2004.17.11_e98c889a.jpg-qImS0ea607vm0WJyywYVFZ0KBHG2zi.jpeg"
                   alt="Yammy Yami Brand Ambassador"
                   fill
                   className="object-contain"
                   priority
+                  reloadInterval={300000} // Reload every 5 minutes
                 />
               </div>
               <div className="absolute -bottom-4 -right-4 bg-white/80 backdrop-blur-sm p-3 rounded-xl shadow-lg">
@@ -337,7 +344,7 @@ export default function Home() {
                   whileHover={{ y: -10 }}
                 >
                   <div className="relative h-64 bg-yammy-light-blue">
-                    <Image
+                    <ForceReloadImage
                       src={product.image || "/placeholder.svg?height=300&width=300&query=product"}
                       alt={product.name[language || "en"]}
                       fill
@@ -383,6 +390,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Rest of the component remains the same */}
       {/* Features Section */}
       <section className="py-16 bg-yammy-light-blue">
         <div className="container mx-auto px-4">
@@ -425,7 +433,7 @@ export default function Home() {
                   whileHover={{ y: -10 }}
                 >
                   <div className="relative h-48">
-                    <Image
+                    <ForceReloadImage
                       src={post.image || "/placeholder.svg?height=300&width=500&query=blog post"}
                       alt={post.title[language || "en"]}
                       fill
@@ -527,7 +535,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 className="relative h-[400px]"
               >
-                <Image src="/images/diaper-sizes.png" alt="Diaper sizes" fill className="object-contain" />
+                <ForceReloadImage src="/images/diaper-sizes.png" alt="Diaper sizes" fill className="object-contain" />
               </motion.div>
             </div>
           </div>
@@ -612,6 +620,8 @@ export default function Home() {
 
       {/* Admin Change Notification */}
       <AdminChangeNotification />
+      {/* Register service worker on client side */}
+      {/* {typeof window !== "undefined" && registerServiceWorker()} */}
     </PageWrapper>
   )
 }

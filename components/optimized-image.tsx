@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
+import { bustCache } from "@/utils/cache-buster"
 
 interface OptimizedImageProps {
   src: string
@@ -55,6 +56,9 @@ function OptimizedImageComponent({
     }
   }, [src])
 
+  // Apply cache busting to the src
+  const cacheBustedSrc = typeof src === "string" ? bustCache(src, { useTimestamp: true }) : src
+
   return (
     <div
       className={cn("relative", className)}
@@ -77,7 +81,7 @@ function OptimizedImageComponent({
       )}
 
       <Image
-        src={imgSrc || fallbackSrc}
+        src={cacheBustedSrc || fallbackSrc}
         alt={alt}
         width={fill ? undefined : width}
         height={fill ? undefined : height}

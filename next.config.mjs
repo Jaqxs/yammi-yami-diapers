@@ -34,11 +34,11 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/:path*.(jpg|jpeg|png|webp|avif|gif)',
+        source: '/:path*.(jpg|jpeg|png|webp|avif|gif|svg)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            value: 'public, max-age=0, must-revalidate, no-store',
           },
           {
             key: 'Pragma',
@@ -47,6 +47,24 @@ const nextConfig = {
           {
             key: 'Expires',
             value: '0',
+          },
+          {
+            key: 'Surrogate-Control',
+            value: 'no-store',
+          },
+          {
+            key: 'Vary',
+            value: '*',
+          },
+        ],
+      },
+      {
+        // Add headers for the _next directory which contains static assets
+        source: '/_next/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
           },
         ],
       },
