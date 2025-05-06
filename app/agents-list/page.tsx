@@ -351,8 +351,26 @@ export default function AgentsListPage() {
       // Generate the PDF
       const doc = generateAgentsPDF(filteredData, language as "en" | "sw")
 
-      // Save the PDF
-      doc.save("Yammy_Yami_Agents_List.pdf")
+      // Convert the PDF to a blob
+      const pdfBlob = doc.output("blob")
+
+      // Create a URL for the blob
+      const blobUrl = URL.createObjectURL(pdfBlob)
+
+      // Create a temporary link element
+      const link = document.createElement("a")
+      link.href = blobUrl
+      link.download = "Yammy_Yami_Agents_List.pdf"
+
+      // Append to document, click and remove
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Clean up by revoking the blob URL
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl)
+      }, 100)
     } catch (error) {
       console.error("Error generating PDF:", error)
       alert("Failed to generate PDF. Please try again.")
