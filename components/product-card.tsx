@@ -110,6 +110,29 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
     return `${url}${separator}v=${timestamp}`
   }
 
+  // Ensure the image URL is absolute
+  const ensureAbsoluteUrl = (url: string | undefined) => {
+    if (!url) return undefined
+
+    // If it's already absolute, return as is
+    if (url.startsWith("http")) return url
+
+    // If it's a relative URL, make it absolute
+    if (url.startsWith("/")) {
+      // Use the current origin
+      return `${window.location.origin}${url}`
+    }
+
+    // If it's a relative URL without leading slash
+    return `${window.location.origin}/${url}`
+  }
+
+  // Get the final image URL
+  const getFinalImageUrl = (url: string | undefined) => {
+    const processedUrl = getProcessedImageUrl(url)
+    return processedUrl
+  }
+
   return (
     <motion.div
       className="product-card bg-white rounded-2xl shadow-md overflow-hidden h-full flex flex-col"
@@ -123,13 +146,14 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
       <div className="relative h-64 bg-yammy-light-blue">
         <OptimizedImage
           key={`product-image-${product.id}-${imageKey}`}
-          src={getProcessedImageUrl(product.image) || "/placeholder.svg?height=300&width=300&query=diaper product"}
+          src={getFinalImageUrl(product.image) || "/placeholder.svg?height=300&width=300&query=diaper product"}
           alt={product.name[language || "en"]}
           fill
           className="object-cover md:object-contain p-0"
           fallbackSrc={getFallbackImage()}
           quality={90}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          priority={isHovered}
         />
 
         {/* Product tags */}

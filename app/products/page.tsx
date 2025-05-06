@@ -18,6 +18,7 @@ import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { ProductCard } from "@/components/product-card"
 import { useIsMobile, useIsTablet } from "@/hooks/use-media-query"
+import { toast } from "@/components/ui/use-toast"
 
 // Dynamically import heavy components
 const BrandAmbassadorSection = dynamic(() => import("@/components/brand-ambassador-section"), {
@@ -51,6 +52,8 @@ const translations = {
     loading: "Loading products...",
     refresh: "Refresh Products",
     clearCache: "Clear Image Cache",
+    imageCacheCleared: "Image cache cleared successfully",
+    productsRefreshed: "Products refreshed successfully",
   },
   sw: {
     products: "Bidhaa",
@@ -76,6 +79,8 @@ const translations = {
     loading: "Inapakia bidhaa...",
     refresh: "Onyesha Upya Bidhaa",
     clearCache: "Futa Picha zilizohifadhiwa",
+    imageCacheCleared: "Picha zilizohifadhiwa zimefutwa kwa mafanikio",
+    productsRefreshed: "Bidhaa zimeonyeshwa upya kwa mafanikio",
   },
 }
 
@@ -176,12 +181,20 @@ export default function ProductsPage() {
       await loadProducts()
       // Force image refresh by updating the version
       setImageVersion(Date.now())
+
+      // Show success toast
+      toast({
+        title: language === "en" ? "Success" : "Mafanikio",
+        description: t.productsRefreshed,
+        variant: "default",
+        duration: 3000,
+      })
     } catch (error) {
       console.error("Error refreshing products:", error)
     } finally {
       setIsRefreshing(false)
     }
-  }, [loadProducts])
+  }, [loadProducts, language, t])
 
   // Function to clear image cache
   const clearImageCache = useCallback(() => {
@@ -199,10 +212,37 @@ export default function ProductsPage() {
       })
     }
 
+    // Clear localStorage image cache if any exists
+    const keys = Object.keys(localStorage)
+    keys.forEach((key) => {
+      if (key.includes("image-cache")) {
+        localStorage.removeItem(key)
+      }
+    })
+
     // Force reload images by updating state
     setIsRefreshing(true)
-    setTimeout(() => setIsRefreshing(false), 500)
-  }, [])
+
+    // Show success toast
+    toast({
+      title: language === "en" ? "Success" : "Mafanikio",
+      description: t.imageCacheCleared,
+      variant: "default",
+      duration: 3000,
+    })
+
+    // Reload products to refresh images
+    loadProducts().then(() => {
+      setTimeout(() => setIsRefreshing(false), 500)
+    })
+
+    // Try to clear service worker cache if available
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: "CLEAR_IMAGE_CACHE",
+      })
+    }
+  }, [loadProducts, language, t])
 
   // Handle WhatsApp order
   const handleWhatsAppOrder = useCallback(

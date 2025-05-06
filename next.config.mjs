@@ -21,6 +21,8 @@ const nextConfig = {
     minimumCacheTTL: 0,
     // Disable static image imports caching
     disableStaticImages: true,
+    // Allow unoptimized images
+    unoptimized: true,
   },
   // Remove the optimizeCss experimental feature that requires critters
   experimental: {
@@ -37,11 +39,33 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+          {
+            key: 'Surrogate-Control',
+            value: 'no-store',
           },
         ],
       },
     ];
+  },
+  // Add webpack configuration to improve image handling
+  webpack(config) {
+    // Optimize image loading
+    config.module.rules.push({
+      test: /\.(png|jpe?g|gif|svg|webp|avif)$/i,
+      type: 'asset/resource',
+    });
+    
+    return config;
   },
 }
 

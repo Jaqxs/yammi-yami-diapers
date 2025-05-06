@@ -13,7 +13,7 @@ import { clientsClaim } from "workbox-core"
 import { ExpirationPlugin } from "workbox-expiration"
 import { precacheAndRoute, createHandlerBoundToURL } from "workbox-precaching"
 import { registerRoute } from "workbox-routing"
-import { StaleWhileRevalidate, CacheFirst } from "workbox-strategies"
+import { StaleWhileRevalidate, NetworkFirst } from "workbox-strategies"
 
 clientsClaim()
 
@@ -52,25 +52,21 @@ registerRoute(
   createHandlerBoundToURL("/index.html"),
 )
 
-// Cache images with a Cache First strategy
+// Cache images with a Network First strategy for better freshness
 registerRoute(
-  // Check to see if the request's destination is style for stylesheets, script for JavaScript, or image for images
+  // Check to see if the request's destination is an image
   ({ request }) => request.destination === "image",
-  // Use a Cache First caching strategy
-  new CacheFirst({
-    // Put all cached files in a cache named 'images'
+  new NetworkFirst({
+    // Use a custom cache name
     cacheName: "images",
     plugins: [
-      // Ensure that only requests that result in a 200 status are cached
-      {
-        cacheWillUpdate: async ({ response }) => {
-          return response && response.status === 200 ? response : null
-        },
-      },
-      // Don't cache more than 50 items, and expire them after 30 days
+      // Don't cache more than 50 images, and expire them after 1 day
       new ExpirationPlugin({
         maxEntries: 50,
-        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 Days
+        // Cache for a maximum of 1 day
+        maxAgeSeconds: 24 * 60 * 60,
+        // Automatically cleanup if quota is exceeded
+        purgeOnQuotaError: true,
       }),
     ],
   }),
@@ -92,10 +88,28 @@ self.addEventListener("message", (event) => {
   }
 })
 
+// Clear image cache when requested
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "CLEAR_IMAGE_CACHE") {
+    caches.open("images").then((cache) => {
+      cache.keys().then((keys) => {
+        keys.forEach((request) => {
+          cache.delete(request)
+        })
+      })
+    })
+
+    // Respond to confirm cache was cleared
+    if (event.source && "postMessage" in event.source) {
+      event.source.postMessage({ type: "IMAGE_CACHE_CLEARED" })
+    }
+  }
+})
+
 // This is a service worker file to help with caching and offline support
 
 // Cache version - change this when you update assets
-const CACHE_VERSION = "v2"
+const CACHE_VERSION = "v3"
 const CACHE_NAME = `yammy-yami-cache-${CACHE_VERSION}`
 
 // Assets to cache on install
@@ -133,7 +147,7 @@ self.addEventListener("activate", (event) => {
   )
 })
 
-// Fetch event - serve from cache or network
+// Fetch event - serve from network first, then cache
 self.addEventListener("fetch", (event) => {
   // Skip non-GET requests
   if (event.request.method !== "GET") return
@@ -153,7 +167,7 @@ self.addEventListener("fetch", (event) => {
   if (event.request.url.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i) || event.request.destination === "image") {
     // For images, use network first, then cache
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: "no-store" })
         .then((response) => {
           // Clone the response to store in cache
           const clonedResponse = response.clone()
@@ -179,14 +193,10 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  // For other requests, try cache first, then network
+  // For other requests, try network first, then cache
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse
-      }
-
-      return fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
         // Don't cache non-successful responses
         if (!response || response.status !== 200 || response.type !== "basic") {
           return response
@@ -202,21 +212,9 @@ self.addEventListener("fetch", (event) => {
 
         return response
       })
-    }),
+      .catch(() => {
+        // If network fails, try the cache
+        return caches.match(event.request)
+      }),
   )
-})
-
-// Clear image cache on message
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "CLEAR_IMAGE_CACHE") {
-    caches.open(CACHE_NAME).then((cache) => {
-      cache.keys().then((requests) => {
-        requests.forEach((request) => {
-          if (request.url.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i)) {
-            cache.delete(request)
-          }
-        })
-      })
-    })
-  }
 })

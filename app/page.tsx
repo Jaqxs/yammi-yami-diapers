@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { ShoppingCart, ChevronRight, Phone, Instagram, Star, Calendar, Clock } from "lucide-react"
@@ -13,6 +12,8 @@ import { useStore } from "@/lib/store"
 import { useCart } from "@/components/cart-provider"
 import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
+import { OptimizedImage } from "@/components/optimized-image"
+import { toast } from "@/components/ui/use-toast"
 
 // Language translations
 const translations = {
@@ -50,6 +51,8 @@ const translations = {
     noFeaturedPosts: "No featured blog posts available",
     addToCart: "Add to Cart",
     viewAllBlogPosts: "View All Blog Posts",
+    addedToCart: "Added to Cart",
+    productAddedToCart: "Product has been added to your cart",
   },
   sw: {
     heroTitle: "Penda Mtoto Wako, Penda Familia Yako",
@@ -85,6 +88,8 @@ const translations = {
     noFeaturedPosts: "Hakuna makala zilizoangaziwa zinazopatikana",
     addToCart: "Ongeza kwenye Kikapu",
     viewAllBlogPosts: "Tazama Makala Zote",
+    addedToCart: "Imeongezwa kwenye Kikapu",
+    productAddedToCart: "Bidhaa imeongezwa kwenye kikapu chako",
   },
 }
 
@@ -160,6 +165,7 @@ export default function Home() {
   const [bubbles, setBubbles] = useState<Array<{ id: number; size: number; left: string; delay: number }>>([])
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [featuredBlogPosts, setFeaturedBlogPosts] = useState([])
+  const [imageVersion, setImageVersion] = useState(Date.now())
   const t = translations[language || "en"]
 
   useEffect(() => {
@@ -216,6 +222,9 @@ export default function Home() {
           const featuredPosts = state.blogPosts.filter((post) => post.featured === true)
           setFeaturedBlogPosts(featuredPosts.slice(0, 3))
         }
+
+        // Force image refresh by updating the version
+        setImageVersion(Date.now())
       }
 
       refreshData()
@@ -243,6 +252,27 @@ export default function Home() {
       size: product.size,
       bundleSize: product.bundleSize,
     })
+
+    // Show confirmation toast
+    toast({
+      title: t.addedToCart,
+      description: t.productAddedToCart,
+      variant: "default",
+      duration: 3000,
+    })
+  }
+
+  // Process image URL to ensure it's not cached
+  const getProcessedImageUrl = (url: string | undefined) => {
+    if (!url) return undefined
+
+    // If it's already a placeholder, return as is
+    if (url.includes("placeholder.svg")) return url
+
+    // Add cache-busting parameter
+    const timestamp = imageVersion
+    const separator = url.includes("?") ? "&" : "?"
+    return `${url}${separator}v=${timestamp}`
   }
 
   return (
@@ -292,7 +322,7 @@ export default function Home() {
               className="relative"
             >
               <div className="relative h-[500px] w-full">
-                <Image
+                <OptimizedImage
                   src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-21%20at%2004.17.11_e98c889a.jpg-qImS0ea607vm0WJyywYVFZ0KBHG2zi.jpeg"
                   alt="Yammy Yami Brand Ambassador"
                   fill
@@ -337,11 +367,12 @@ export default function Home() {
                   whileHover={{ y: -10 }}
                 >
                   <div className="relative h-64 bg-yammy-light-blue">
-                    <Image
-                      src={product.image || "/placeholder.svg?height=300&width=300&query=product"}
+                    <OptimizedImage
+                      src={getProcessedImageUrl(product.image) || "/placeholder.svg?height=300&width=300&query=product"}
                       alt={product.name[language || "en"]}
                       fill
                       className="object-contain p-4"
+                      fallbackSrc="/assorted-products-display.png"
                     />
                   </div>
                   <div className="p-6">
@@ -425,8 +456,8 @@ export default function Home() {
                   whileHover={{ y: -10 }}
                 >
                   <div className="relative h-48">
-                    <Image
-                      src={post.image || "/placeholder.svg?height=300&width=500&query=blog post"}
+                    <OptimizedImage
+                      src={getProcessedImageUrl(post.image) || "/placeholder.svg?height=300&width=500&query=blog post"}
                       alt={post.title[language || "en"]}
                       fill
                       className="object-cover"
@@ -527,7 +558,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 className="relative h-[400px]"
               >
-                <Image src="/images/diaper-sizes.png" alt="Diaper sizes" fill className="object-contain" />
+                <OptimizedImage src="/images/diaper-sizes.png" alt="Diaper sizes" fill className="object-contain" />
               </motion.div>
             </div>
           </div>
