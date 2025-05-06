@@ -50,6 +50,7 @@ const translations = {
     priceNote: "* Prices in Dar es Salaam/Kariakoo. See Pricing page for details.",
     loading: "Loading products...",
     refresh: "Refresh Products",
+    clearCache: "Clear Image Cache",
   },
   sw: {
     products: "Bidhaa",
@@ -74,6 +75,7 @@ const translations = {
     priceNote: "* Bei hizi ni za Dar es Salaam/Kariakoo. Tazama ukurasa wa Bei kwa maelezo zaidi.",
     loading: "Inapakia bidhaa...",
     refresh: "Onyesha Upya Bidhaa",
+    clearCache: "Futa Picha zilizohifadhiwa",
   },
 }
 
@@ -115,6 +117,7 @@ export default function ProductsPage() {
   const [sortOption, setSortOption] = useState("newest")
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [imageVersion, setImageVersion] = useState(Date.now())
   const isMobile = useIsMobile()
   const t = translations[language || "en"]
 
@@ -142,6 +145,8 @@ export default function ProductsPage() {
         setIsRefreshing(true)
         try {
           await loadProducts()
+          // Force image refresh by updating the version
+          setImageVersion(Date.now())
 
           // If we received an "add" action, show a subtle notification
           if (lastEvent.action === "add") {
@@ -169,12 +174,35 @@ export default function ProductsPage() {
     setIsRefreshing(true)
     try {
       await loadProducts()
+      // Force image refresh by updating the version
+      setImageVersion(Date.now())
     } catch (error) {
       console.error("Error refreshing products:", error)
     } finally {
       setIsRefreshing(false)
     }
   }, [loadProducts])
+
+  // Function to clear image cache
+  const clearImageCache = useCallback(() => {
+    // Update image version to force refresh
+    setImageVersion(Date.now())
+
+    // Clear browser cache for images if possible
+    if ("caches" in window) {
+      caches.keys().then((cacheNames) => {
+        cacheNames.forEach((cacheName) => {
+          if (cacheName.includes("image")) {
+            caches.delete(cacheName)
+          }
+        })
+      })
+    }
+
+    // Force reload images by updating state
+    setIsRefreshing(true)
+    setTimeout(() => setIsRefreshing(false), 500)
+  }, [])
 
   // Handle WhatsApp order
   const handleWhatsAppOrder = useCallback(
@@ -242,9 +270,19 @@ export default function ProductsPage() {
         processedProduct.image = "/images/baby-diapers.png"
       } else if (processedProduct.category === "adultDiapers") {
         processedProduct.image = "/images/diaper-features.png"
+      } else if (processedProduct.category === "ladyPads") {
+        processedProduct.image = "/images/lady-pads.png"
+      } else if (processedProduct.category === "babyPants") {
+        processedProduct.image = "/images/baby-diapers.png"
       } else {
         processedProduct.image = "/assorted-products-display.png"
       }
+    }
+
+    // Add version to image URL to prevent caching
+    if (processedProduct.image && !processedProduct.image.includes("placeholder")) {
+      const separator = processedProduct.image.includes("?") ? "&" : "?"
+      processedProduct.image = `${processedProduct.image}${separator}v=${imageVersion}`
     }
 
     return processedProduct
@@ -374,6 +412,16 @@ export default function ProductsPage() {
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
               {t.refresh}
             </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-yammy-blue/30 text-yammy-blue"
+              onClick={clearImageCache}
+            >
+              {t.clearCache}
+            </Button>
+
             <Select value={sortOption} onValueChange={setSortOption}>
               <SelectTrigger className="w-full md:w-[180px] border-yammy-blue/30 focus:ring-yammy-blue">
                 <SelectValue placeholder={t.sort} />
@@ -494,7 +542,7 @@ export default function ProductsPage() {
         ) : processedProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {processedProducts.map((product) => (
-              <div key={product.id} className="h-full">
+              <div key={`${product.id}-${imageVersion}`} className="h-full">
                 <ProductCard product={product} onWhatsAppOrder={handleWhatsAppOrder} />
               </div>
             ))}

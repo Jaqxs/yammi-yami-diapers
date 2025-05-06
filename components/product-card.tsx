@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { ShoppingCart } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -19,6 +19,12 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
   const { language } = useLanguage()
   const { addItem } = useCart()
   const [isHovered, setIsHovered] = useState(false)
+  const [imageKey, setImageKey] = useState(Date.now())
+
+  // Force image refresh when product changes
+  useEffect(() => {
+    setImageKey(Date.now())
+  }, [product.id, product.image])
 
   const formatPrice = (price: number) => {
     return `TZS ${price.toLocaleString()}`
@@ -79,6 +85,19 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
     },
   }
 
+  // Process image URL to ensure it's not cached
+  const getProcessedImageUrl = (url: string | undefined) => {
+    if (!url) return undefined
+
+    // If it's already a placeholder, return as is
+    if (url.includes("placeholder.svg")) return url
+
+    // Add cache-busting parameter
+    const timestamp = imageKey
+    const separator = url.includes("?") ? "&" : "?"
+    return `${url}${separator}v=${timestamp}`
+  }
+
   return (
     <motion.div
       className="product-card bg-white rounded-2xl shadow-md overflow-hidden h-full flex flex-col"
@@ -91,7 +110,8 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
     >
       <div className="relative h-64 bg-yammy-light-blue">
         <OptimizedImage
-          src={product.image || "/placeholder.svg?height=300&width=300&query=diaper product"}
+          key={`product-image-${product.id}-${imageKey}`}
+          src={getProcessedImageUrl(product.image) || "/placeholder.svg?height=300&width=300&query=diaper product"}
           alt={product.name[language || "en"]}
           fill
           className="object-cover md:object-contain p-0"

@@ -91,3 +91,132 @@ self.addEventListener("message", (event) => {
     self.skipWaiting()
   }
 })
+
+// This is a service worker file to help with caching and offline support
+
+// Cache version - change this when you update assets
+const CACHE_VERSION = "v2"
+const CACHE_NAME = `yammy-yami-cache-${CACHE_VERSION}`
+
+// Assets to cache on install
+const STATIC_ASSETS = [
+  "/",
+  "/products",
+  "/pricing",
+  "/about",
+  "/contact",
+  "/images/baby-diapers.png",
+  "/images/diaper-features.png",
+  "/images/lady-pads.png",
+  "/assorted-products-display.png",
+]
+
+// Install event - cache static assets
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS)
+    }),
+  )
+})
+
+// Activate event - clean up old caches
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name.startsWith("yammy-yami-cache-") && name !== CACHE_NAME)
+          .map((name) => caches.delete(name)),
+      )
+    }),
+  )
+})
+
+// Fetch event - serve from cache or network
+self.addEventListener("fetch", (event) => {
+  // Skip non-GET requests
+  if (event.request.method !== "GET") return
+
+  // Skip browser-sync and analytics requests
+  const url = new URL(event.request.url)
+  if (
+    url.pathname.startsWith("/browser-sync") ||
+    url.pathname.startsWith("/analytics") ||
+    url.hostname.includes("google-analytics") ||
+    url.hostname.includes("googletagmanager")
+  ) {
+    return
+  }
+
+  // Special handling for image requests
+  if (event.request.url.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i) || event.request.destination === "image") {
+    // For images, use network first, then cache
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Clone the response to store in cache
+          const clonedResponse = response.clone()
+
+          // Open the cache and store the new response
+          caches.open(CACHE_NAME).then((cache) => {
+            // Add timestamp to URL to prevent caching issues
+            const timestamp = new Date().getTime()
+            const urlWithTimestamp = new URL(event.request.url)
+            urlWithTimestamp.searchParams.set("_sw_cache", timestamp.toString())
+
+            // Store in cache with timestamp
+            cache.put(new Request(urlWithTimestamp.toString()), clonedResponse)
+          })
+
+          return response
+        })
+        .catch(() => {
+          // If network fails, try the cache
+          return caches.match(event.request)
+        }),
+    )
+    return
+  }
+
+  // For other requests, try cache first, then network
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse
+      }
+
+      return fetch(event.request).then((response) => {
+        // Don't cache non-successful responses
+        if (!response || response.status !== 200 || response.type !== "basic") {
+          return response
+        }
+
+        // Clone the response to store in cache
+        const clonedResponse = response.clone()
+
+        // Open the cache and store the new response
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, clonedResponse)
+        })
+
+        return response
+      })
+    }),
+  )
+})
+
+// Clear image cache on message
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "CLEAR_IMAGE_CACHE") {
+    caches.open(CACHE_NAME).then((cache) => {
+      cache.keys().then((requests) => {
+        requests.forEach((request) => {
+          if (request.url.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i)) {
+            cache.delete(request)
+          }
+        })
+      })
+    })
+  }
+})

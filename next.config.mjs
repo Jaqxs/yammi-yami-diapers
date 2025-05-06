@@ -17,6 +17,10 @@ const nextConfig = {
         hostname: '**',
       },
     ],
+    // Disable image optimization caching
+    minimumCacheTTL: 0,
+    // Disable static image imports caching
+    disableStaticImages: true,
   },
   // Remove the optimizeCss experimental feature that requires critters
   experimental: {
@@ -25,6 +29,20 @@ const nextConfig = {
   },
   // Enable React strict mode for better development experience
   reactStrictMode: true,
+  // Add headers to prevent caching of images
+  async headers() {
+    return [
+      {
+        source: '/:path*/(.jpg|.jpeg|.png|.webp|.avif|.gif)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
 }
 
 export default nextConfig
