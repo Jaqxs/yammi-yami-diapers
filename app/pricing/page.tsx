@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { PageWrapper } from "@/components/page-wrapper"
 import { useLanguage } from "@/components/language-provider"
+import { useCart } from "@/components/cart-provider"
 
 // Language translations
 const translations = {
@@ -113,6 +114,7 @@ export default function PricingPage() {
   const { language } = useLanguage()
   const t = translations[language]
   const [activeTab, setActiveTab] = useState("wholesale")
+  const { addItem } = useCart()
 
   // Format price function
   const formatPrice = (price: number) => {
@@ -404,7 +406,25 @@ export default function PricingPage() {
                 </h4>
                 <p className="text-gray-600 text-sm mb-2">4-8kg, 50 pcs</p>
                 <p className="text-yammy-blue font-bold mb-3">{formatPrice(18000)}</p>
-                <Button size="sm" className="w-full bg-yammy-blue hover:bg-yammy-dark-blue">
+                <Button
+                  size="sm"
+                  className="w-full bg-yammy-blue hover:bg-yammy-dark-blue"
+                  onClick={() =>
+                    addItem({
+                      id: 101,
+                      name: {
+                        en: "Baby Diapers - Size S",
+                        sw: "Diapers za Watoto - Ukubwa S",
+                      },
+                      price: 18000,
+                      quantity: 1,
+                      image:
+                        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/baby%20diaper.jpg-8TUQ8NXCalui3IondSW0pGQKZezKI1.jpeg",
+                      size: "S",
+                      bundleSize: 50,
+                    })
+                  }
+                >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   {language === "en" ? "Order Now" : "Agiza Sasa"}
                 </Button>
@@ -426,7 +446,25 @@ export default function PricingPage() {
                 </h4>
                 <p className="text-gray-600 text-sm mb-2">9-14kg, 50 pcs</p>
                 <p className="text-yammy-blue font-bold mb-3">{formatPrice(20000)}</p>
-                <Button size="sm" className="w-full bg-yammy-blue hover:bg-yammy-dark-blue">
+                <Button
+                  size="sm"
+                  className="w-full bg-yammy-blue hover:bg-yammy-dark-blue"
+                  onClick={() =>
+                    addItem({
+                      id: 102,
+                      name: {
+                        en: "Baby Pants - Size L",
+                        sw: "Pants za Watoto - Ukubwa L",
+                      },
+                      price: 20000,
+                      quantity: 1,
+                      image:
+                        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.41_542754ce.jpg-SYaYX5HxpNniNUoMc0trj7485kedRl.jpeg",
+                      size: "L",
+                      bundleSize: 50,
+                    })
+                  }
+                >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   {language === "en" ? "Order Now" : "Agiza Sasa"}
                 </Button>
@@ -448,7 +486,25 @@ export default function PricingPage() {
                 </h4>
                 <p className="text-gray-600 text-sm mb-2">12-17kg, 50 pcs</p>
                 <p className="text-yammy-blue font-bold mb-3">{formatPrice(20000)}</p>
-                <Button size="sm" className="w-full bg-yammy-blue hover:bg-yammy-dark-blue">
+                <Button
+                  size="sm"
+                  className="w-full bg-yammy-blue hover:bg-yammy-dark-blue"
+                  onClick={() =>
+                    addItem({
+                      id: 103,
+                      name: {
+                        en: "Baby Pants - Size XL",
+                        sw: "Pants za Watoto - Ukubwa XL",
+                      },
+                      price: 20000,
+                      quantity: 1,
+                      image:
+                        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-19%20at%2015.34.43_dd271f0f.jpg-EYQ4FIQyCghuaa0E0kwbpKWsBDNaPZ.jpeg",
+                      size: "XL",
+                      bundleSize: 50,
+                    })
+                  }
+                >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   {language === "en" ? "Order Now" : "Agiza Sasa"}
                 </Button>
@@ -470,7 +526,25 @@ export default function PricingPage() {
                 </h4>
                 <p className="text-gray-600 text-sm mb-2">80-105cm, 20 pcs</p>
                 <p className="text-yammy-blue font-bold mb-3">{formatPrice(25000)}</p>
-                <Button size="sm" className="w-full bg-yammy-blue hover:bg-yammy-dark-blue">
+                <Button
+                  size="sm"
+                  className="w-full bg-yammy-blue hover:bg-yammy-dark-blue"
+                  onClick={() =>
+                    addItem({
+                      id: 104,
+                      name: {
+                        en: "Adult Pants - Size L",
+                        sw: "Pants za Watu Wazima - Ukubwa L",
+                      },
+                      price: 25000,
+                      quantity: 1,
+                      image:
+                        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adult%20pants.jpg-eYvgmKtmGCITzb488aMf7pcNvB16Y2.jpeg",
+                      size: "L",
+                      bundleSize: 20,
+                    })
+                  }
+                >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   {language === "en" ? "Order Now" : "Agiza Sasa"}
                 </Button>

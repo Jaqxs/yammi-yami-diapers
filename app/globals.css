@@ -73,6 +73,67 @@
   }
 }
 
+/* Mobile optimizations */
+@layer utilities {
+  /* Improve touch targets for mobile */
+  @media (max-width: 640px) {
+    .mobile-touch-target {
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+
+    .mobile-container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    .mobile-text {
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .mobile-section {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+
+    .mobile-button {
+      min-height: 44px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-input {
+      font-size: 1rem;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .mobile-table {
+      width: 100%;
+      table-layout: auto;
+    }
+
+    .mobile-img {
+      max-width: 100%;
+      height: auto;
+    }
+  }
+
+  /* Prevent horizontal overflow */
+  .no-horizontal-overflow {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Fix for mobile viewport height issues */
+  .mobile-min-h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
 .baby-bg-pattern {
   background-color: #e6f7ff;
   background-image: radial-gradient(circle at 25px 25px, rgba(173, 216, 230, 0.15) 2px, transparent 0),
@@ -131,5 +192,12 @@
   }
   50% {
     transform: translateY(-20px) scale(1.1);
+  }
+}
+
+/* Fix for iOS Safari 100vh issue */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
   }
 }

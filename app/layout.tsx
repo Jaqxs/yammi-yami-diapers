@@ -11,6 +11,7 @@ import { StoreProvider } from "@/lib/store"
 import { StoreSyncProvider } from "@/lib/store-sync"
 import { RegistrationSync } from "@/lib/registration-sync"
 import { Toaster } from "@/components/ui/toaster"
+import { cn } from "@/lib/utils"
 
 // Load fonts
 const inter = Inter({
@@ -54,8 +55,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${nunito.variable}`}>
-      <body className={inter.className}>
+    <html lang="en" className={cn("no-horizontal-overflow", inter.variable, nunito.variable)}>
+      <body className={cn("min-h-screen no-horizontal-overflow", inter.className)}>
         <ThemeProvider attribute="class" defaultTheme="light">
           <StoreProvider>
             <StoreSyncProvider>

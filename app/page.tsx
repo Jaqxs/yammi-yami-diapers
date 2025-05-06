@@ -483,21 +483,36 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-bubblegum mb-6 text-yammy-dark-blue">{t.allSizesAvailable}</h2>
               <p className="text-gray-600 mb-6">
                 {language === "en"
-                  ? "We offer a complete range of sizes from S to XL to fit babies of all ages and stages."
-                  : "Tunatoa ukubwa kamili kutoka S hadi XL kufaa watoto wa umri na hatua zote."}
+                  ? "We offer a complete range of sizes from Newborn (NB) to XXXXXL to fit babies and adults of all ages and stages."
+                  : "Tunatoa ukubwa kamili kutoka Newborn (NB) hadi XXXXXL kufaa watoto na watu wazima wa umri na hatua zote."}
               </p>
-              <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+                <div className="bg-yammy-light-blue rounded-lg p-3 text-center">
+                  <span className="font-bubblegum text-lg text-yammy-dark-blue">NB (≤5kg)</span>
+                </div>
                 <div className="bg-yammy-light-blue rounded-lg p-3 text-center">
                   <span className="font-bubblegum text-lg text-yammy-dark-blue">S (4-8kg)</span>
                 </div>
                 <div className="bg-yammy-light-blue rounded-lg p-3 text-center">
-                  <span className="font-bubblegum text-lg text-yammy-dark-blue">M (6-11kg)</span>
+                  <span className="font-bubblegum text-lg text-yammy-dark-blue">M (7-10kg)</span>
                 </div>
                 <div className="bg-yammy-light-blue rounded-lg p-3 text-center">
                   <span className="font-bubblegum text-lg text-yammy-dark-blue">L (9-14kg)</span>
                 </div>
                 <div className="bg-yammy-light-blue rounded-lg p-3 text-center">
                   <span className="font-bubblegum text-lg text-yammy-dark-blue">XL (12-17kg)</span>
+                </div>
+                <div className="bg-yammy-light-blue rounded-lg p-3 text-center">
+                  <span className="font-bubblegum text-lg text-yammy-dark-blue">XXL (15kg+)</span>
+                </div>
+                <div className="bg-yammy-light-blue rounded-lg p-3 text-center">
+                  <span className="font-bubblegum text-lg text-yammy-dark-blue">XXXL (17kg+)</span>
+                </div>
+                <div className="bg-yammy-light-blue rounded-lg p-3 text-center">
+                  <span className="font-bubblegum text-lg text-yammy-dark-blue">XXXXL (19kg+)</span>
+                </div>
+                <div className="bg-yammy-light-blue rounded-lg p-3 text-center">
+                  <span className="font-bubblegum text-lg text-yammy-dark-blue">XXXXXL (21kg+)</span>
                 </div>
               </div>
               <Link href="/products">
