@@ -348,32 +348,49 @@ export default function AgentsListPage() {
         ? agentsByRegion.filter((region) => region.region === selectedRegion)
         : agentsByRegion
 
-      // Generate the PDF
-      const doc = generateAgentsPDF(filteredData, language as "en" | "sw")
+      // Use a try-catch block specifically for the PDF generation
+      try {
+        // Generate the PDF
+        const doc = generateAgentsPDF(filteredData, language as "en" | "sw")
 
-      // Convert the PDF to a blob
-      const pdfBlob = doc.output("blob")
+        // Use a more direct approach to trigger download
+        doc.save("Yammy_Yami_Agents_List.pdf")
+      } catch (pdfError) {
+        console.error("PDF Generation Error:", pdfError)
 
-      // Create a URL for the blob
-      const blobUrl = URL.createObjectURL(pdfBlob)
+        // Fallback: Create a simple text version if PDF fails
+        let textContent = `Yammy Yami Diapers Agents List\n\n`
 
-      // Create a temporary link element
-      const link = document.createElement("a")
-      link.href = blobUrl
-      link.download = "Yammy_Yami_Agents_List.pdf"
+        filteredData.forEach((region) => {
+          textContent += `\n${region.region}\n`
+          textContent += `${"=".repeat(region.region.length)}\n\n`
 
-      // Append to document, click and remove
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+          region.agents.forEach((agent) => {
+            textContent += `${agent.sn}. ${agent.name} - ${agent.location} - ${agent.phone}\n`
+          })
+          textContent += "\n"
+        })
 
-      // Clean up by revoking the blob URL
-      setTimeout(() => {
-        URL.revokeObjectURL(blobUrl)
-      }, 100)
+        // Create a blob from the text content
+        const textBlob = new Blob([textContent], { type: "text/plain" })
+        const textUrl = URL.createObjectURL(textBlob)
+
+        // Create download link
+        const link = document.createElement("a")
+        link.href = textUrl
+        link.download = "Yammy_Yami_Agents_List.txt"
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        // Clean up
+        setTimeout(() => URL.revokeObjectURL(textUrl), 100)
+
+        alert("PDF generation failed. A text file has been downloaded instead.")
+      }
     } catch (error) {
-      console.error("Error generating PDF:", error)
-      alert("Failed to generate PDF. Please try again.")
+      console.error("Overall Error:", error)
+      alert("Failed to generate the agents list. Please try again or contact support.")
     }
   }
 

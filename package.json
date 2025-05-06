@@ -59,17 +59,17 @@
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
     "@emotion/is-prop-valid": "latest",
-    "jspdf": "latest",
     "immer": "latest",
     "use-sync-external-store": "latest",
+    "jspdf": "latest",
     "framer-motion": "latest",
-    "jspdf-autotable": "latest",
     "zustand": "latest",
     "workbox-core": "latest",
     "workbox-expiration": "latest",
     "workbox-precaching": "latest",
     "workbox-routing": "latest",
-    "workbox-strategies": "latest"
+    "workbox-strategies": "latest",
+    "jspdf-autotable": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
