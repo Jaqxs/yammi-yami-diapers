@@ -21,6 +21,7 @@ const nextConfig = {
     minimumCacheTTL: 0,
     // Disable static image imports caching
     disableStaticImages: true,
+    unoptimized: true, // Add this to disable image optimization completely
   },
   // Remove the optimizeCss experimental feature that requires critters
   experimental: {
@@ -33,11 +34,19 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/:path*/(.jpg|.jpeg|.png|.webp|.avif|.gif)',
+        source: '/:path*.(jpg|jpeg|png|webp|avif|gif)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
           },
         ],
       },
