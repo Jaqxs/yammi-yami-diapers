@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button"
 import { PageWrapper } from "@/components/page-wrapper"
 import { useLanguage } from "@/components/language-provider"
 import ImageSlider from "@/components/image-slider"
-import OptimizedImage from "@/components/optimized-image"
 
 // Language translations
 const translations = {
@@ -800,27 +799,30 @@ export default function AboutPage() {
             <p className="text-lg text-gray-700 max-w-3xl mx-auto">{t.leadershipDescription}</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.map((member, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
-                <div className="h-[300px] w-full relative">
-                  <OptimizedImage
-                    src={member.image}
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-white rounded-lg overflow-hidden shadow-lg"
+              >
+                <div className="relative h-[300px] w-full mb-4 rounded-lg overflow-hidden">
+                  <Image
+                    src={member.image || "/images/ambassador-1.png"}
                     alt={member.name}
                     fill
-                    className="w-full"
-                    objectFit="cover"
-                    objectPosition="top"
-                    priority={true}
-                    unoptimized={true}
+                    className="object-cover object-top"
                   />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900">{member.name}</h3>
-                  <p className="text-blue-600 font-semibold">{member.role}</p>
-                  {member.nickname && <p className="text-gray-600 text-sm mt-1">"{member.nickname}"</p>}
+                  <h3 className="text-xl font-bold text-yammy-dark-blue">{member.name}</h3>
+                  <p className="text-yammy-blue text-sm">{member.role}</p>
+                  {member.nickname && <p className="text-gray-700 text-sm">({member.nickname})</p>}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

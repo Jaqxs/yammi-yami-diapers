@@ -9,7 +9,6 @@ import { useLanguage } from "@/components/language-provider"
 import { useCart } from "@/components/cart-provider"
 import { OptimizedImage } from "@/components/optimized-image"
 import type { Product } from "@/lib/store"
-import { bustCache } from "@/utils/cache-buster"
 
 interface ProductCardProps {
   product: Product
@@ -112,7 +111,7 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
       <div className="relative h-64 bg-yammy-light-blue">
         <OptimizedImage
           key={`product-image-${product.id}-${imageKey}`}
-          src={bustCache(product.image) || "/placeholder.svg?height=300&width=300&query=diaper product"}
+          src={getProcessedImageUrl(product.image) || "/placeholder.svg?height=300&width=300&query=diaper product"}
           alt={product.name[language || "en"]}
           fill
           className="object-cover md:object-contain p-0"

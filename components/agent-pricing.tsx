@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, AlertCircle } from "lucide-react"
+import { Download } from "lucide-react"
 import { useRegistrationStore } from "@/lib/registration-store"
-import { useToast } from "@/hooks/use-toast"
 
 // Define interfaces for our data structure
 interface ProductPrice {
@@ -1198,7 +1197,7 @@ const priceTiers: PriceTier[] = [
         itemsPerPackage: 100,
         packagesPerCarton: 5,
         agentPrice: "34,000",
-        darPrice: "21,000",
+        darPrice: "41,000",
         regionPrice: "45,000",
         category: "BABY PANTS",
       },
@@ -1342,8 +1341,6 @@ export function AgentPricing() {
   const [currentStatus, setCurrentStatus] = useState(status)
   const [activeTier, setActiveTier] = useState("tier-a")
   const [activeCategory, setActiveCategory] = useState(categories[0])
-  const [isDownloading, setIsDownloading] = useState(false)
-  const { toast } = useToast()
 
   // Check for status updates
   useEffect(() => {
@@ -1370,54 +1367,14 @@ export function AgentPricing() {
     }
   }, [email, checkRegistrationStatus])
 
-  const handleDownload = async () => {
-    try {
-      setIsDownloading(true)
-
-      // The path to the PDF file
-      const pdfUrl = "/documents/agent-price-list.pdf"
-
-      // Fetch the file to ensure it exists
-      const response = await fetch(pdfUrl)
-
-      if (!response.ok) {
-        throw new Error(`Failed to download file: ${response.status} ${response.statusText}`)
-      }
-
-      // Get the file as a blob
-      const blob = await response.blob()
-
-      // Create a URL for the blob
-      const url = window.URL.createObjectURL(blob)
-
-      // Create an anchor element
-      const a = document.createElement("a")
-      a.href = url
-      a.download = "Yammy-Yami-Agent-Price-List.pdf"
-
-      // Append to the document, click it, and then remove it
-      document.body.appendChild(a)
-      a.click()
-
-      // Clean up
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-
-      toast({
-        title: "Download Started",
-        description: "Your price list is downloading.",
-      })
-    } catch (error) {
-      console.error("Download error:", error)
-      toast({
-        variant: "destructive",
-        title: "Download Failed",
-        description: "There was a problem downloading the price list. Please try again later.",
-        icon: <AlertCircle className="h-4 w-4" />,
-      })
-    } finally {
-      setIsDownloading(false)
-    }
+  const handleDownload = () => {
+    // In a real app, this would download the price list PDF
+    const link = document.createElement("a")
+    link.href = "/documents/agent-price-list.pdf"
+    link.download = "Yammy-Yami-Agent-Price-List.pdf"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   if (currentStatus !== "approved") {
@@ -1437,9 +1394,9 @@ export function AgentPricing() {
           <CardTitle>Agent Pricing</CardTitle>
           <CardDescription>Exclusive pricing for registered agents</CardDescription>
         </div>
-        <Button variant="outline" size="sm" onClick={handleDownload} disabled={isDownloading}>
+        <Button variant="outline" size="sm" onClick={handleDownload}>
           <Download className="mr-2 h-4 w-4" />
-          {isDownloading ? "Downloading..." : "Download Price List"}
+          Download Price List
         </Button>
       </CardHeader>
       <CardContent>
