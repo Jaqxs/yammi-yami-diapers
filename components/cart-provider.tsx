@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useLanguage } from "./language-provider"
+import { useToast } from "@/components/ui/use-toast"
 
 export type CartItem = {
   id: number
@@ -28,11 +29,26 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
+const translations = {
+  en: {
+    addedToCart: "Added to cart",
+    itemsInCart: "items in cart",
+    quantity: "Quantity",
+  },
+  sw: {
+    addedToCart: "Imeongezwa kwenye kikapu",
+    itemsInCart: "bidhaa kwenye kikapu",
+    quantity: "Idadi",
+  },
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [itemCount, setItemCount] = useState(0)
   const [total, setTotal] = useState(0)
   const { language } = useLanguage()
+  const { toast } = useToast()
+  const t = translations[language]
 
   // Load cart from localStorage on initial render
   useEffect(() => {
@@ -67,16 +83,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prevItems) => {
       // Check if item already exists in cart
       const existingItemIndex = prevItems.findIndex((item) => item.id === newItem.id)
+      let updatedItems
 
       if (existingItemIndex >= 0) {
         // Update quantity of existing item
-        const updatedItems = [...prevItems]
+        updatedItems = [...prevItems]
         updatedItems[existingItemIndex].quantity += newItem.quantity
-        return updatedItems
       } else {
         // Add new item to cart
-        return [...prevItems, newItem]
+        updatedItems = [...prevItems, newItem]
       }
+
+      // Show toast notification
+      toast({
+        title: t.addedToCart,
+        description: (
+          <div className="flex items-center gap-2">
+            <div className="relative w-10 h-10 rounded overflow-hidden">
+              <img
+                src={newItem.image || "/placeholder.svg?height=40&width=40&query=product"}
+                alt={newItem.name[language]}
+                className="object-cover w-full h-full"
+                onError={(e) => {
+                  e.currentTarget.src = "/diverse-products-still-life.png"
+                }}
+              />
+            </div>
+            <div>
+              <p className="font-medium">{newItem.name[language]}</p>
+              <p className="text-sm text-gray-500">
+                {t.quantity}: {newItem.quantity}
+              </p>
+            </div>
+          </div>
+        ),
+        className: "bg-white border-yammy-blue",
+      })
+
+      return updatedItems
     })
   }
 
