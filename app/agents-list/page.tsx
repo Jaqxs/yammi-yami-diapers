@@ -3,7 +3,7 @@
 import React from "react"
 
 import { useState } from "react"
-import { Download, FileText, FileIcon as FilePdf, ChevronDown, Search } from "lucide-react"
+import { Download, FileIcon as FilePdf, ChevronDown, Search } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -437,10 +437,6 @@ export default function AgentsListPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={handleTextDownload} className="cursor-pointer flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    {t.downloadText}
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handlePdfDownload} className="cursor-pointer flex items-center gap-2">
                     <FilePdf className="h-4 w-4" />
                     {t.downloadPdf}
