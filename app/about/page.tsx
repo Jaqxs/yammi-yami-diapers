@@ -259,6 +259,12 @@ const teamMembers = [
     name: "Juma Ramadhan Iddi",
     role: "Chief Operations Officer (COO)",
     nickname: "Boss Juma",
+    image: "/images/juma.jpeg",
+  },
+  {
+    name: "Amina Mohamed",
+    role: "Digital Marketing Manager (DMM)",
+    nickname: "Digital Amina",
     image: null,
   },
 ]
