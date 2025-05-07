@@ -367,81 +367,138 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
+              className="relative z-10"
             >
-              <h2 className="text-4xl font-bold mb-6 text-yammy-dark-blue">{t.ourStory}</h2>
-              <div className="w-16 h-1 bg-yammy-pink mb-8"></div>
-              <p className="text-lg text-gray-700 mb-8">{t.storyContent}</p>
+              <div className="absolute -top-10 -left-10 w-20 h-20 bg-yammy-pink/10 rounded-full"></div>
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-yammy-blue/10 rounded-full"></div>
 
-              <h3 className="text-2xl font-bold mb-4 text-yammy-dark-blue">{t.ourMission}</h3>
-              <p className="text-lg text-gray-700">{t.missionContent}</p>
+              <h2 className="text-4xl font-bold mb-6 text-yammy-dark-blue relative">
+                {t.ourStory}
+                <div className="w-16 h-1 bg-yammy-pink mt-2 mb-8"></div>
+              </h2>
 
-              <div className="mt-8">
-                <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white">
-                  {t.readMore} <ChevronRight className="ml-2 h-4 w-4" />
+              <p className="text-lg text-gray-700 mb-8 relative z-10">{t.storyContent}</p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <h3 className="text-2xl font-bold mb-4 text-yammy-dark-blue">{t.ourMission}</h3>
+                <p className="text-lg text-gray-700">{t.missionContent}</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="mt-8"
+              >
+                <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white relative overflow-hidden group">
+                  <span className="relative z-10 flex items-center">
+                    {t.readMore}
+                    <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <span className="absolute inset-0 bg-yammy-pink transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
                 </Button>
-              </div>
+              </motion.div>
             </motion.div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* New cool image layout */}
+            <div className="relative h-[500px] w-full">
+              {/* Main large image */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="relative h-64 rounded-lg overflow-hidden shadow-lg"
+                className="absolute top-0 left-0 w-[65%] h-[65%] z-10"
               >
-                <Image
-                  src={ambassadorImages[0] || "/placeholder.svg"}
-                  alt="Yammy Yami Brand Ambassador"
-                  className="object-cover object-top"
-                  fill
-                />
+                <div className="relative w-full h-full rounded-lg overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                  <Image
+                    src={ambassadorImages[0] || "/placeholder.svg"}
+                    alt="Yammy Yami Brand Ambassador"
+                    className="object-cover object-top"
+                    fill
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
               </motion.div>
 
+              {/* Overlapping image 1 */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="relative h-64 rounded-lg overflow-hidden shadow-lg mt-8"
+                className="absolute top-[15%] right-0 w-[45%] h-[50%] z-20"
               >
-                <Image
-                  src={ambassadorImages[1] || "/placeholder.svg"}
-                  alt="Yammy Yami Brand Ambassador"
-                  className="object-cover object-top"
-                  fill
-                />
+                <div className="relative w-full h-full rounded-lg overflow-hidden shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 border-4 border-white">
+                  <Image
+                    src={ambassadorImages[1] || "/placeholder.svg"}
+                    alt="Yammy Yami Brand Ambassador"
+                    className="object-cover object-top"
+                    fill
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
               </motion.div>
 
+              {/* Overlapping image 2 */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="relative h-64 rounded-lg overflow-hidden shadow-lg"
+                className="absolute bottom-0 left-[10%] w-[40%] h-[45%] z-30"
               >
-                <Image
-                  src={ambassadorImages[2] || "/placeholder.svg"}
-                  alt="Yammy Yami Ambassador"
-                  className="object-cover object-top"
-                  fill
-                />
+                <div className="relative w-full h-full rounded-lg overflow-hidden shadow-2xl transform rotate-6 hover:rotate-0 transition-transform duration-500 border-4 border-white">
+                  <Image
+                    src={ambassadorImages[2] || "/placeholder.svg"}
+                    alt="Yammy Yami Ambassador"
+                    className="object-cover object-top"
+                    fill
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
               </motion.div>
 
+              {/* Floating accent image */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.5 }}
-                className="relative h-64 rounded-lg overflow-hidden shadow-lg mt-8"
+                className="absolute bottom-[10%] right-[5%] w-[35%] h-[40%] z-40"
               >
-                <Image
-                  src={ambassadorImages[3] || "/placeholder.svg"}
-                  alt="Yammy Yami Ambassador"
-                  className="object-cover object-top"
-                  fill
-                />
+                <div className="relative w-full h-full rounded-lg overflow-hidden shadow-2xl transform -rotate-6 hover:rotate-0 transition-transform duration-500 border-4 border-white">
+                  <Image
+                    src={ambassadorImages[3] || "/placeholder.svg"}
+                    alt="Yammy Yami Ambassador"
+                    className="object-cover object-top"
+                    fill
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
               </motion.div>
+
+              {/* Decorative elements */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full bg-yammy-pink/20 z-0"
+              ></motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.7 }}
+                className="absolute -top-4 -right-4 w-32 h-32 rounded-full bg-yammy-blue/20 z-0"
+              ></motion.div>
             </div>
           </div>
         </div>
