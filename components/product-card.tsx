@@ -169,16 +169,27 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
 
       <div className="p-6 flex-grow flex flex-col">
         <h3 className="font-bubblegum text-xl mb-1 text-yammy-dark-blue line-clamp-2">
-          {product.name[language || "en"]}
+          {(product.name[language || "en"] || "").replace("XXXL", "")}
         </h3>
 
         {/* Product details */}
         <div className="mb-3 text-sm text-gray-600">
           {product.size && (
             <div>
-              {language === "en" ? "Size" : "Ukubwa"}: {t[language][product.size as keyof typeof t.en] || product.size}
-              {product.weightRange && ` (${product.weightRange})`}
-              {product.hipSize && ` (${product.hipSize})`}
+              {product.category === "babyDiapers" ? (
+                language === "en" ? (
+                  "Size:S,M,L,XL(5-19KG)"
+                ) : (
+                  "Ukubwa:S,M,L,XL(5-19KG)"
+                )
+              ) : (
+                <>
+                  {language === "en" ? "Size" : "Ukubwa"}:{" "}
+                  {t[language][product.size as keyof typeof t.en] || product.size}
+                  {product.weightRange && ` (${product.weightRange})`}
+                  {product.hipSize && ` (${product.hipSize})`}
+                </>
+              )}
             </div>
           )}
           <div>

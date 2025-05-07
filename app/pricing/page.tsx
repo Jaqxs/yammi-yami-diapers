@@ -184,7 +184,7 @@ export default function PricingPage() {
                       {formatPrice(16000)} / 50 {t.pcs}
                     </TableCell>
                     <TableCell>8 {t.bundles}</TableCell>
-                    <TableCell>S, M, L, XL, XXL, XXXL</TableCell>
+                    <TableCell>S, M, L, XL</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">{t.babyPants}</TableCell>
@@ -192,7 +192,7 @@ export default function PricingPage() {
                       {formatPrice(17000)} / 50 {t.pcs}
                     </TableCell>
                     <TableCell>6 {t.bundles}</TableCell>
-                    <TableCell>S, M, L, XL, XXL, XXXL</TableCell>
+                    <TableCell>S, M, L, XL, XXL, XXXL, XXXXL</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">{t.adultPants}</TableCell>
