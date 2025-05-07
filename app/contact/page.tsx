@@ -114,7 +114,7 @@ export default function ContactPage() {
 
   const handleWhatsAppOrder = () => {
     const message = `Hello, I would like to inquire about your products.`
-    const whatsappUrl = `https://wa.me/255658181863?text=${encodeURIComponent(message)}`
+    const whatsappUrl = `https://wa.me/255773181863?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 

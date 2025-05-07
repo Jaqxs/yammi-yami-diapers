@@ -343,15 +343,14 @@ export default function AgentsListPage() {
   // Function to handle PDF download
   const handlePdfDownload = () => {
     try {
-      // Get the filtered agents data
-      const filteredData = selectedRegion
-        ? agentsByRegion.filter((region) => region.region === selectedRegion)
-        : agentsByRegion
+      // Always use the full data for PDF generation, not the filtered data
+      // This ensures all agents are included in the PDF
+      const dataForPdf = agentsByRegion
 
       // Use a try-catch block specifically for the PDF generation
       try {
         // Generate the PDF
-        const doc = generateAgentsPDF(filteredData, language as "en" | "sw")
+        const doc = generateAgentsPDF(dataForPdf, language as "en" | "sw")
 
         // Use a more direct approach to trigger download
         doc.save("Yammy_Yami_Agents_List.pdf")
@@ -361,7 +360,7 @@ export default function AgentsListPage() {
         // Fallback: Create a simple text version if PDF fails
         let textContent = `Yammy Yami Diapers Agents List\n\n`
 
-        filteredData.forEach((region) => {
+        dataForPdf.forEach((region) => {
           textContent += `\n${region.region}\n`
           textContent += `${"=".repeat(region.region.length)}\n\n`
 

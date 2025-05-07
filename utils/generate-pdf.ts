@@ -71,26 +71,39 @@ export function generateAgentsPDF(agentsByRegion: RegionGroup[], language: "en" 
           head: headers,
           body: data,
           startY: yPos,
-          margin: { top: 10 },
-          styles: { fontSize: 9 },
+          margin: { top: 10, right: 10, left: 10, bottom: 10 },
+          styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [41, 128, 185], textColor: 255 },
           alternateRowStyles: { fillColor: [240, 240, 240] },
           tableWidth: "auto",
           columnStyles: {
-            0: { cellWidth: 15 },
+            0: { cellWidth: 10 },
             1: { cellWidth: "auto" },
             2: { cellWidth: "auto" },
             3: { cellWidth: "auto" },
           },
+          didDrawPage: (data) => {
+            // Add page number at the bottom
+            doc.setFontSize(8)
+            doc.text(`Page ${doc.getNumberOfPages()}`, data.settings.margin.left, doc.internal.pageSize.height - 10)
+          },
         })
       } catch (tableError) {
-        console.error("Error creating table:", tableError)
+        console.error("Error creating table for region:", regionGroup.region, tableError)
         // Continue with the next region if a table fails
       }
 
       // @ts-ignore - accessing lastAutoTable which is added by the plugin
       yPos = doc.lastAutoTable?.finalY + 10 || yPos + 10
     })
+
+    // Add footer with total count
+    const totalAgents = agentsByRegion.reduce((acc, region) => acc + region.agents.length, 0)
+    const totalText = language === "en" ? `Total Agents: ${totalAgents}` : `Jumla ya Wakala: ${totalAgents}`
+
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "bold")
+    doc.text(totalText, 14, doc.internal.pageSize.height - 20)
 
     return doc
   } catch (error) {

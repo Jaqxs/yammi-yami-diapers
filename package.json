@@ -64,12 +64,12 @@
     "jspdf": "latest",
     "framer-motion": "latest",
     "zustand": "latest",
-    "jspdf-autotable": "latest",
     "workbox-core": "latest",
     "workbox-expiration": "latest",
     "workbox-precaching": "latest",
     "workbox-routing": "latest",
-    "workbox-strategies": "latest"
+    "workbox-strategies": "latest",
+    "jspdf-autotable": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
