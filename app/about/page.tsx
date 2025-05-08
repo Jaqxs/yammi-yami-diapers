@@ -262,10 +262,10 @@ const teamMembers = [
     image: "/images/juma.jpeg",
   },
   {
-    name: "Amina Mohamed",
+    name: "Wito Peter",
     role: "Digital Marketing Manager (DMM)",
-    nickname: "Digital Amina",
-    image: null,
+    nickname: "Mckalipeter",
+    image: "/images/wito-peter.jpeg",
   },
 ]
 
