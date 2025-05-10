@@ -17,6 +17,7 @@ type Props = {}
 const navigationItems = [
   { name: { en: "Home", sw: "Nyumbani" }, href: "/" },
   { name: { en: "Products", sw: "Bidhaa" }, href: "/products" },
+  { name: { en: "Projects", sw: "Miradi" }, href: "/projects" },
   { name: { en: "About", sw: "Kuhusu" }, href: "/about" },
   { name: { en: "Blog", sw: "Blogu" }, href: "/blog" },
   { name: { en: "Agents", sw: "Wakala" }, href: "/agents" },

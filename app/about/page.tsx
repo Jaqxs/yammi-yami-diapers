@@ -14,7 +14,7 @@ import {
   ShoppingBag,
   Award,
 } from "lucide-react"
-import CountUp from "@/components/count-up"
+import { CountUp } from "@/components/count-up"
 
 import { Button } from "@/components/ui/button"
 import { PageWrapper } from "@/components/page-wrapper"
@@ -54,18 +54,24 @@ const translations = {
     phoneNumber2: "+255 754 089 447",
     emailUs: "Email Us",
     visitUs: "Visit Us",
-    brandAmbassadors: "Our Brand Ambassador",
-    brandInfluencers: "Our Brand Influencer",
+    brandAmbassadors: "Our Brand Ambassadors",
+    brandInfluencers: "Our Brand Influencers",
+    brandModels: "Our Product Models",
     ambassadorsDescription:
-      "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our ambassador is passionate about quality, comfort, and family care.",
+      "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our ambassadors are passionate about quality, comfort, and family care.",
     influencersDescription:
-      "Our influencer helps spread the word about Yammy Yami products across Tanzania. They share their authentic experiences with our products and help us reach new customers.",
+      "Our influencers help spread the word about Yammy Yami products across Tanzania. They share their authentic experiences with our products and help us reach new customers.",
+    modelsDescription:
+      "Our product models showcase our high-quality products in action, demonstrating the comfort and reliability that Yammy Yami is known for across Tanzania.",
     brandAmbassador: "Brand Ambassador",
     brandInfluencer: "Brand Influencer",
+    productModel: "Product Model",
     ambassadorInterest:
       "Interested in becoming a Yammy Yami brand ambassador? Contact us to learn more about partnership opportunities.",
     influencerInterest:
       "Want to collaborate with us as an influencer? We're always looking for authentic voices to share our products.",
+    modelInterest:
+      "Interested in modeling for Yammy Yami? We're always looking for new faces to showcase our products.",
     leadershipTeam: "Our Leadership Team",
     leadershipDescription:
       "Meet the dedicated professionals leading Yammy Yami Diaper TZ. Our leadership team brings together decades of experience and a shared passion for improving family care across Tanzania.",
@@ -86,6 +92,10 @@ const translations = {
       "As a brand ambassador, I'm proud to represent Yammy Yami. Their commitment to quality and community is unmatched.",
     testimonial3:
       "The team at Yammy Yami truly understands the needs of Tanzanian families. Their products are reliable and comfortable.",
+    testimonial4:
+      "As a mother, I trust only Yammy Yami diapers for my daughter Amara. The quality and comfort they provide are unmatched. I'm proud to represent a brand that truly cares about babies and mothers.",
+    testimonial5:
+      "Modeling for Yammy Yami has been a wonderful experience. Their products are truly the best in the market, and I'm proud to showcase them to families across Tanzania.",
     meetOurTeam: "Meet Our Team",
     ourCommunity: "Our Community",
     communityDesc:
@@ -101,6 +111,7 @@ const translations = {
     ambassadorQuote: "I'm proud to represent a brand that truly cares about Tanzanian families.",
     becomeAmbassador: "Become an Ambassador",
     becomeInfluencer: "Become an Influencer",
+    becomeModel: "Become a Model",
     ourAgents: "Our Agents",
     becomeAgent: "Become an Agent",
     agentDesc:
@@ -111,6 +122,7 @@ const translations = {
     readMore: "Read More",
     ambassadorName: "Nasma Hassan",
     influencerName: "Evanche Dange",
+    modelName: "Zainabu Hassan",
     ourAchievements: "Our Achievements",
     achievementsDesc:
       "Since our founding in 2018, Yammy Yami has grown to become a trusted household name across Tanzania.",
@@ -151,18 +163,24 @@ const translations = {
     phoneNumber2: "+255 754 089 447",
     emailUs: "Tuma Barua Pepe",
     visitUs: "Tembelea",
-    brandAmbassadors: "Balozi Wetu wa Bidhaa",
-    brandInfluencers: "Mshawishi Wetu wa Bidhaa",
+    brandAmbassadors: "Mabalozi Wetu wa Bidhaa",
+    brandInfluencers: "Washawishi Wetu wa Bidhaa",
+    brandModels: "Waonyeshaji Wetu wa Bidhaa",
     ambassadorsDescription:
-      "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Balozi wetu ana shauku juu ya ubora, faraja, na utunzaji wa familia.",
+      "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Mabalozi wetu wana shauku juu ya ubora, faraja, na utunzaji wa familia.",
     influencersDescription:
-      "Mshawishi wetu husaidia kueneza habari kuhusu bidhaa za Yammy Yami kote Tanzania. Wanashiriki uzoefu wao halisi na bidhaa zetu na kutusaidia kufikia wateja wapya.",
-    brandAmbassador: "Brand Ambassador",
+      "Washawishi wetu husaidia kueneza habari kuhusu bidhaa za Yammy Yami kote Tanzania. Wanashiriki uzoefu wao halisi na bidhaa zetu na kutusaidia kufikia wateja wapya.",
+    modelsDescription:
+      "Waonyeshaji wetu wa bidhaa wanaonyesha bidhaa zetu bora zikitumika, wakidhihirisha faraja na uaminifu ambao Yammy Yami inajulikana nao kote Tanzania.",
+    brandAmbassador: "Balozi wa Bidhaa",
     brandInfluencer: "Mshawishi wa Bidhaa",
+    productModel: "Monyeshaji wa Bidhaa",
     ambassadorInterest:
       "Una nia ya kuwa balozi wa bidhaa za Yammy Yami? Wasiliana nasi kujifunza zaidi kuhusu fursa za ushirikiano.",
     influencerInterest:
       "Unataka kushirikiana nasi kama mshawishi? Tunatarajia daima sauti halisi kushiriki bidhaa zetu.",
+    modelInterest:
+      "Una nia ya kuwa monyeshaji wa bidhaa za Yammy Yami? Tunatarajia daima nyuso mpya kuonyesha bidhaa zetu.",
     leadershipTeam: "Timu Yetu ya Uongozi",
     leadershipDescription:
       "Kutana na wataalamu wanaojitoa wanaoongoza Yammy Yami Diaper TZ. Timu yetu ya uongozi inaleta pamoja miongo ya uzoefu na shauku ya pamoja ya kuboresha utunzaji wa familia kote Tanzania.",
@@ -181,6 +199,10 @@ const translations = {
       "Kama balozi wa bidhaa, ninajivunia kuwakilisha Yammy Yami. Kujitolea kwao kwa ubora na jamii hakuna kifani.",
     testimonial3:
       "Timu ya Yammy Yami inaelewa kweli mahitaji ya familia za Kitanzania. Bidhaa zao ni za kuaminika na faraja.",
+    testimonial4:
+      "Kama mama, ninaamini tu diapers za Yammy Yami kwa binti yangu Amara. Ubora na faraja zinazopatikana hazina kifani. Ninajivunia kuwakilisha chapa inayojali watoto na akina mama.",
+    testimonial5:
+      "Kuonyesha bidhaa za Yammy Yami kumekuwa uzoefu wa ajabu. Bidhaa zao ni bora zaidi katika soko, na ninajivunia kuzionyesha kwa familia kote Tanzania.",
     meetOurTeam: "Kutana na Timu Yetu",
     ourCommunity: "Jamii Yetu",
     communityDesc:
@@ -195,6 +217,7 @@ const translations = {
     ambassadorQuote: "Ninajivunia kuwakilisha chapa inayojali kweli familia za Kitanzania.",
     becomeAmbassador: "Kuwa Balozi",
     becomeInfluencer: "Kuwa Mshawishi",
+    becomeModel: "Kuwa Monyeshaji",
     ourAgents: "Mawakala Wetu",
     becomeAgent: "Kuwa Wakala",
     agentDesc:
@@ -205,6 +228,7 @@ const translations = {
     readMore: "Soma Zaidi",
     ambassadorName: "Nasma Hassan",
     influencerName: "Evanche Dange",
+    modelName: "Zainabu Hassan",
     ourAchievements: "Mafanikio Yetu",
     achievementsDesc:
       "Tangu kuanzishwa kwetu mwaka 2018, Yammy Yami imekua na kuwa jina la nyumbani linaloaminika Tanzania nzima.",
@@ -223,6 +247,7 @@ const ambassadorImages = [
   "/images/brand-ambassador-3.jpeg",
   "/images/brand-ambassador-4.jpeg",
   "/images/brand-ambassador-5.jpeg",
+  "/images/paula-and-amara.jpeg",
 ]
 
 // Influencer images - using only the confirmed existing images
@@ -233,13 +258,29 @@ const influencerImages = [
   "/images/brand-influencer-4.jpeg",
 ]
 
-// Update the ambassador names array to consistently use "Nasma Hassan"
-const ambassadorNames = Array(ambassadorImages.length).fill("Nasma Hassan")
-const ambassadorNicknames = Array(ambassadorImages.length).fill("Nana_dollz")
+// Model images - using the new product model images
+const modelImages = ["/images/ambassador-blue-outfit.jpeg", "/images/ambassador-white-outfit.jpeg"]
+
+// Update the ambassador names array to include Paula Paul Peter and Amara Omary Mwanga
+const ambassadorNames = [
+  "Nasma Hassan",
+  "Nasma Hassan",
+  "Nasma Hassan",
+  "Nasma Hassan",
+  "Nasma Hassan",
+  "Paula Paul Peter & Amara Omary Mwanga",
+]
+
+// Update the nicknames array
+const ambassadorNicknames = ["Nana_dollz", "Nana_dollz", "Nana_dollz", "Nana_dollz", "Nana_dollz", "Mother & Daughter"]
 
 // Update the influencer names array to consistently use "Evanche Dange" (with proper capitalization)
 const influencerNames = Array(influencerImages.length).fill("Evanche Dange")
 const influencerNicknames = Array(influencerImages.length).fill("lissahacttress")
+
+// Model names and nicknames
+const modelNames = ["Zainabu Hassan", "Rehema Juma"]
+const modelNicknames = ["Baby Products Model", "Adult Products Model"]
 
 // Team members
 const teamMembers = [
@@ -321,11 +362,17 @@ const testimonials = [
     quote: "testimonial2",
   },
   {
-    name: "Evanche Dange",
-    role: "Brand Influencer",
-    nickname: "lissahacttress",
-    image: "/images/ambassador-1.png", // Changed to use a known existing image
-    quote: "testimonial3",
+    name: "Paula Paul Peter",
+    role: "Brand Ambassador",
+    nickname: "Mother of Amara",
+    image: "/images/paula-and-amara.jpeg",
+    quote: "testimonial4",
+  },
+  {
+    name: "Zainabu Hassan",
+    role: "Product Model",
+    image: "/images/ambassador-blue-outfit.jpeg",
+    quote: "testimonial5",
   },
 ]
 
@@ -518,7 +565,7 @@ export default function AboutPage() {
             <div className="w-16 h-1 bg-yammy-pink mx-auto mb-8"></div>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid md:grid-cols-3 gap-8">
             {/* Brand Ambassador */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -568,6 +615,32 @@ export default function AboutPage() {
 
               <div className="mt-4">
                 <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white">{t.becomeInfluencer}</Button>
+              </div>
+            </motion.div>
+
+            {/* Product Models */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col items-center"
+            >
+              <h3 className="text-2xl font-bold text-yammy-dark-blue mb-6">{t.brandModels}</h3>
+              <p className="text-gray-700 mb-8 text-center max-w-md">{t.modelsDescription}</p>
+
+              <div className="w-full max-w-md">
+                <ImageSlider
+                  images={modelImages}
+                  title={t.productModel}
+                  names={modelNames}
+                  nicknames={modelNicknames}
+                  className="mb-8"
+                />
+              </div>
+
+              <div className="mt-4">
+                <Button className="bg-yammy-blue hover:bg-yammy-dark-blue text-white">{t.becomeModel}</Button>
               </div>
             </motion.div>
           </div>
@@ -806,7 +879,7 @@ export default function AboutPage() {
             <div className="w-16 h-1 bg-yammy-pink mx-auto mb-8"></div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}

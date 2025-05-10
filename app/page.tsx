@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { motion } from "framer-motion"
-import { ShoppingCart, ChevronRight, Phone, Instagram, Star, Calendar, Clock } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { ShoppingCart, Phone, Instagram, Star, Calendar, Clock, ChevronLeft, ChevronRightIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
@@ -14,6 +14,7 @@ import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { OptimizedImage } from "@/components/optimized-image"
 import { toast } from "@/components/ui/use-toast"
+import Image from "next/image"
 
 // Language translations
 const translations = {
@@ -53,6 +54,8 @@ const translations = {
     viewAllBlogPosts: "View All Blog Posts",
     addedToCart: "Added to Cart",
     productAddedToCart: "Product has been added to your cart",
+    prevImage: "Previous image",
+    nextImage: "Next image",
   },
   sw: {
     heroTitle: "Penda Mtoto Wako, Penda Familia Yako",
@@ -90,6 +93,8 @@ const translations = {
     viewAllBlogPosts: "Tazama Makala Zote",
     addedToCart: "Imeongezwa kwenye Kikapu",
     productAddedToCart: "Bidhaa imeongezwa kwenye kikapu chako",
+    prevImage: "Picha iliyopita",
+    nextImage: "Picha inayofuata",
   },
 }
 
@@ -157,6 +162,52 @@ const testimonials = [
   },
 ]
 
+// Hero carousel images - removed the third image
+const heroImages = [
+  {
+    src: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-21%20at%2004.17.11_e98c889a.jpg-qImS0ea607vm0WJyywYVFZ0KBHG2zi.jpeg",
+    alt: "Yammy Yami Brand Ambassador",
+  },
+  {
+    src: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Post_Reel_1080x1440_03-ErnRKBr1DJ0cJI6Tvwc9mOzLLt1OE8.png",
+    alt: "Yammy Yami Product Showcase",
+  },
+]
+
+// Transition variants for hero carousel
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 1000 : -1000,
+    opacity: 0,
+    scale: 0.8,
+    rotateY: direction > 0 ? 30 : -30,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+    scale: 1,
+    rotateY: 0,
+    transition: {
+      x: { type: "spring", stiffness: 300, damping: 30 },
+      opacity: { duration: 0.5 },
+      scale: { duration: 0.5 },
+      rotateY: { duration: 0.5 },
+    },
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? 1000 : -1000,
+    opacity: 0,
+    scale: 0.8,
+    rotateY: direction < 0 ? 30 : -30,
+    transition: {
+      x: { type: "spring", stiffness: 300, damping: 30 },
+      opacity: { duration: 0.5 },
+      scale: { duration: 0.5 },
+      rotateY: { duration: 0.5 },
+    },
+  }),
+}
+
 export default function Home() {
   const { language } = useLanguage()
   const { state, loadProducts, loadBlogPosts } = useStore()
@@ -166,7 +217,32 @@ export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [featuredBlogPosts, setFeaturedBlogPosts] = useState([])
   const [imageVersion, setImageVersion] = useState(Date.now())
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [direction, setDirection] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
   const t = translations[language || "en"]
+
+  // Set up hero image carousel
+  useEffect(() => {
+    if (isPaused) return
+
+    const interval = setInterval(() => {
+      setDirection(1)
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % heroImages.length)
+    }, 5000) // Change image every 5 seconds
+
+    return () => clearInterval(interval)
+  }, [isPaused])
+
+  const nextImage = () => {
+    setDirection(1)
+    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % heroImages.length)
+  }
+
+  const prevImage = () => {
+    setDirection(-1)
+    setCurrentImageIndex((prevIndex) => (prevIndex - 1 + heroImages.length) % heroImages.length)
+  }
 
   useEffect(() => {
     // Create random bubbles for background effect
@@ -315,25 +391,84 @@ export default function Home() {
                 </Button>
               </Link>
             </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="relative"
+            <div
+              className="relative h-[500px] w-full overflow-hidden rounded-2xl shadow-lg perspective-1000"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
             >
-              <div className="relative h-[500px] w-full">
-                <OptimizedImage
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-21%20at%2004.17.11_e98c889a.jpg-qImS0ea607vm0WJyywYVFZ0KBHG2zi.jpeg"
-                  alt="Yammy Yami Brand Ambassador"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
+              <AnimatePresence initial={false} custom={direction} mode="wait">
+                <motion.div
+                  key={currentImageIndex}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="absolute inset-0 w-full h-full"
+                  style={{
+                    transformStyle: "preserve-3d",
+                    backfaceVisibility: "hidden",
+                  }}
+                >
+                  <Image
+                    src={heroImages[currentImageIndex].src || "/placeholder.svg"}
+                    alt={heroImages[currentImageIndex].alt}
+                    fill
+                    className="object-contain"
+                    priority
+                    unoptimized={currentImageIndex === 1}
+                  />
+
+                  {/* Image caption */}
+                  <div className="absolute bottom-16 left-0 right-0 text-center">
+                    <div className="inline-block bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                      <p className="text-yammy-dark-blue font-medium">{heroImages[currentImageIndex].alt}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Navigation arrows */}
+              <button
+                onClick={prevImage}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+                aria-label={t.prevImage}
+              >
+                <ChevronLeft className="h-6 w-6 text-yammy-dark-blue" />
+              </button>
+
+              <button
+                onClick={nextImage}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+                aria-label={t.nextImage}
+              >
+                <ChevronRightIcon className="h-6 w-6 text-yammy-dark-blue" />
+              </button>
+
               <div className="absolute -bottom-4 -right-4 bg-white/80 backdrop-blur-sm p-3 rounded-xl shadow-lg">
                 <p className="text-yammy-blue font-bubblegum text-lg">{t.japanStandard}</p>
               </div>
-            </motion.div>
+
+              {/* Hero image navigation dots */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-3">
+                {heroImages.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setDirection(index > currentImageIndex ? 1 : -1)
+                      setCurrentImageIndex(index)
+                    }}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      index === currentImageIndex ? "bg-yammy-blue scale-125" : "bg-white/60 hover:bg-white/90"
+                    }`}
+                    aria-label={`Show image ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              {/* Animated gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-yammy-blue/10 via-transparent to-yammy-blue/10 animate-gradient-x pointer-events-none"></div>
+            </div>
           </div>
         </div>
 
@@ -407,7 +542,7 @@ export default function Home() {
                 className="group border-yammy-blue text-yammy-blue hover:bg-yammy-blue hover:text-white"
               >
                 {t.viewAll}
-                <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <ChevronRightIcon className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
           </div>
@@ -479,7 +614,7 @@ export default function Home() {
                     </div>
                     <Button className="mt-4 w-full bg-yammy-blue hover:bg-yammy-dark-blue" asChild>
                       <Link href={`/blog/${post.id}`}>
-                        {t.readMore} <ChevronRight className="ml-2 h-4 w-4" />
+                        {t.readMore} <ChevronRightIcon className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
                   </div>
@@ -499,7 +634,7 @@ export default function Home() {
                 className="group border-yammy-blue text-yammy-blue hover:bg-yammy-blue hover:text-white"
               >
                 {t.viewAllBlogPosts}
-                <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <ChevronRightIcon className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
           </div>

@@ -9,7 +9,7 @@ interface CountUpProps {
   separator?: string
 }
 
-export default function CountUp({ start = 0, end, duration = 2, separator = "," }: CountUpProps) {
+export function CountUp({ start = 0, end, duration = 2, separator = "," }: CountUpProps) {
   const [count, setCount] = useState(start)
 
   useEffect(() => {

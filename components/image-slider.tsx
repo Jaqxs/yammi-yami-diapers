@@ -78,6 +78,11 @@ export default function ImageSlider({
               className="object-cover"
               priority={currentIndex === 0}
             />
+            {names && names[currentIndex] && names[currentIndex].includes("Paula") && (
+              <div className="absolute bottom-4 left-4 right-4 bg-yammy-pink/80 text-white py-1 px-3 rounded-full text-sm font-medium">
+                Mother & Daughter Ambassador
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
 
