@@ -65,7 +65,7 @@ const translations = {
       "Our product models showcase our high-quality products in action, demonstrating the comfort and reliability that Yammy Yami is known for across Tanzania.",
     brandAmbassador: "Brand Ambassador",
     brandInfluencer: "Brand Influencer",
-    productModel: "Product Model",
+    productModel: "Brand Ambassador",
     ambassadorInterest:
       "Interested in becoming a Yammy Yami brand ambassador? Contact us to learn more about partnership opportunities.",
     influencerInterest:
