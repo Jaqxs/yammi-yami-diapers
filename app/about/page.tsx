@@ -228,7 +228,7 @@ const translations = {
     readMore: "Soma Zaidi",
     ambassadorName: "Nasma Hassan",
     influencerName: "Evanche Dange",
-    modelName: "Zainabu Hassan",
+    modelName: "PaulaKajala & Princess Amarah",
     ourAchievements: "Mafanikio Yetu",
     achievementsDesc:
       "Tangu kuanzishwa kwetu mwaka 2018, Yammy Yami imekua na kuwa jina la nyumbani linaloaminika Tanzania nzima.",
@@ -279,8 +279,8 @@ const influencerNames = Array(influencerImages.length).fill("Evanche Dange")
 const influencerNicknames = Array(influencerImages.length).fill("lissahacttress")
 
 // Model names and nicknames
-const modelNames = ["Zainabu Hassan", "Rehema Juma"]
-const modelNicknames = ["Baby Products Model", "Adult Products Model"]
+const modelNames = ["Paula Paul Peter", "Amara Omary Mwanga"]
+const modelNicknames = ["Therealpaulakajalah", "Princess_amarah"]
 
 // Team members
 const teamMembers = [
