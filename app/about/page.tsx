@@ -388,7 +388,7 @@ export default function AboutPage() {
       <section className="relative h-[70vh] min-h-[500px] w-full overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/mother-with-baby.png"
+            src="/images/ambassador-blue-outfit.jpeg"
             alt="Yammy Yami Hero"
             fill
             className="object-cover brightness-50"
