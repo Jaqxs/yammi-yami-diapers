@@ -665,7 +665,7 @@ export default function AboutPage() {
             }}
             className="absolute inset-0 opacity-10"
             style={{
-              backgroundImage: "url('/images/baby-diapers.png')",
+              backgroundImage: "url('/images/ambassador-blue-outfit.jpeg')",
               backgroundSize: "60%",
               backgroundRepeat: "repeat",
             }}
