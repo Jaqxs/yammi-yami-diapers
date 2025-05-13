@@ -120,11 +120,15 @@ export default function ImageSlider({
       <div className="p-4 bg-yammy-pink/20">
         <h3 className="font-bold text-yammy-dark-blue text-lg text-center">{title}</h3>
         <p className="text-center text-yammy-blue">{subtitle}</p>
-        {names && names[currentIndex] && (
-          <p className="text-center text-yammy-dark-blue font-medium mt-1">{names[currentIndex]}</p>
+        {names && names.length > 0 && (
+          <p className="text-center text-yammy-dark-blue font-medium mt-1">
+            {currentIndex === 0 && names.length > 1 ? names[1] : names[0]}
+          </p>
         )}
-        {nicknames && nicknames[currentIndex] && (
-          <p className="text-center text-gray-600 text-sm mt-0.5">({nicknames[currentIndex]})</p>
+        {nicknames && nicknames.length > 0 && (
+          <p className="text-center text-gray-600 text-sm mt-0.5">
+            @{currentIndex === 0 && nicknames.length > 1 ? nicknames[1] : nicknames[0]}
+          </p>
         )}
       </div>
     </div>

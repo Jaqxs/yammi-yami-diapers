@@ -56,7 +56,7 @@ const translations = {
     visitUs: "Visit Us",
     brandAmbassadors: "Our Brand Ambassadors",
     brandInfluencers: "Our Brand Influencers",
-    brandModels: "Our Product Models",
+    brandModels: "Our Brand Ambassador",
     ambassadorsDescription:
       "We're proud to partner with these amazing individuals who represent our brand values and help us connect with families across Tanzania. Our ambassadors are passionate about quality, comfort, and family care.",
     influencersDescription:
@@ -165,7 +165,7 @@ const translations = {
     visitUs: "Tembelea",
     brandAmbassadors: "Mabalozi Wetu wa Bidhaa",
     brandInfluencers: "Washawishi Wetu wa Bidhaa",
-    brandModels: "Waonyeshaji Wetu wa Bidhaa",
+    brandModels: "Mabalozi Wetu wa Bidhaa",
     ambassadorsDescription:
       "Tunajivunia kushirikiana na watu hawa wa ajabu ambao wanawakilisha maadili yetu ya biashara na kutusaidia kuunganisha na familia kote Tanzania. Mabalozi wetu wana shauku juu ya ubora, faraja, na utunzaji wa familia.",
     influencersDescription:
@@ -174,7 +174,7 @@ const translations = {
       "Waonyeshaji wetu wa bidhaa wanaonyesha bidhaa zetu bora zikitumika, wakidhihirisha faraja na uaminifu ambao Yammy Yami inajulikana nao kote Tanzania.",
     brandAmbassador: "Balozi wa Bidhaa",
     brandInfluencer: "Mshawishi wa Bidhaa",
-    productModel: "Monyeshaji wa Bidhaa",
+    productModel: "Balozi wa Bidhaa",
     ambassadorInterest:
       "Una nia ya kuwa balozi wa bidhaa za Yammy Yami? Wasiliana nasi kujifunza zaidi kuhusu fursa za ushirikiano.",
     influencerInterest:
@@ -228,10 +228,10 @@ const translations = {
     readMore: "Soma Zaidi",
     ambassadorName: "Nasma Hassan",
     influencerName: "Evanche Dange",
-    modelName: "PaulaKajala & Princess Amarah",
+    modelName: "Zainabu Hassan",
     ourAchievements: "Mafanikio Yetu",
     achievementsDesc:
-      "Tangu kuanzishwa kwetu mwaka 2018, Yammy Yami imekua na kuwa jina la nyumbani linaloaminika Tanzania nzima.",
+      "Since our founding in 2018, Yammy Yami has grown to become a trusted household name across Tanzania.",
     happyCustomers: "Wateja Walioridhika",
     regionsServed: "Mikoa Tunayohudumia",
     productTypes: "Aina za Bidhaa",
@@ -258,7 +258,9 @@ const influencerImages = [
   "/images/brand-influencer-4.jpeg",
 ]
 
-// Model images - using the new product model images
+// Model images - updated to match the correct people
+// The first image (ambassador-blue-outfit.jpeg) is Paula Paul
+// The second image (ambassador-white-outfit.jpeg) is Amarah Omary with baby
 const modelImages = ["/images/ambassador-blue-outfit.jpeg", "/images/ambassador-white-outfit.jpeg"]
 
 // Update the ambassador names array to include Paula Paul Peter and Amara Omary Mwanga
@@ -278,9 +280,9 @@ const ambassadorNicknames = ["Nana_dollz", "Nana_dollz", "Nana_dollz", "Nana_dol
 const influencerNames = Array(influencerImages.length).fill("Evanche Dange")
 const influencerNicknames = Array(influencerImages.length).fill("lissahacttress")
 
-// Model names and nicknames
-const modelNames = ["Paula Paul Peter", "Amara Omary Mwanga"]
-const modelNicknames = ["Therealpaulakajalah", "Princess_amarah"]
+// Model names and nicknames - updated to match the correct order of images
+const modelNames = ["Paula Paul", "Amarah Omary"]
+const modelNicknames = ["therealpaulakajala", "Princess Amarah"]
 
 // Team members
 const teamMembers = [
@@ -384,23 +386,37 @@ export default function AboutPage() {
 
   return (
     <PageWrapper>
-      {/* Hero Section */}
-      <section className="relative h-[70vh] min-h-[500px] w-full overflow-hidden">
+      {/* Hero Section with reduced brightness and matching style */}
+      <section className="relative h-[90vh] min-h-[650px] w-full overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/ambassador-blue-outfit.jpeg"
-            alt="Yammy Yami Hero"
+            src="/images/yammy-yami-mother-daughter-hero.jpeg"
+            alt="Paula and Amara with Yammy Yami Products"
             fill
-            className="object-cover brightness-50"
+            className="object-cover brightness-[0.85]"
             priority
+            sizes="100vw"
+            style={{ objectPosition: "50% 30%" }}
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/70 z-10"></div>
-        <div className="container mx-auto px-4 h-full flex flex-col justify-end pb-16 relative z-20">
-          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">{t.aboutUs}</h1>
-            <div className="w-24 h-2 bg-yammy-pink mb-6"></div>
-            <p className="text-xl text-white max-w-2xl">{t.storyContent}</p>
+
+        {/* Darker overlay to match other pages */}
+        <div className="absolute inset-0 bg-gradient-to-r from-yammy-blue/30 to-transparent z-10"></div>
+
+        {/* Container for the left-aligned text */}
+        <div className="container mx-auto px-4 h-full flex items-center justify-start relative z-20">
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="bg-white/80 p-6 rounded-lg backdrop-blur-sm max-w-md"
+          >
+            <h1 className="text-4xl md:text-6xl font-bold text-yammy-dark-blue mb-4">{t.aboutUs}</h1>
+            <div className="w-20 h-1.5 bg-yammy-pink mb-4"></div>
+            <p className="text-base text-yammy-dark-blue">{t.storyContent}</p>
+            <div className="mt-4">
+              <Button className="bg-yammy-blue hover:bg-yammy-pink text-white">{t.readMore}</Button>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -665,7 +681,7 @@ export default function AboutPage() {
             }}
             className="absolute inset-0 opacity-10"
             style={{
-              backgroundImage: "url('/images/ambassador-blue-outfit.jpeg')",
+              backgroundImage: "url('/images/baby-diapers.png')",
               backgroundSize: "60%",
               backgroundRepeat: "repeat",
             }}

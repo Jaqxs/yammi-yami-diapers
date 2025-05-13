@@ -14,17 +14,20 @@ export const metadata = {
 export default function ProjectsPage() {
   return (
     <PageWrapper>
-      <div className="relative bg-gradient-to-b from-yammy-light-blue/20 to-white">
+      <div className="relative bg-gradient-to-b from-yammy-blue/10 to-white">
         <div className="container mx-auto py-16 px-4">
           {/* Hero Section */}
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold text-yammy-blue mb-4 font-nunito">
-              Our <span className="text-yammy-orange">Initiatives</span> & Projects
-            </h1>
-            <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto">
-              Beyond diapers, we're building a better future through strategic investments and community development
-              projects.
-            </p>
+          <div className="relative text-center mb-16 py-12 px-4 bg-gradient-to-r from-yammy-blue/10 to-transparent rounded-xl">
+            <div className="absolute inset-0 bg-white/5 backdrop-blur-[2px] rounded-xl"></div>
+            <div className="relative z-10">
+              <h1 className="text-4xl md:text-5xl font-bold text-yammy-blue mb-4 font-nunito">
+                Our <span className="text-yammy-orange">Initiatives</span> & Projects
+              </h1>
+              <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto">
+                Beyond diapers, we're building a better future through strategic investments and community development
+                projects.
+              </p>
+            </div>
           </div>
 
           {/* Current Projects Section */}
@@ -41,8 +44,9 @@ export default function ProjectsPage() {
                     src="/zanzibar-ocean-view.png"
                     alt="Zanzibar Land Project"
                     fill
-                    className="object-cover transform hover:scale-105 transition-transform duration-500"
+                    className="object-cover brightness-[0.85] transform hover:scale-105 transition-transform duration-500"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 bg-yammy-blue/80 text-white py-2 px-4 rounded-tr-lg">
                     <p className="font-semibold">Zanzibar, Tanzania</p>
                   </div>
@@ -51,15 +55,27 @@ export default function ProjectsPage() {
                 <CardContent className="p-8 flex flex-col justify-center">
                   <h3 className="text-2xl font-bold text-yammy-blue mb-4">Hectare of Land in Zanzibar</h3>
                   <p className="text-gray-700 mb-6">
-                    We've acquired a strategic hectare of land in the beautiful island of Zanzibar. This investment
+                    We've acquired strategic land properties in the beautiful island of Zanzibar. This investment
                     represents our commitment to sustainable development and expansion in Tanzania.
                   </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="bg-yammy-light-blue/10 p-4 rounded-lg border border-yammy-blue/20">
+                      <h4 className="font-semibold text-yammy-blue">Paje, Zanzibar</h4>
+                      <p className="text-2xl font-bold text-yammy-blue">63,700 m²</p>
+                      <p className="text-sm text-gray-600">Prime coastal location</p>
+                    </div>
+                    <div className="bg-yammy-orange/10 p-4 rounded-lg border border-yammy-orange/20">
+                      <h4 className="font-semibold text-yammy-orange">Kigamboni, Zanzibar</h4>
+                      <p className="text-2xl font-bold text-yammy-orange">9,800 m²</p>
+                      <p className="text-sm text-gray-600">Strategic development area</p>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-yammy-light-blue/20 p-4 rounded-lg text-center">
                       <p className="text-3xl font-bold text-yammy-blue">
-                        <CountUp end={10000} />+
+                        <CountUp end={73500} />+
                       </p>
-                      <p className="text-sm text-gray-600">Square Meters</p>
+                      <p className="text-sm text-gray-600">Total Square Meters</p>
                     </div>
                     <div className="bg-yammy-orange/20 p-4 rounded-lg text-center">
                       <p className="text-3xl font-bold text-yammy-orange">
@@ -93,7 +109,7 @@ export default function ProjectsPage() {
                     src="/placeholder.svg?key=psok6"
                     alt="Yammy Yami Football Club"
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="object-cover brightness-[0.85] group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 p-6 text-white">
@@ -129,7 +145,7 @@ export default function ProjectsPage() {
                     src="/placeholder.svg?key=nc9f9"
                     alt="Yammy Yami Football Academy"
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="object-cover brightness-[0.85] group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 p-6 text-white">
@@ -175,23 +191,23 @@ export default function ProjectsPage() {
                     Join Yammy Yami as a sponsor and align your brand with our growing portfolio of impactful projects.
                     We offer various sponsorship tiers with unique benefits and exposure opportunities.
                   </p>
-                  <div className="bg-gradient-to-r from-yammy-light-blue to-yammy-blue p-6 rounded-lg text-white mb-6">
+                  <div className="bg-gradient-to-r from-yammy-blue/20 to-yammy-blue/40 p-6 rounded-lg border border-yammy-blue/20 shadow-sm text-yammy-blue mb-6">
                     <h4 className="font-bold text-xl mb-2">Sponsorship Benefits</h4>
                     <ul className="space-y-2">
                       <li className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-white mr-2"></div>
+                        <div className="w-2 h-2 rounded-full bg-yammy-orange mr-2"></div>
                         Brand visibility across our platforms
                       </li>
                       <li className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-white mr-2"></div>
+                        <div className="w-2 h-2 rounded-full bg-yammy-orange mr-2"></div>
                         Access to exclusive events and networking
                       </li>
                       <li className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-white mr-2"></div>
+                        <div className="w-2 h-2 rounded-full bg-yammy-orange mr-2"></div>
                         Community impact and CSR opportunities
                       </li>
                       <li className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-white mr-2"></div>
+                        <div className="w-2 h-2 rounded-full bg-yammy-orange mr-2"></div>
                         Co-branded marketing campaigns
                       </li>
                     </ul>
@@ -204,7 +220,13 @@ export default function ProjectsPage() {
                 </CardContent>
 
                 <div className="relative h-[400px] overflow-hidden order-1 lg:order-2">
-                  <Image src="/images/fei-toto.jpg" alt="CEO of Yammy Yami" fill className="object-contain" priority />
+                  <Image
+                    src="/images/fei-toto.jpg"
+                    alt="CEO of Yammy Yami"
+                    fill
+                    className="object-contain brightness-[0.85]"
+                    priority
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 p-6 text-white">
                     <p className="font-medium text-lg">Message from our CEO</p>
