@@ -119,12 +119,6 @@ export default function AgentClientPage() {
                   <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
                     <span className="text-blue-600 text-sm">3</span>
                   </div>
-                  <p>Registration fee of TZS 50,000 (one-time payment)</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
-                    <span className="text-blue-600 text-sm">4</span>
-                  </div>
                   <p>Minimum initial order of 10 boxes</p>
                 </div>
               </CardContent>

@@ -97,7 +97,7 @@ export function RegistrationForm() {
     }
 
     if (!formData.region) newErrors.region = "Region is required"
-    if (!formData.paymentConfirmation.trim()) newErrors.paymentConfirmation = "Payment confirmation is required"
+    // Payment confirmation is now optional, so no validation needed
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -187,7 +187,9 @@ export function RegistrationForm() {
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Agent Registration</CardTitle>
-        <CardDescription>Register as an agent to access exclusive pricing and resources</CardDescription>
+        <CardDescription>
+          Register as an agent to access exclusive pricing and resources - Registration is free!
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -250,20 +252,18 @@ export function RegistrationForm() {
 
           <div className="space-y-2">
             <Label htmlFor="paymentConfirmation">
-              Payment Confirmation
+              Payment Reference (Optional)
               <span className="block text-sm text-gray-500 font-normal mt-1">
-                Please provide your M-Pesa or bank transfer confirmation number for the registration fee of TZS 50,000
+                If you've made any payment, please provide your M-Pesa or bank transfer confirmation number
               </span>
             </Label>
             <Textarea
               id="paymentConfirmation"
               name="paymentConfirmation"
-              placeholder="Enter payment confirmation number"
+              placeholder="Enter payment confirmation number (optional)"
               value={formData.paymentConfirmation}
               onChange={handleChange}
-              className={errors.paymentConfirmation ? "border-red-500" : ""}
             />
-            {errors.paymentConfirmation && <p className="text-red-500 text-sm">{errors.paymentConfirmation}</p>}
           </div>
 
           {errors.submit && (
