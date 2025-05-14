@@ -22,6 +22,7 @@ export const mockProducts: Product[] = [
     },
     stock: 120,
     status: "active",
+    featured: true,
   },
   {
     id: 2,
@@ -66,6 +67,7 @@ export const mockProducts: Product[] = [
     },
     stock: 65,
     status: "active",
+    featured: true,
   },
   {
     id: 4,
@@ -110,6 +112,7 @@ export const mockProducts: Product[] = [
     },
     stock: 30,
     status: "active",
+    featured: true,
   },
   {
     id: 6,
@@ -130,6 +133,7 @@ export const mockProducts: Product[] = [
     },
     stock: 200,
     status: "active",
+    featured: true,
   },
   {
     id: 7,

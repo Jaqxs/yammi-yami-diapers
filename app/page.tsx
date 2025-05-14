@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { ShoppingCart, Phone, Instagram, Star, Calendar, Clock, ChevronLeft, ChevronRightIcon } from "lucide-react"
@@ -97,6 +98,12 @@ const translations = {
     nextImage: "Picha inayofuata",
   },
 }
+
+// Dynamically import the modal for better performance
+const BlogPostModal = dynamic(() => import("@/components/blog-post-modal").then((mod) => mod.BlogPostModal), {
+  ssr: false,
+  loading: () => null,
+})
 
 // Features
 const features = [
@@ -220,6 +227,8 @@ export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [direction, setDirection] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
+  const [selectedPost, setSelectedPost] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const t = translations[language || "en"]
 
   // Set up hero image carousel
@@ -337,6 +346,19 @@ export default function Home() {
       duration: 3000,
     })
   }
+
+  // Handle opening the modal with the selected post
+  const handleOpenModal = useCallback((post) => {
+    setSelectedPost(post)
+    setIsModalOpen(true)
+  }, [])
+
+  // Handle closing the modal
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false)
+    // Wait for animation to complete before clearing the selected post
+    setTimeout(() => setSelectedPost(null), 300)
+  }, [])
 
   // Process image URL to ensure it's not cached
   const getProcessedImageUrl = (url: string | undefined) => {
@@ -612,10 +634,11 @@ export default function Home() {
                         {post.readTime} {t.minutes}
                       </div>
                     </div>
-                    <Button className="mt-4 w-full bg-yammy-blue hover:bg-yammy-dark-blue" asChild>
-                      <Link href={`/blog/${post.id}`}>
-                        {t.readMore} <ChevronRightIcon className="ml-2 h-4 w-4" />
-                      </Link>
+                    <Button
+                      className="mt-4 w-full bg-yammy-blue hover:bg-yammy-dark-blue"
+                      onClick={() => handleOpenModal(post)}
+                    >
+                      {t.readMore} <ChevronRightIcon className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
                 </motion.div>
@@ -775,6 +798,11 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Blog Post Modal */}
+      <Suspense fallback={null}>
+        {selectedPost && <BlogPostModal post={selectedPost} isOpen={isModalOpen} onClose={handleCloseModal} />}
+      </Suspense>
 
       {/* Admin Change Notification */}
       <AdminChangeNotification />
