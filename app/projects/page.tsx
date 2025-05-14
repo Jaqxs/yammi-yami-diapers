@@ -66,14 +66,14 @@ export default function ProjectsPage() {
                     </div>
                     <div className="bg-yammy-orange/10 p-4 rounded-lg border border-yammy-orange/20">
                       <h4 className="font-semibold text-yammy-orange">Kigamboni, Zanzibar</h4>
-                      <p className="text-2xl font-bold text-yammy-orange">9,800 m²</p>
+                      <p className="text-2xl font-bold text-yammy-orange">89,300 m²</p>
                       <p className="text-sm text-gray-600">Strategic development area</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-yammy-light-blue/20 p-4 rounded-lg text-center">
                       <p className="text-3xl font-bold text-yammy-blue">
-                        <CountUp end={73500} />+
+                        <CountUp end={153000} />+
                       </p>
                       <p className="text-sm text-gray-600">Total Square Meters</p>
                     </div>
