@@ -4,7 +4,20 @@ import { useState, useEffect, useCallback, Suspense } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { ShoppingCart, Phone, Instagram, Star, Calendar, Clock, ChevronLeft, ChevronRightIcon } from "lucide-react"
+import {
+  ShoppingCart,
+  Phone,
+  Instagram,
+  Star,
+  Calendar,
+  Clock,
+  ChevronLeft,
+  ChevronRightIcon,
+  Award,
+  Users,
+  ShoppingBag,
+  Globe,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
@@ -16,6 +29,7 @@ import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { OptimizedImage } from "@/components/optimized-image"
 import { toast } from "@/components/ui/use-toast"
 import Image from "next/image"
+import { CountUp } from "@/components/count-up"
 
 // Language translations
 const translations = {
@@ -57,6 +71,12 @@ const translations = {
     productAddedToCart: "Product has been added to your cart",
     prevImage: "Previous image",
     nextImage: "Next image",
+    achievements: "Our Achievements",
+    happyCustomers: "Happy Customers",
+    productsDelivered: "Products Delivered",
+    regions: "Regions Covered",
+    yearsOfExperience: "Years of Experience",
+    ourImpact: "Our Impact Across Tanzania",
   },
   sw: {
     heroTitle: "Penda Mtoto Wako, Penda Familia Yako",
@@ -96,6 +116,12 @@ const translations = {
     productAddedToCart: "Bidhaa imeongezwa kwenye kikapu chako",
     prevImage: "Picha iliyopita",
     nextImage: "Picha inayofuata",
+    achievements: "Mafanikio Yetu",
+    happyCustomers: "Wateja Wenye Furaha",
+    productsDelivered: "Bidhaa Zilizosambazwa",
+    regions: "Mikoa Inayofikiwa",
+    yearsOfExperience: "Miaka ya Uzoefu",
+    ourImpact: "Athari Yetu Katika Tanzania",
   },
 }
 
@@ -178,6 +204,30 @@ const heroImages = [
   {
     src: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Post_Reel_1080x1440_03-ErnRKBr1DJ0cJI6Tvwc9mOzLLt1OE8.png",
     alt: "Yammy Yami Product Showcase",
+  },
+]
+
+// Achievement stats
+const achievements = [
+  {
+    icon: <Users className="h-8 w-8 text-white" />,
+    value: 50000,
+    title: { en: "Happy Customers", sw: "Wateja Wenye Furaha" },
+  },
+  {
+    icon: <ShoppingBag className="h-8 w-8 text-white" />,
+    value: 1000000,
+    title: { en: "Products Delivered", sw: "Bidhaa Zilizosambazwa" },
+  },
+  {
+    icon: <Globe className="h-8 w-8 text-white" />,
+    value: 26,
+    title: { en: "Regions Covered", sw: "Mikoa Inayofikiwa" },
+  },
+  {
+    icon: <Award className="h-8 w-8 text-white" />,
+    value: 5,
+    title: { en: "Years of Experience", sw: "Miaka ya Uzoefu" },
   },
 ]
 
@@ -591,6 +641,49 @@ export default function Home() {
                 <div className="text-4xl mb-4 animate-bounce-slow">{feature.icon}</div>
                 <h3 className="text-xl font-bubblegum mb-3 text-yammy-dark-blue">{feature.title[language || "en"]}</h3>
                 <p className="text-gray-600">{feature.description[language || "en"]}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Achievements Section */}
+      <section className="relative py-20 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/yammy-yami-mother-baby.png"
+            alt="Mother and baby with Yammy Yami products"
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* Overlay to ensure text readability */}
+          <div className="absolute inset-0 bg-yammy-dark-blue/70"></div>
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <h2 className="text-3xl md:text-4xl font-bubblegum text-center mb-4 text-white">{t.achievements}</h2>
+          <p className="text-xl text-center text-white/90 mb-12 max-w-3xl mx-auto">{t.ourImpact}</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {achievements.map((achievement, index) => (
+              <motion.div
+                key={index}
+                className="text-center"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <div className="bg-yammy-blue/30 backdrop-blur-sm rounded-full p-4 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  {achievement.icon}
+                </div>
+                <div className="text-4xl font-bold text-white mb-2">
+                  <CountUp end={achievement.value} duration={2.5} />
+                  {achievement.value >= 1000 ? "+" : ""}
+                </div>
+                <h3 className="text-xl font-bubblegum text-white">{achievement.title[language || "en"]}</h3>
               </motion.div>
             ))}
           </div>

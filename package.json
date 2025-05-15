@@ -61,7 +61,6 @@
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "use-sync-external-store": "latest",
     "vaul": "^0.9.6",
     "workbox-core": "latest",
     "workbox-expiration": "latest",
