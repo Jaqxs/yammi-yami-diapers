@@ -65,7 +65,7 @@ export default function ProjectsPage() {
                       <p className="text-sm text-gray-600">Prime coastal location</p>
                     </div>
                     <div className="bg-yammy-orange/10 p-4 rounded-lg border border-yammy-orange/20">
-                      <h4 className="font-semibold text-yammy-orange">Kigamboni, Zanzibar</h4>
+                      <h4 className="font-semibold text-yammy-orange">Kigamboni-Dar es salaam</h4>
                       <p className="text-2xl font-bold text-yammy-orange">9,800 m²</p>
                       <p className="text-sm text-gray-600">Strategic development area</p>
                     </div>
