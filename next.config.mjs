@@ -17,10 +17,12 @@ const nextConfig = {
         hostname: '**',
       },
     ],
-    // Optimize caching for better performance
-    minimumCacheTTL: 60,
-    // Use Next.js image optimization
-    unoptimized: false,
+    // Disable image optimization caching
+    minimumCacheTTL: 0,
+    // Disable static image imports caching
+    disableStaticImages: true,
+    // Allow unoptimized images
+    unoptimized: true,
   },
   // Remove the optimizeCss experimental feature that requires critters
   experimental: {
@@ -33,15 +35,27 @@ const nextConfig = {
   },
   // Enable React strict mode for better development experience
   reactStrictMode: true,
-  // Add headers for better image caching
+  // Add headers to prevent caching of images
   async headers() {
     return [
       {
-        source: '/:path*.(jpg|jpeg|png|webp|avif|gif)',
+        source: '/:path*/(.jpg|.jpeg|.png|.webp|.avif|.gif)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400, stale-while-revalidate=31536000',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+          {
+            key: 'Surrogate-Control',
+            value: 'no-store',
           },
         ],
       },
@@ -52,12 +66,7 @@ const nextConfig = {
     // Optimize image loading
     config.module.rules.push({
       test: /\.(png|jpe?g|gif|svg|webp|avif)$/i,
-      type: 'asset',
-      parser: {
-        dataUrlCondition: {
-          maxSize: 8 * 1024, // 8kb - inline small images as data URLs
-        },
-      },
+      type: 'asset/resource',
     });
     
     return config;
