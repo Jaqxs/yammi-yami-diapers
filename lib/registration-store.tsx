@@ -33,8 +33,43 @@ export const useRegistrationStore = create<RegistrationState>()(
         set({
           info,
           email: info.email,
-          status: info.status || "pending",
+          status: info.status || "approved", // Default to approved
         })
+
+        // Also update in localStorage for persistence
+        try {
+          const registrationsJSON = localStorage.getItem("yammy-registrations") || "[]"
+          const registrations = JSON.parse(registrationsJSON)
+
+          // Check if this email already exists
+          const existingIndex = registrations.findIndex((r: any) => r.email === info.email)
+
+          if (existingIndex >= 0) {
+            // Update existing registration
+            registrations[existingIndex] = {
+              ...registrations[existingIndex],
+              ...info,
+              status: info.status || "approved",
+              lastUpdated: new Date().toISOString(),
+            }
+          } else {
+            // Add new registration
+            registrations.push({
+              id: registrations.length > 0 ? Math.max(...registrations.map((r: any) => r.id)) + 1 : 1,
+              ...info,
+              status: info.status || "approved",
+              date: new Date().toISOString(),
+              lastUpdated: new Date().toISOString(),
+            })
+          }
+
+          localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
+
+          // Dispatch event for other components
+          window.dispatchEvent(new Event("registrationUpdated"))
+        } catch (error) {
+          console.error("Error updating registration in localStorage:", error)
+        }
       },
       setRegistrationStatus: (status) => {
         set((state) => ({

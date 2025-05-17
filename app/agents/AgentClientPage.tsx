@@ -14,13 +14,19 @@ export default function AgentClientPage() {
   const [activeTab, setActiveTab] = useState("register")
   const [hasRegistered, setHasRegistered] = useState(false)
 
-  // Check if user is already registered
+  // Check if user is already registered and switch to pricing tab
   useEffect(() => {
-    if (status === "approved" || status === "pending") {
+    if (status === "approved") {
       setHasRegistered(true)
       setActiveTab("pricing")
     }
   }, [status])
+
+  // Add a function to handle registration completion
+  const handleRegistrationComplete = () => {
+    setHasRegistered(true)
+    setActiveTab("pricing")
+  }
 
   return (
     <PageWrapper>
@@ -73,7 +79,7 @@ export default function AgentClientPage() {
                 <TabsTrigger value="pricing">Agent Pricing</TabsTrigger>
               </TabsList>
               <TabsContent value="register" className="p-6">
-                <RegistrationForm />
+                <RegistrationForm onRegistrationComplete={handleRegistrationComplete} />
               </TabsContent>
               <TabsContent value="pricing" className="p-6">
                 <AgentPricing />

@@ -49,7 +49,11 @@ const regions = [
   "Zanzibar Urban/West",
 ]
 
-export function RegistrationForm() {
+interface RegistrationFormProps {
+  onRegistrationComplete?: () => void
+}
+
+export function RegistrationForm({ onRegistrationComplete }: RegistrationFormProps) {
   const { setRegistrationInfo, status, email, checkRegistrationStatus } = useRegistrationStore()
   const [formData, setFormData] = useState({
     name: "",
@@ -124,7 +128,7 @@ export function RegistrationForm() {
     setIsSubmitting(true)
 
     try {
-      // Add the registration to the store
+      // Add the registration to the store with immediate approval
       const newRegistration = await addRegistration({
         name: formData.name,
         email: formData.email,
@@ -133,45 +137,34 @@ export function RegistrationForm() {
         region: formData.region,
         location: formData.location,
         notes: `Region: ${formData.region}, Location: ${formData.location}`,
+        status: "approved", // Set status to approved immediately
       })
 
       console.log("Registration submitted:", newRegistration)
 
-      // Save registration info in the registration store
+      // Save registration info in the registration store with approved status
       setRegistrationInfo({
         ...formData,
-        status: "pending", // Set initial status to pending
+        status: "approved", // Set status to approved immediately
       })
 
-      // For demo purposes, auto-approve the registration
-      // In a real system, this would be done by an admin
-      setTimeout(async () => {
-        try {
-          // Auto-approve the registration after 2 seconds (for demo purposes)
-          await autoApproveRegistration(newRegistration.id)
+      // Add the user to the agents list immediately
+      await addToAgentsList(formData)
 
-          // Add the user to the agents list
-          await addToAgentsList(formData)
+      // Update local status
+      setCurrentStatus("approved")
 
-          // Update local status
-          setCurrentStatus("approved")
+      // Call the completion handler if provided
+      if (onRegistrationComplete) {
+        onRegistrationComplete()
+      }
 
-          // Update registration store
-          setRegistrationInfo({
-            ...formData,
-            status: "approved",
-          })
-
-          // Show success message
-          toast({
-            title: "Registration approved",
-            description: "Your registration has been approved. You now have access to agent pricing.",
-            variant: "default",
-          })
-        } catch (error) {
-          console.error("Error auto-approving registration:", error)
-        }
-      }, 2000)
+      // Show success message
+      toast({
+        title: "Registration successful!",
+        description: "You now have full access to agent pricing and resources.",
+        variant: "default",
+      })
 
       // Reset form
       setFormData({
@@ -182,50 +175,11 @@ export function RegistrationForm() {
         location: "",
         paymentConfirmation: "",
       })
-
-      toast({
-        title: "Registration submitted",
-        description: "Your registration has been submitted successfully. We'll review it shortly.",
-      })
     } catch (error) {
       console.error("Registration error:", error)
       setErrors({ submit: "An error occurred. Please try again." })
     } finally {
       setIsSubmitting(false)
-    }
-  }
-
-  // Function to auto-approve registration (for demo purposes)
-  const autoApproveRegistration = async (id: number) => {
-    try {
-      // Get the store context
-      const { approveRegistration } = useStore.getState()
-
-      // Approve the registration
-      await approveRegistration(id, "System", "Auto-approved for demo purposes")
-
-      // Save to localStorage to persist across sessions
-      const registrationsJSON = localStorage.getItem("yammy-registrations") || "[]"
-      const registrations = JSON.parse(registrationsJSON)
-
-      const index = registrations.findIndex((r: any) => r.id === id)
-      if (index !== -1) {
-        registrations[index].status = "approved"
-        registrations[index].reviewedBy = "System"
-        registrations[index].notes = "Auto-approved for demo purposes"
-        registrations[index].reviewDate = new Date().toISOString()
-
-        localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
-      }
-
-      // Update registration store
-      const { setRegistrationStatus } = useRegistrationStore.getState()
-      setRegistrationStatus("approved")
-
-      console.log("Registration auto-approved:", id)
-    } catch (error) {
-      console.error("Error auto-approving registration:", error)
-      throw error
     }
   }
 
@@ -416,7 +370,7 @@ export function RegistrationForm() {
         </CardContent>
         <CardFooter>
           <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? "Submitting..." : "Register as Agent"}
+            {isSubmitting ? "Processing..." : "Register & View Pricing"}
           </Button>
         </CardFooter>
       </form>
