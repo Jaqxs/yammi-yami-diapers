@@ -22,9 +22,7 @@ export function OptimizedImage({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(false)
   const [imgSrc, setImgSrc] = useState<string | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
   const mountedRef = useRef(true)
-  const maxRetries = 3
 
   useEffect(() => {
     // Set mounted ref
@@ -41,7 +39,6 @@ export function OptimizedImage({
     if (mountedRef.current) {
       setIsLoading(true)
       setError(false)
-      setRetryCount(0)
     }
 
     // Process the image source
@@ -55,12 +52,18 @@ export function OptimizedImage({
         return
       }
 
-      // Add cache-busting parameter to image URLs
+      // Ensure the src is properly formatted
       if (typeof src === "string") {
-        const timestamp = Date.now()
-        const separator = src.includes("?") ? "&" : "?"
+        // Handle relative paths for deployment
+        let finalSrc = src
+
+        // If it's a relative path that doesn't start with / or http, add /
+        if (!src.startsWith("/") && !src.startsWith("http")) {
+          finalSrc = `/${src}`
+        }
+
         if (mountedRef.current) {
-          setImgSrc(`${src}${separator}t=${timestamp}`)
+          setImgSrc(finalSrc)
         }
       } else {
         if (mountedRef.current) {
@@ -80,25 +83,10 @@ export function OptimizedImage({
   }
 
   const handleError = () => {
-    // If we haven't exceeded max retries, try again
-    if (retryCount < maxRetries && typeof src === "string" && !src.includes("placeholder")) {
-      if (mountedRef.current) {
-        setRetryCount((prev) => prev + 1)
-
-        // Try again with a new cache-busting parameter
-        const timestamp = Date.now() + retryCount
-        const separator = src.includes("?") ? "&" : "?"
-        setImgSrc(`${src}${separator}retry=${timestamp}`)
-      }
-    } else {
-      // Max retries exceeded, show fallback
-      if (mountedRef.current) {
-        setError(true)
-        setIsLoading(false)
-
-        // Log error for debugging
-        console.warn(`Image failed to load after ${maxRetries} retries:`, src)
-      }
+    if (mountedRef.current) {
+      console.warn(`Image failed to load:`, src)
+      setError(true)
+      setIsLoading(false)
     }
   }
 
@@ -129,7 +117,6 @@ export function OptimizedImage({
           height: "100%",
           ...props.style,
         }}
-        unoptimized={true} // Skip Next.js image optimization to avoid caching issues
       />
     </div>
   )

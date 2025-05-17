@@ -7,7 +7,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { useLanguage } from "./language-provider"
 import { CartItems } from "./cart-items"
 import { Badge } from "@/components/ui/badge"
-import { useEffect, useRef } from "react"
 
 const translations = {
   en: {
@@ -24,14 +23,6 @@ export function CartButton() {
   const { itemCount, isOpen, openCart, closeCart } = useCart()
   const { language } = useLanguage()
   const t = translations[language]
-  const sheetTriggerRef = useRef<HTMLButtonElement>(null)
-
-  // Use effect to programmatically click the trigger when isOpen changes
-  useEffect(() => {
-    if (isOpen && sheetTriggerRef.current) {
-      sheetTriggerRef.current.click()
-    }
-  }, [isOpen])
 
   // Handle sheet state changes
   const handleOpenChange = (open: boolean) => {
@@ -46,10 +37,19 @@ export function CartButton() {
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button
-          ref={sheetTriggerRef}
           variant="outline"
           size="icon"
           className="relative border-yammy-blue/30 text-yammy-blue"
+          onClick={(e) => {
+            // If cart is already open and user clicks the button, close it
+            if (isOpen) {
+              e.preventDefault()
+              closeCart()
+            } else {
+              // Otherwise open it
+              openCart()
+            }
+          }}
         >
           <ShoppingCart className="h-4 w-4" />
           {itemCount > 0 && (
