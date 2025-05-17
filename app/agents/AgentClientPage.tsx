@@ -5,26 +5,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PageWrapper } from "@/components/page-wrapper"
 import { RegistrationForm } from "@/components/registration-form"
 import { AgentPricing } from "@/components/agent-pricing"
-import { useRegistrationStore } from "@/lib/registration-store"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, CheckCircle, FileText, Users } from "lucide-react"
 
 export default function AgentClientPage() {
-  const { status, email } = useRegistrationStore()
   const [activeTab, setActiveTab] = useState("register")
-  const [hasRegistered, setHasRegistered] = useState(false)
+  const [isRegistered, setIsRegistered] = useState(false)
 
-  // Check if user is already registered and switch to pricing tab
+  // Check if user is already registered
   useEffect(() => {
-    if (status === "approved") {
-      setHasRegistered(true)
-      setActiveTab("pricing")
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("yammy-current-user") || "{}")
+      if (currentUser.isRegistered) {
+        setIsRegistered(true)
+        setActiveTab("pricing")
+      }
+    } catch (error) {
+      console.error("Error checking registration status:", error)
     }
-  }, [status])
+  }, [])
 
-  // Add a function to handle registration completion
+  // Handle registration completion
   const handleRegistrationComplete = () => {
-    setHasRegistered(true)
+    setIsRegistered(true)
     setActiveTab("pricing")
   }
 
@@ -55,10 +58,8 @@ export default function AgentClientPage() {
               <div className="w-16 h-16 bg-yammy-light-blue/20 rounded-full flex items-center justify-center mb-4">
                 <CheckCircle className="h-8 w-8 text-yammy-blue" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Instant Approval</h3>
-              <p className="text-gray-600">
-                Get approved quickly and gain immediate access to agent pricing and resources.
-              </p>
+              <h3 className="text-xl font-semibold mb-2">Instant Access</h3>
+              <p className="text-gray-600">Get immediate access to agent pricing and resources after registration.</p>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col items-center text-center">
@@ -70,19 +71,37 @@ export default function AgentClientPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 max-w-4xl mx-auto">
+          <div
+            id="register"
+            className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 max-w-4xl mx-auto"
+          >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="register" disabled={hasRegistered}>
+                <TabsTrigger value="register" disabled={isRegistered}>
                   Register
                 </TabsTrigger>
                 <TabsTrigger value="pricing">Agent Pricing</TabsTrigger>
               </TabsList>
               <TabsContent value="register" className="p-6">
-                <RegistrationForm onRegistrationComplete={handleRegistrationComplete} />
+                {isRegistered ? (
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 className="font-semibold text-green-800">Already Registered</h3>
+                    <p className="text-green-700 mt-1">
+                      You are already registered as an agent. View the pricing tab for exclusive agent pricing.
+                    </p>
+                    <Button
+                      onClick={() => setActiveTab("pricing")}
+                      className="mt-2 bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      View Pricing
+                    </Button>
+                  </div>
+                ) : (
+                  <RegistrationForm onRegistrationComplete={handleRegistrationComplete} />
+                )}
               </TabsContent>
               <TabsContent value="pricing" className="p-6">
-                <AgentPricing />
+                <AgentPricing showPreview={isRegistered} />
               </TabsContent>
             </Tabs>
           </div>
