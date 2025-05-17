@@ -28,10 +28,6 @@ const nextConfig = {
   experimental: {
     // optimizeCss: true, // Removing this line as it requires critters
     optimizePackageImports: ['framer-motion', 'lucide-react', 'recharts'],
-    // Enable image optimization
-    images: {
-      allowFutureImage: true,
-    },
   },
   // Enable React strict mode for better development experience
   reactStrictMode: true,
@@ -71,8 +67,6 @@ const nextConfig = {
     
     return config;
   },
-  // Ensure output is static for better image handling
-  output: 'standalone',
 }
 
 export default nextConfig

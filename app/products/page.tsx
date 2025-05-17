@@ -19,7 +19,6 @@ import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { ProductCard } from "@/components/product-card"
 import { useIsMobile, useIsTablet } from "@/hooks/use-media-query"
 import { toast } from "@/components/ui/use-toast"
-import { CriticalImagesLoader } from "@/components/critical-images-loader"
 
 // Dynamically import heavy components
 const BrandAmbassadorSection = dynamic(() => import("@/components/brand-ambassador-section"), {
@@ -126,8 +125,6 @@ export default function ProductsPage() {
   const [imageVersion, setImageVersion] = useState(Date.now())
   const isMobile = useIsMobile()
   const t = translations[language || "en"]
-
-  // Preload category-specific images when tab changes
 
   // Load products on component mount and when sync events occur
   useEffect(() => {
@@ -333,9 +330,6 @@ export default function ProductsPage() {
 
   return (
     <PageWrapper>
-      {/* Preload critical images */}
-      <CriticalImagesLoader />
-
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-4xl font-bubblegum mb-8 text-yammy-dark-blue text-center">{t.products}</h1>
 
