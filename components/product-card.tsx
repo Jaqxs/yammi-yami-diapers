@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
 import { useCart } from "@/components/cart-provider"
-import { OptimizedImage } from "@/components/optimized-image"
+import { SuperImage } from "@/components/super-image"
 import type { Product } from "@/lib/store"
 import { toast } from "@/components/ui/use-toast"
 
@@ -101,30 +101,6 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
     },
   }
 
-  // Process image URL to ensure it's not cached
-  const getProcessedImageUrl = (url: string | undefined) => {
-    if (!url) return undefined
-
-    // If it's already a placeholder, return as is
-    if (url.includes("placeholder.svg")) return url
-
-    // Handle relative paths for local images
-    if (url.startsWith("/")) {
-      // For local images, ensure they're properly referenced
-      return url
-    }
-
-    // Add cache-busting parameter
-    const timestamp = imageKey
-    const separator = url.includes("?") ? "&" : "?"
-    return `${url}${separator}v=${timestamp}`
-  }
-
-  // Get the final image URL
-  const getFinalImageUrl = (url: string | undefined) => {
-    return getProcessedImageUrl(url)
-  }
-
   return (
     <motion.div
       className="product-card bg-white rounded-2xl shadow-md overflow-hidden h-full flex flex-col"
@@ -136,12 +112,13 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
       transition={{ duration: 0.3 }}
     >
       <div className="relative h-64 bg-yammy-light-blue">
-        <OptimizedImage
+        <SuperImage
           key={`product-image-${product.id}-${imageKey}`}
-          src={getFinalImageUrl(product.image) || "/placeholder.svg?height=300&width=300&query=diaper product"}
+          src={product.image || "/placeholder.svg?height=300&width=300&query=diaper product"}
           alt={product.name[language || "en"]}
           fill
-          className="object-cover md:object-contain p-0"
+          className="w-full h-full"
+          imgClassName="object-cover md:object-contain p-0"
           fallbackSrc={getFallbackImage()}
           quality={90}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

@@ -35,11 +35,11 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/:path*/(.jpg|.jpeg|.png|.webp|.avif|.gif)',
+        source: '/:path*.(jpg|jpeg|png|webp|avif|gif)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            value: 'public, max-age=0, must-revalidate',
           },
           {
             key: 'Pragma',
@@ -48,10 +48,6 @@ const nextConfig = {
           {
             key: 'Expires',
             value: '0',
-          },
-          {
-            key: 'Surrogate-Control',
-            value: 'no-store',
           },
         ],
       },
@@ -67,6 +63,8 @@ const nextConfig = {
     
     return config;
   },
+  // Ensure output is static for better image handling
+  output: 'standalone',
 }
 
 export default nextConfig
