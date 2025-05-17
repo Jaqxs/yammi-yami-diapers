@@ -17,6 +17,9 @@ import {
   Users,
   ShoppingBag,
   Globe,
+  Droplets,
+  Moon,
+  Heart,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -134,7 +137,7 @@ const BlogPostModal = dynamic(() => import("@/components/blog-post-modal").then(
 // Features
 const features = [
   {
-    icon: "💧",
+    icon: <Droplets className="h-10 w-10 text-yammy-blue" />,
     title: { en: "High Absorption", sw: "Unyonywaji wa Hali ya Juu" },
     description: {
       en: "Our diapers feature advanced absorption technology to keep your baby dry and comfortable.",
@@ -142,7 +145,7 @@ const features = [
     },
   },
   {
-    icon: "🌙",
+    icon: <Moon className="h-10 w-10 text-yammy-blue" />,
     title: { en: "Overnight Protection", sw: "Ulinzi wa Usiku" },
     description: {
       en: "Designed for all-night comfort and leak protection for peaceful sleep.",
@@ -150,7 +153,7 @@ const features = [
     },
   },
   {
-    icon: "🌈",
+    icon: <Heart className="h-10 w-10 text-yammy-blue" />,
     title: { en: "Soft Materials", sw: "Vifaa Laini" },
     description: {
       en: "Made with gentle, skin-friendly materials for sensitive baby skin.",
@@ -158,7 +161,7 @@ const features = [
     },
   },
   {
-    icon: "✨",
+    icon: <Star className="h-10 w-10 text-yammy-blue" />,
     title: { en: "Japan Standard", sw: "Kiwango cha Japan" },
     description: {
       en: "Manufactured to meet high Japanese quality standards for reliability.",
