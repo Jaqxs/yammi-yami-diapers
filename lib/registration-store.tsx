@@ -41,14 +41,51 @@ export const useRegistrationStore = create<RegistrationState>()(
         // Check if there's an existing registration with this email in localStorage
         const storedRegistrations = localStorage.getItem("yammy-registrations")
         let currentStatus = "pending" as RegistrationStatus
+        let registrations = []
 
         if (storedRegistrations) {
-          const registrations = JSON.parse(storedRegistrations)
+          registrations = JSON.parse(storedRegistrations)
           const existingRegistration = registrations.find((reg: any) => reg.email === info.email)
 
           if (existingRegistration) {
             currentStatus = existingRegistration.status as RegistrationStatus
+          } else {
+            // Add new registration to the list
+            const maxId = Math.max(...registrations.map((reg: any) => reg.id), 0)
+            const newRegistration = {
+              id: maxId + 1,
+              name: info.name,
+              email: info.email,
+              phone: info.phone,
+              region: info.region,
+              date: new Date().toISOString(),
+              paymentReference: info.paymentConfirmation,
+              status: "pending",
+            }
+
+            registrations.push(newRegistration)
+            localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
+
+            // Dispatch event to notify other components
+            window.dispatchEvent(new Event("registrationAdded"))
           }
+        } else {
+          // Initialize with this registration
+          const newRegistration = {
+            id: 1,
+            name: info.name,
+            email: info.email,
+            phone: info.phone,
+            region: info.region,
+            date: new Date().toISOString(),
+            paymentReference: info.paymentConfirmation,
+            status: "pending",
+          }
+
+          localStorage.setItem("yammy-registrations", JSON.stringify([newRegistration]))
+
+          // Dispatch event to notify other components
+          window.dispatchEvent(new Event("registrationAdded"))
         }
 
         set({
@@ -65,6 +102,14 @@ export const useRegistrationStore = create<RegistrationState>()(
       updateStatus: (email, status) => {
         if (get().email === email) {
           set({ status })
+        }
+
+        // Also update in localStorage
+        const storedRegistrations = localStorage.getItem("yammy-registrations")
+        if (storedRegistrations) {
+          const registrations = JSON.parse(storedRegistrations)
+          const updatedRegistrations = registrations.map((reg: any) => (reg.email === email ? { ...reg, status } : reg))
+          localStorage.setItem("yammy-registrations", JSON.stringify(updatedRegistrations))
         }
       },
 

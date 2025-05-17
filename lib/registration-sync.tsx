@@ -16,6 +16,21 @@ export function RegistrationSync() {
         try {
           await store.loadRegistrations()
           initialLoadCompleted.current = true
+
+          // Check if there are any new registrations in localStorage that need to be synced
+          const syncRegistrations = () => {
+            const storedRegistrations = localStorage.getItem("yammy-registrations")
+            if (storedRegistrations) {
+              const registrations = JSON.parse(storedRegistrations)
+
+              // Update the store with these registrations if needed
+              if (registrations.length > store.state.registrations.length) {
+                store.refreshData()
+              }
+            }
+          }
+
+          syncRegistrations()
         } catch (error) {
           console.error("Error loading registrations:", error)
         }
@@ -23,7 +38,18 @@ export function RegistrationSync() {
 
       loadData()
     }
-  }, []) // Empty dependency array to run only once on mount
+
+    // Listen for registration added events
+    const handleRegistrationAdded = () => {
+      store.refreshData()
+    }
+
+    window.addEventListener("registrationAdded", handleRegistrationAdded)
+
+    return () => {
+      window.removeEventListener("registrationAdded", handleRegistrationAdded)
+    }
+  }, [store])
 
   // Check for registration status changes in the main store
   useEffect(() => {
@@ -46,6 +72,9 @@ export function RegistrationSync() {
           if (data.email === email) {
             updateStatus(email, data.status)
           }
+
+          // Also refresh the main store data
+          store.refreshData()
         } catch (error) {
           console.error("Failed to parse registration status change:", error)
         }
@@ -56,7 +85,7 @@ export function RegistrationSync() {
     return () => {
       window.removeEventListener("storage", handleStorageEvent)
     }
-  }, [email, updateStatus])
+  }, [email, updateStatus, store])
 
   return null
 }
