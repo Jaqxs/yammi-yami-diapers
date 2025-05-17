@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, ChevronRight, ChevronDown } from "lucide-react"
+import { Download, ChevronRight, ChevronDown, Package, DollarSign, MapPin } from "lucide-react"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 // Define interfaces for our data structure
@@ -576,35 +576,63 @@ function MobileProductCard({ product, isRegistered }: { product: ProductPrice; i
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-3 overflow-hidden">
-      <div className="p-3 flex justify-between items-center cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
-        <h3 className="font-medium text-sm">{product.name}</h3>
-        {isExpanded ? (
-          <ChevronDown className="h-4 w-4 text-gray-500" />
-        ) : (
-          <ChevronRight className="h-4 w-4 text-gray-500" />
-        )}
+    <div className="bg-white rounded-lg shadow mb-4 overflow-hidden border border-gray-200">
+      <div
+        className="p-4 flex justify-between items-center cursor-pointer bg-gray-50"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex-1">
+          <h3 className="font-medium text-gray-900">{product.name}</h3>
+          <p className="text-xs text-gray-500 mt-1">Tap to {isExpanded ? "collapse" : "view"} details</p>
+        </div>
+        <div className="flex items-center">
+          <span className="text-yammy-blue font-bold mr-2">TZS {product.agentPrice}</span>
+          {isExpanded ? (
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          ) : (
+            <ChevronRight className="h-5 w-5 text-gray-500" />
+          )}
+        </div>
       </div>
 
       {isExpanded && (
-        <div className="px-3 pb-3 border-t border-gray-100 pt-2">
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="text-gray-500">Items Per Package:</div>
-            <div className="font-medium text-right">{product.itemsPerPackage}</div>
-
-            <div className="text-gray-500">Packages Per Carton:</div>
-            <div className="font-medium text-right">{product.packagesPerCarton}</div>
-
-            <div className="text-gray-500">Agent Price:</div>
-            <div className="font-medium text-right text-yammy-blue">
-              {isRegistered ? `TZS ${product.agentPrice}/=` : "Login to view"}
+        <div className="p-4 bg-white">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+              <Package className="h-5 w-5 text-gray-500 mr-3" />
+              <div>
+                <p className="text-xs text-gray-500">Package Details</p>
+                <p className="font-medium">
+                  {product.itemsPerPackage} items × {product.packagesPerCarton} packages per carton
+                </p>
+              </div>
             </div>
 
-            <div className="text-gray-500">Dar Price:</div>
-            <div className="font-medium text-right">TZS {product.darPrice}/=</div>
+            <div className="grid grid-cols-1 gap-3">
+              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <div className="flex items-center">
+                  <DollarSign className="h-5 w-5 text-yammy-blue mr-2" />
+                  <p className="text-sm">Agent Price</p>
+                </div>
+                <p className="font-bold text-yammy-blue">TZS {product.agentPrice}/=</p>
+              </div>
 
-            <div className="text-gray-500">Regional Price:</div>
-            <div className="font-medium text-right">TZS {product.regionPrice}/=</div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <MapPin className="h-5 w-5 text-gray-500 mr-2" />
+                  <p className="text-sm">Dar Price</p>
+                </div>
+                <p className="font-medium">TZS {product.darPrice}/=</p>
+              </div>
+
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <MapPin className="h-5 w-5 text-gray-500 mr-2" />
+                  <p className="text-sm">Regional Price</p>
+                </div>
+                <p className="font-medium">TZS {product.regionPrice}/=</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -687,79 +715,123 @@ export function AgentPricing({ showFullPricing = false }: AgentPricingProps) {
         </Button>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTier} onValueChange={setActiveTier} className="w-full mb-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-1">
+        {/* Mobile-optimized tier selection */}
+        {isMobile ? (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Select Tier:</label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded-md bg-white"
+              value={activeTier}
+              onChange={(e) => setActiveTier(e.target.value)}
+            >
+              {priceTiers.map((tier) => (
+                <option key={tier.id} value={tier.id}>
+                  {tier.name} - {tier.description}
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-muted-foreground mt-2">
+              {currentTier.name} - {currentTier.description}
+            </p>
+          </div>
+        ) : (
+          <Tabs value={activeTier} onValueChange={setActiveTier} className="w-full mb-6">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-1">
+              {priceTiers.map((tier) => (
+                <TabsTrigger key={tier.id} value={tier.id} className="text-xs md:text-sm">
+                  {tier.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
             {priceTiers.map((tier) => (
-              <TabsTrigger key={tier.id} value={tier.id} className="text-xs md:text-sm">
-                {tier.name}
-              </TabsTrigger>
+              <TabsContent key={tier.id} value={tier.id}>
+                <div className="text-sm text-muted-foreground mb-4">
+                  {tier.name} - {tier.description}
+                </div>
+              </TabsContent>
             ))}
-          </TabsList>
-          {priceTiers.map((tier) => (
-            <TabsContent key={tier.id} value={tier.id}>
-              <div className="text-sm text-muted-foreground mb-4">
-                {tier.name} - {tier.description}
+          </Tabs>
+        )}
+
+        {/* Mobile-optimized category selection */}
+        {isMobile ? (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Select Category:</label>
+            <div className="grid grid-cols-2 gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  className={`p-3 text-center rounded-lg text-sm font-medium transition-colors ${
+                    activeCategory === category
+                      ? "bg-yammy-blue text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
+            <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${categories.length}, 1fr)` }}>
+              {categories.map((category) => (
+                <TabsTrigger key={category} value={category}>
+                  {category}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        )}
+
+        {/* Product display - mobile or desktop */}
+        {categories.map((category) => (
+          <div key={category} className={activeCategory === category ? "block mt-4" : "hidden"}>
+            {isMobile ? (
+              // Mobile view - card-based layout
+              <div className="space-y-1">
+                {filteredProducts.map((product) => (
+                  <MobileProductCard
+                    key={`${product.id}-${product.itemsPerPackage}`}
+                    product={product}
+                    isRegistered={isRegistered}
+                  />
+                ))}
               </div>
-            </TabsContent>
-          ))}
-        </Tabs>
-
-        <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${categories.length}, 1fr)` }}>
-            {categories.map((category) => (
-              <TabsTrigger key={category} value={category}>
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {categories.map((category) => (
-            <TabsContent key={category} value={category} className="mt-4">
-              {isMobile ? (
-                // Mobile view - card-based layout
-                <div className="space-y-1">
-                  {filteredProducts.map((product) => (
-                    <MobileProductCard
-                      key={`${product.id}-${product.itemsPerPackage}`}
-                      product={product}
-                      isRegistered={isRegistered}
-                    />
-                  ))}
-                </div>
-              ) : (
-                // Desktop view - table layout
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Product</TableHead>
-                        <TableHead className="text-center">Items Per Package</TableHead>
-                        <TableHead className="text-center">Packages Per Carton</TableHead>
-                        <TableHead className="text-right">Agent Price (TZS)</TableHead>
-                        <TableHead className="text-right">Dar Price (TZS)</TableHead>
-                        <TableHead className="text-right">Regional Price (TZS)</TableHead>
+            ) : (
+              // Desktop view - table layout
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead className="text-center">Items Per Package</TableHead>
+                      <TableHead className="text-center">Packages Per Carton</TableHead>
+                      <TableHead className="text-right">Agent Price (TZS)</TableHead>
+                      <TableHead className="text-right">Dar Price (TZS)</TableHead>
+                      <TableHead className="text-right">Regional Price (TZS)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProducts.map((product) => (
+                      <TableRow key={`${product.id}-${product.itemsPerPackage}`}>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell className="text-center">{product.itemsPerPackage}</TableCell>
+                        <TableCell className="text-center">{product.packagesPerCarton}</TableCell>
+                        <TableCell className="text-right text-yammy-blue font-medium">
+                          TZS {product.agentPrice}/=
+                        </TableCell>
+                        <TableCell className="text-right">TZS {product.darPrice}/=</TableCell>
+                        <TableCell className="text-right">TZS {product.regionPrice}/=</TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredProducts.map((product) => (
-                        <TableRow key={`${product.id}-${product.itemsPerPackage}`}>
-                          <TableCell className="font-medium">{product.name}</TableCell>
-                          <TableCell className="text-center">{product.itemsPerPackage}</TableCell>
-                          <TableCell className="text-center">{product.packagesPerCarton}</TableCell>
-                          <TableCell className="text-right text-yammy-blue font-medium">
-                            TZS {product.agentPrice}/=
-                          </TableCell>
-                          <TableCell className="text-right">TZS {product.darPrice}/=</TableCell>
-                          <TableCell className="text-right">TZS {product.regionPrice}/=</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        ))}
 
         <div className="text-sm text-muted-foreground mt-6">
           <p className="font-semibold">Notes:</p>
