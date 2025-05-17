@@ -17,41 +17,31 @@ const nextConfig = {
         hostname: '**',
       },
     ],
-    // Disable image optimization caching
-    minimumCacheTTL: 0,
-    // Disable static image imports caching
-    disableStaticImages: true,
-    // Allow unoptimized images
-    unoptimized: true,
+    // Optimize caching for better performance
+    minimumCacheTTL: 60,
+    // Use Next.js image optimization
+    unoptimized: false,
   },
   // Remove the optimizeCss experimental feature that requires critters
   experimental: {
     // optimizeCss: true, // Removing this line as it requires critters
     optimizePackageImports: ['framer-motion', 'lucide-react', 'recharts'],
+    // Enable image optimization
+    images: {
+      allowFutureImage: true,
+    },
   },
   // Enable React strict mode for better development experience
   reactStrictMode: true,
-  // Add headers to prevent caching of images
+  // Add headers for better image caching
   async headers() {
     return [
       {
-        source: '/:path*/(.jpg|.jpeg|.png|.webp|.avif|.gif)',
+        source: '/:path*.(jpg|jpeg|png|webp|avif|gif)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          },
-          {
-            key: 'Pragma',
-            value: 'no-cache',
-          },
-          {
-            key: 'Expires',
-            value: '0',
-          },
-          {
-            key: 'Surrogate-Control',
-            value: 'no-store',
+            value: 'public, max-age=86400, stale-while-revalidate=31536000',
           },
         ],
       },
@@ -62,11 +52,18 @@ const nextConfig = {
     // Optimize image loading
     config.module.rules.push({
       test: /\.(png|jpe?g|gif|svg|webp|avif)$/i,
-      type: 'asset/resource',
+      type: 'asset',
+      parser: {
+        dataUrlCondition: {
+          maxSize: 8 * 1024, // 8kb - inline small images as data URLs
+        },
+      },
     });
     
     return config;
   },
+  // Ensure output is static for better image handling
+  output: 'standalone',
 }
 
 export default nextConfig

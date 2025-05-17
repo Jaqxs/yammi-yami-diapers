@@ -19,6 +19,8 @@ import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { ProductCard } from "@/components/product-card"
 import { useIsMobile, useIsTablet } from "@/hooks/use-media-query"
 import { toast } from "@/components/ui/use-toast"
+import { CriticalImagesLoader } from "@/components/critical-images-loader"
+import { preloadCategoryImages } from "@/lib/image-preloader"
 
 // Dynamically import heavy components
 const BrandAmbassadorSection = dynamic(() => import("@/components/brand-ambassador-section"), {
@@ -122,9 +124,15 @@ export default function ProductsPage() {
   const [sortOption, setSortOption] = useState("newest")
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [imageVersion, setImageVersion] = useState(Date.now())
   const isMobile = useIsMobile()
   const t = translations[language || "en"]
+
+  // Preload category-specific images when tab changes
+  useEffect(() => {
+    if (activeTab !== "all" && activeTab !== "wholesale") {
+      preloadCategoryImages(activeTab)
+    }
+  }, [activeTab])
 
   // Load products on component mount and when sync events occur
   useEffect(() => {
@@ -150,8 +158,6 @@ export default function ProductsPage() {
         setIsRefreshing(true)
         try {
           await loadProducts()
-          // Force image refresh by updating the version
-          setImageVersion(Date.now())
 
           // If we received an "add" action, show a subtle notification
           if (lastEvent.action === "add") {
@@ -179,8 +185,6 @@ export default function ProductsPage() {
     setIsRefreshing(true)
     try {
       await loadProducts()
-      // Force image refresh by updating the version
-      setImageVersion(Date.now())
 
       // Show success toast
       toast({
@@ -198,9 +202,6 @@ export default function ProductsPage() {
 
   // Function to clear image cache
   const clearImageCache = useCallback(() => {
-    // Update image version to force refresh
-    setImageVersion(Date.now())
-
     // Clear browser cache for images if possible
     if ("caches" in window) {
       caches.keys().then((cacheNames) => {
@@ -319,17 +320,14 @@ export default function ProductsPage() {
       }
     }
 
-    // Add version to image URL to prevent caching
-    if (processedProduct.image && !processedProduct.image.includes("placeholder")) {
-      const separator = processedProduct.image.includes("?") ? "&" : "?"
-      processedProduct.image = `${processedProduct.image}${separator}v=${imageVersion}`
-    }
-
     return processedProduct
   })
 
   return (
     <PageWrapper>
+      {/* Preload critical images */}
+      <CriticalImagesLoader />
+
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-4xl font-bubblegum mb-8 text-yammy-dark-blue text-center">{t.products}</h1>
 
@@ -581,9 +579,13 @@ export default function ProductsPage() {
           <ProductsSkeleton />
         ) : processedProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {processedProducts.map((product) => (
-              <div key={`${product.id}-${imageVersion}`} className="h-full">
-                <ProductCard product={product} onWhatsAppOrder={handleWhatsAppOrder} />
+            {processedProducts.map((product, index) => (
+              <div key={`${product.id}`} className="h-full">
+                <ProductCard
+                  product={product}
+                  onWhatsAppOrder={handleWhatsAppOrder}
+                  priority={index < 4} // Prioritize loading the first 4 products
+                />
               </div>
             ))}
           </div>
