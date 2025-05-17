@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRegistrationStore } from "@/lib/registration-store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -50,19 +50,31 @@ const regions = [
 ]
 
 export function RegistrationForm() {
-  const { setRegistrationInfo, status, email } = useRegistrationStore()
+  const { setRegistrationInfo, status, email, checkRegistrationStatus } = useRegistrationStore()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     region: "",
+    location: "",
     paymentConfirmation: "",
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [currentStatus, setCurrentStatus] = useState(status)
 
   // Import the useStore hook
-  const { addRegistration } = useStore()
+  const { addRegistration, addAgent } = useStore()
+
+  // Check for status updates
+  useEffect(() => {
+    if (email) {
+      const updatedStatus = checkRegistrationStatus(email)
+      setCurrentStatus(updatedStatus)
+    } else {
+      setCurrentStatus(status)
+    }
+  }, [status, email, checkRegistrationStatus])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -97,7 +109,7 @@ export function RegistrationForm() {
     }
 
     if (!formData.region) newErrors.region = "Region is required"
-    // Payment confirmation is now optional, so no validation needed
+    if (!formData.location) newErrors.location = "Location is required"
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -119,25 +131,47 @@ export function RegistrationForm() {
         phone: formData.phone,
         paymentReference: formData.paymentConfirmation,
         region: formData.region,
-        notes: `Region: ${formData.region}`,
+        location: formData.location,
+        notes: `Region: ${formData.region}, Location: ${formData.location}`,
       })
 
       console.log("Registration submitted:", newRegistration)
 
       // Save registration info in the registration store
-      setRegistrationInfo(formData)
-
-      // Save to shared storage for admin access
-      saveRegistrationToSharedStorage({
-        id: newRegistration.id,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        region: formData.region,
-        paymentReference: formData.paymentConfirmation,
-        date: new Date().toISOString(),
-        status: "pending",
+      setRegistrationInfo({
+        ...formData,
+        status: "pending", // Set initial status to pending
       })
+
+      // For demo purposes, auto-approve the registration
+      // In a real system, this would be done by an admin
+      setTimeout(async () => {
+        try {
+          // Auto-approve the registration after 2 seconds (for demo purposes)
+          await autoApproveRegistration(newRegistration.id)
+
+          // Add the user to the agents list
+          await addToAgentsList(formData)
+
+          // Update local status
+          setCurrentStatus("approved")
+
+          // Update registration store
+          setRegistrationInfo({
+            ...formData,
+            status: "approved",
+          })
+
+          // Show success message
+          toast({
+            title: "Registration approved",
+            description: "Your registration has been approved. You now have access to agent pricing.",
+            variant: "default",
+          })
+        } catch (error) {
+          console.error("Error auto-approving registration:", error)
+        }
+      }, 2000)
 
       // Reset form
       setFormData({
@@ -145,6 +179,7 @@ export function RegistrationForm() {
         email: "",
         phone: "",
         region: "",
+        location: "",
         paymentConfirmation: "",
       })
 
@@ -160,56 +195,84 @@ export function RegistrationForm() {
     }
   }
 
-  // Function to save registration to a shared storage mechanism
-  const saveRegistrationToSharedStorage = (registration: any) => {
+  // Function to auto-approve registration (for demo purposes)
+  const autoApproveRegistration = async (id: number) => {
     try {
-      // Get existing registrations
-      const existingRegistrationsJSON = localStorage.getItem("yammy-registrations") || "[]"
-      const existingRegistrations = JSON.parse(existingRegistrationsJSON)
+      // Get the store context
+      const { approveRegistration } = useStore.getState()
 
-      // Check if this email already exists
-      const existingIndex = existingRegistrations.findIndex((r: any) => r.email === registration.email)
+      // Approve the registration
+      await approveRegistration(id, "System", "Auto-approved for demo purposes")
 
-      if (existingIndex >= 0) {
-        // Update existing registration
-        existingRegistrations[existingIndex] = {
-          ...existingRegistrations[existingIndex],
-          ...registration,
-          lastUpdated: new Date().toISOString(),
-        }
-      } else {
-        // Add new registration
-        existingRegistrations.push({
-          ...registration,
-          lastUpdated: new Date().toISOString(),
-        })
+      // Save to localStorage to persist across sessions
+      const registrationsJSON = localStorage.getItem("yammy-registrations") || "[]"
+      const registrations = JSON.parse(registrationsJSON)
+
+      const index = registrations.findIndex((r: any) => r.id === id)
+      if (index !== -1) {
+        registrations[index].status = "approved"
+        registrations[index].reviewedBy = "System"
+        registrations[index].notes = "Auto-approved for demo purposes"
+        registrations[index].reviewDate = new Date().toISOString()
+
+        localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
       }
 
-      // Save back to localStorage
-      localStorage.setItem("yammy-registrations", JSON.stringify(existingRegistrations))
+      // Update registration store
+      const { setRegistrationStatus } = useRegistrationStore.getState()
+      setRegistrationStatus("approved")
 
-      // Broadcast an event for other tabs/windows
-      if (typeof window !== "undefined") {
-        // Create and dispatch a custom event
-        const event = new CustomEvent("yammy-registration-added", {
-          detail: { registration },
-        })
-        window.dispatchEvent(event)
-
-        // Also dispatch a storage event for cross-tab communication
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "yammy-registration-added",
-            newValue: JSON.stringify(registration),
-          }),
-        )
-      }
+      console.log("Registration auto-approved:", id)
     } catch (error) {
-      console.error("Error saving registration to shared storage:", error)
+      console.error("Error auto-approving registration:", error)
+      throw error
     }
   }
 
-  if (status === "approved") {
+  // Function to add the user to the agents list
+  const addToAgentsList = async (userData: typeof formData) => {
+    try {
+      // Add the user as an agent
+      await addAgent({
+        name: userData.name,
+        location: userData.location,
+        phone: userData.phone,
+        region: userData.region,
+        registrationDate: new Date().toISOString(),
+        status: "active",
+        tier: "bronze", // Default tier
+        salesVolume: 0,
+        lastOrderDate: new Date().toISOString(),
+      })
+
+      // Also update the agents list in localStorage
+      const agentsJSON = localStorage.getItem("yammy-agents") || "[]"
+      const agents = JSON.parse(agentsJSON)
+
+      const newAgent = {
+        id: agents.length > 0 ? Math.max(...agents.map((a: any) => a.id)) + 1 : 1,
+        name: userData.name,
+        location: userData.location,
+        phone: userData.phone,
+        region: userData.region,
+        registrationDate: new Date().toISOString(),
+        status: "active",
+        tier: "bronze",
+        salesVolume: 0,
+        lastOrderDate: new Date().toISOString(),
+      }
+
+      agents.push(newAgent)
+      localStorage.setItem("yammy-agents", JSON.stringify(agents))
+
+      console.log("User added to agents list:", newAgent)
+    } catch (error) {
+      console.error("Error adding user to agents list:", error)
+      throw error
+    }
+  }
+
+  if (currentStatus === "approved") {
     return (
       <Alert className="bg-green-50 border-green-200">
         <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -221,7 +284,7 @@ export function RegistrationForm() {
     )
   }
 
-  if (status === "pending") {
+  if (currentStatus === "pending") {
     return (
       <Alert className="bg-yellow-50 border-yellow-200">
         <Clock className="h-5 w-5 text-yellow-600" />
@@ -234,7 +297,7 @@ export function RegistrationForm() {
     )
   }
 
-  if (status === "rejected") {
+  if (currentStatus === "rejected") {
     return (
       <Alert className="bg-red-50 border-red-200">
         <AlertCircle className="h-5 w-5 text-red-600" />
@@ -258,11 +321,11 @@ export function RegistrationForm() {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">Business/Shop Name</Label>
             <Input
               id="name"
               name="name"
-              placeholder="Your full name"
+              placeholder="Your business or shop name"
               value={formData.name}
               onChange={handleChange}
               className={errors.name ? "border-red-500" : ""}
@@ -312,6 +375,19 @@ export function RegistrationForm() {
               </SelectContent>
             </Select>
             {errors.region && <p className="text-red-500 text-sm">{errors.region}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="location">Location/Area</Label>
+            <Input
+              id="location"
+              name="location"
+              placeholder="Your specific location or area"
+              value={formData.location}
+              onChange={handleChange}
+              className={errors.location ? "border-red-500" : ""}
+            />
+            {errors.location && <p className="text-red-500 text-sm">{errors.location}</p>}
           </div>
 
           <div className="space-y-2">

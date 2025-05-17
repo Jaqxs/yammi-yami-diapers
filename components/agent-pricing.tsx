@@ -827,6 +827,11 @@ const priceTiers: PriceTier[] = [
         agentPrice: "34,000",
         darPrice: "41,000",
         regionPrice: "45,000",
+        itemsPerPackage: 100,
+        packagesPerCarton: 5,
+        agentPrice: "34,000",
+        darPrice: "41,000",
+        regionPrice: "45,000",
         category: "BABY PANTS",
       },
       {
@@ -1341,6 +1346,7 @@ export function AgentPricing() {
   const [currentStatus, setCurrentStatus] = useState(status)
   const [activeTier, setActiveTier] = useState("tier-a")
   const [activeCategory, setActiveCategory] = useState(categories[0])
+  const [showPreview, setShowPreview] = useState(false)
 
   // Check for status updates
   useEffect(() => {
@@ -1377,38 +1383,89 @@ export function AgentPricing() {
     document.body.removeChild(link)
   }
 
-  if (currentStatus !== "approved") {
-    return null
-  }
-
   // Get the current tier data
   const currentTier = priceTiers.find((tier) => tier.id === activeTier) || priceTiers[0]
 
   // Filter products by the selected category
   const filteredProducts = currentTier.products.filter((product) => product.category === activeCategory)
 
+  // If not registered or pending, show preview with limited data
+  if (currentStatus !== "approved" && !showPreview) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Agent Pricing</CardTitle>
+          <CardDescription>Register as an agent to access exclusive pricing and resources</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
+            <h3 className="font-semibold text-yellow-800">Access Restricted</h3>
+            <p className="text-yellow-700 mt-1">
+              You need to register and be approved as an agent to access full pricing details.
+            </p>
+          </div>
+
+          <Button onClick={() => setShowPreview(true)} variant="outline" className="w-full">
+            Preview Sample Pricing
+          </Button>
+
+          <Button
+            onClick={() => (window.location.href = "/agents")}
+            className="w-full bg-yammy-blue hover:bg-yammy-blue/90"
+          >
+            Register as Agent
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Show limited preview for non-approved users who clicked "Preview"
+  const isPreview = currentStatus !== "approved" && showPreview
+
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Agent Pricing</CardTitle>
-          <CardDescription>Exclusive pricing for registered agents</CardDescription>
+          <CardDescription>
+            {isPreview
+              ? "Sample pricing preview - Register to see full pricing"
+              : "Exclusive pricing for registered agents"}
+          </CardDescription>
         </div>
-        <Button variant="outline" size="sm" onClick={handleDownload}>
-          <Download className="mr-2 h-4 w-4" />
-          Download Price List
-        </Button>
+        {!isPreview && (
+          <Button variant="outline" size="sm" onClick={handleDownload}>
+            <Download className="mr-2 h-4 w-4" />
+            Download Price List
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
+        {isPreview && (
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+            <h3 className="font-semibold text-blue-800">Preview Mode</h3>
+            <p className="text-blue-700 mt-1">
+              This is a limited preview. Register and get approved to see full pricing details and all tiers.
+            </p>
+            <Button
+              onClick={() => (window.location.href = "/agents")}
+              className="mt-2 bg-yammy-blue hover:bg-yammy-blue/90"
+            >
+              Register Now
+            </Button>
+          </div>
+        )}
+
         <Tabs value={activeTier} onValueChange={setActiveTier} className="w-full mb-6">
-          <TabsList className="grid w-full grid-cols-7">
-            {priceTiers.map((tier) => (
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${isPreview ? 2 : 7}, 1fr)` }}>
+            {priceTiers.slice(0, isPreview ? 2 : priceTiers.length).map((tier) => (
               <TabsTrigger key={tier.id} value={tier.id}>
                 {tier.name}
               </TabsTrigger>
             ))}
           </TabsList>
-          {priceTiers.map((tier) => (
+          {priceTiers.slice(0, isPreview ? 2 : priceTiers.length).map((tier) => (
             <TabsContent key={tier.id} value={tier.id}>
               <div className="text-sm text-muted-foreground mb-4">
                 {tier.name} - {tier.description}
@@ -1440,16 +1497,32 @@ export function AgentPricing() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts.map((product) => (
+                  {filteredProducts.slice(0, isPreview ? 3 : filteredProducts.length).map((product) => (
                     <TableRow key={`${product.id}-${product.itemsPerPackage}`}>
                       <TableCell className="font-medium">{product.name}</TableCell>
                       <TableCell className="text-center">{product.itemsPerPackage}</TableCell>
                       <TableCell className="text-center">{product.packagesPerCarton}</TableCell>
-                      <TableCell className="text-right">TZS {product.agentPrice}/=</TableCell>
+                      <TableCell className="text-right">
+                        {isPreview ? "Login to view" : `TZS ${product.agentPrice}/=`}
+                      </TableCell>
                       <TableCell className="text-right">TZS {product.darPrice}/=</TableCell>
                       <TableCell className="text-right">TZS {product.regionPrice}/=</TableCell>
                     </TableRow>
                   ))}
+
+                  {isPreview && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-4">
+                        <p className="text-gray-500 mb-2">Register and get approved to see full pricing details</p>
+                        <Button
+                          onClick={() => (window.location.href = "/agents")}
+                          className="bg-yammy-blue hover:bg-yammy-blue/90"
+                        >
+                          Register as Agent
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TabsContent>
