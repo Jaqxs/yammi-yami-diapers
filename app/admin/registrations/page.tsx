@@ -31,7 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Search, X, CheckCircle, XCircle, Clock, Eye, Filter, RefreshCw } from "lucide-react"
+import { Search, X, CheckCircle, XCircle, Clock, Eye, Filter, RefreshCw, Download } from "lucide-react"
 import { useStore } from "@/lib/store"
 import { mockRegistrations } from "@/data/mock-registrations"
 
@@ -47,92 +47,100 @@ export default function RegistrationsPage() {
   const [notes, setNotes] = useState("")
   const [registrations, setRegistrations] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasNewRegistrations, setHasNewRegistrations] = useState(false)
 
   // Get store functions
-  const { state, loadRegistrations, approveRegistration, rejectRegistration, updateRegistration } = useStore()
+  const { state, loadRegistrations, approveRegistration, rejectRegistration } = useStore()
 
-  // Load registrations on mount
-  useEffect(() => {
-    setMounted(true)
-    const fetchData = async () => {
-      setIsLoading(true)
-      try {
-        await loadRegistrations()
-
-        // Get registrations from localStorage first
-        const storedRegistrations = localStorage.getItem("yammy-registrations")
-        if (storedRegistrations) {
-          const parsedRegistrations = JSON.parse(storedRegistrations)
-          setRegistrations(parsedRegistrations)
-        } else {
-          // Fallback to mock data
-          setRegistrations(
-            mockRegistrations.map((reg) => ({
-              ...reg,
-              id: Number(reg.id.replace("reg-", "")),
-              date: reg.registrationDate,
-            })),
-          )
-        }
-      } catch (error) {
-        console.error("Error loading registrations:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load registrations. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-
-    // Set up event listener for registration updates
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "yammy-registrations") {
-        try {
-          const updatedRegistrations = JSON.parse(event.newValue || "[]")
-          setRegistrations(updatedRegistrations)
-        } catch (error) {
-          console.error("Error parsing updated registrations:", error)
-        }
-      }
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-    }
-  }, [loadRegistrations, toast])
-
-  // Refresh registrations
-  const handleRefresh = async () => {
+  // Function to load all registrations from various sources
+  const loadAllRegistrations = async () => {
     setIsLoading(true)
     try {
-      await loadRegistrations()
-
-      // Get updated registrations from localStorage
+      // First try to load from localStorage
       const storedRegistrations = localStorage.getItem("yammy-registrations")
-      if (storedRegistrations) {
-        const parsedRegistrations = JSON.parse(storedRegistrations)
-        setRegistrations(parsedRegistrations)
+      let allRegistrations = []
 
-        toast({
-          title: "Refreshed",
-          description: "Registration data has been refreshed.",
-        })
+      if (storedRegistrations) {
+        try {
+          const parsedRegistrations = JSON.parse(storedRegistrations)
+          allRegistrations = parsedRegistrations
+          console.log("Loaded registrations from localStorage:", parsedRegistrations)
+        } catch (error) {
+          console.error("Error parsing registrations from localStorage:", error)
+        }
       }
+
+      // If no registrations in localStorage, use mock data
+      if (allRegistrations.length === 0) {
+        allRegistrations = mockRegistrations.map((reg) => ({
+          ...reg,
+          id: typeof reg.id === "string" ? Number.parseInt(reg.id.replace("reg-", "")) : reg.id,
+          date: reg.registrationDate || new Date().toISOString(),
+        }))
+        console.log("Using mock registrations:", allRegistrations)
+      }
+
+      // Update state with all registrations
+      setRegistrations(allRegistrations)
+      setHasNewRegistrations(false)
     } catch (error) {
-      console.error("Error refreshing registrations:", error)
+      console.error("Error loading registrations:", error)
       toast({
         title: "Error",
-        description: "Failed to refresh registrations. Please try again.",
+        description: "Failed to load registrations. Please try again.",
         variant: "destructive",
       })
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Load registrations on mount
+  useEffect(() => {
+    setMounted(true)
+    loadAllRegistrations()
+
+    // Set up event listeners for new registrations
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "yammy-registrations" || event.key === "yammy-registration-added") {
+        console.log("Registration storage changed:", event)
+        setHasNewRegistrations(true)
+      }
+    }
+
+    const handleCustomEvent = (event: Event) => {
+      console.log("Custom registration event received:", event)
+      setHasNewRegistrations(true)
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    window.addEventListener("yammy-registration-added", handleCustomEvent)
+
+    // Set up polling to check for new registrations
+    const intervalId = setInterval(() => {
+      const storedRegistrations = localStorage.getItem("yammy-registrations")
+      if (storedRegistrations) {
+        try {
+          const parsedRegistrations = JSON.parse(storedRegistrations)
+          if (parsedRegistrations.length !== registrations.length) {
+            setHasNewRegistrations(true)
+          }
+        } catch (error) {
+          console.error("Error checking for new registrations:", error)
+        }
+      }
+    }, 30000) // Check every 30 seconds
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      window.removeEventListener("yammy-registration-added", handleCustomEvent)
+      clearInterval(intervalId)
+    }
+  }, [])
+
+  // Refresh registrations
+  const handleRefresh = () => {
+    loadAllRegistrations()
   }
 
   if (!mounted) return null
@@ -166,24 +174,32 @@ export default function RegistrationsPage() {
     try {
       setIsLoading(true)
 
-      // Update the registration status
-      await approveRegistration(selectedRegistration.id, "Admin User", notes)
+      // Update the registration status in localStorage
+      const storedRegistrations = localStorage.getItem("yammy-registrations")
+      if (storedRegistrations) {
+        const parsedRegistrations = JSON.parse(storedRegistrations)
+        const updatedRegistrations = parsedRegistrations.map((reg: any) =>
+          reg.id === selectedRegistration.id
+            ? {
+                ...reg,
+                status: "approved",
+                reviewedBy: "Admin User",
+                notes: notes,
+                reviewDate: new Date().toISOString(),
+              }
+            : reg,
+        )
 
-      // Update the local state
-      const updatedRegistrations = registrations.map((reg) =>
-        reg.id === selectedRegistration.id
-          ? {
-              ...reg,
-              status: "approved",
-              reviewedBy: "Admin User",
-              notes: notes,
-              reviewDate: new Date().toISOString(),
-            }
-          : reg,
-      )
+        localStorage.setItem("yammy-registrations", JSON.stringify(updatedRegistrations))
+        setRegistrations(updatedRegistrations)
+      }
 
-      setRegistrations(updatedRegistrations)
-      localStorage.setItem("yammy-registrations", JSON.stringify(updatedRegistrations))
+      // Also update in the store if available
+      try {
+        await approveRegistration(selectedRegistration.id, "Admin User", notes)
+      } catch (error) {
+        console.error("Error updating registration in store:", error)
+      }
 
       // Trigger a localStorage event to notify other tabs/windows
       const event = new StorageEvent("storage", {
@@ -222,24 +238,32 @@ export default function RegistrationsPage() {
     try {
       setIsLoading(true)
 
-      // Update the registration status
-      await rejectRegistration(selectedRegistration.id, "Admin User", notes)
+      // Update the registration status in localStorage
+      const storedRegistrations = localStorage.getItem("yammy-registrations")
+      if (storedRegistrations) {
+        const parsedRegistrations = JSON.parse(storedRegistrations)
+        const updatedRegistrations = parsedRegistrations.map((reg: any) =>
+          reg.id === selectedRegistration.id
+            ? {
+                ...reg,
+                status: "rejected",
+                reviewedBy: "Admin User",
+                notes: notes,
+                reviewDate: new Date().toISOString(),
+              }
+            : reg,
+        )
 
-      // Update the local state
-      const updatedRegistrations = registrations.map((reg) =>
-        reg.id === selectedRegistration.id
-          ? {
-              ...reg,
-              status: "rejected",
-              reviewedBy: "Admin User",
-              notes: notes,
-              reviewDate: new Date().toISOString(),
-            }
-          : reg,
-      )
+        localStorage.setItem("yammy-registrations", JSON.stringify(updatedRegistrations))
+        setRegistrations(updatedRegistrations)
+      }
 
-      setRegistrations(updatedRegistrations)
-      localStorage.setItem("yammy-registrations", JSON.stringify(updatedRegistrations))
+      // Also update in the store if available
+      try {
+        await rejectRegistration(selectedRegistration.id, "Admin User", notes)
+      } catch (error) {
+        console.error("Error updating registration in store:", error)
+      }
 
       // Trigger a localStorage event to notify other tabs/windows
       const event = new StorageEvent("storage", {
@@ -268,6 +292,51 @@ export default function RegistrationsPage() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Export registrations to CSV
+  const handleExport = () => {
+    try {
+      const headers = ["ID", "Name", "Email", "Phone", "Region", "Payment Ref", "Date", "Status", "Notes"]
+      const csvRows = [headers.join(",")]
+
+      filteredRegistrations.forEach((reg) => {
+        const row = [
+          reg.id,
+          `"${reg.name || ""}"`,
+          `"${reg.email || ""}"`,
+          `"${reg.phone || ""}"`,
+          `"${reg.region || ""}"`,
+          `"${reg.paymentReference || ""}"`,
+          `"${reg.date ? formatDate(reg.date) : ""}"`,
+          `"${reg.status || ""}"`,
+          `"${reg.notes || ""}"`,
+        ]
+        csvRows.push(row.join(","))
+      })
+
+      const csvContent = csvRows.join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.setAttribute("href", url)
+      link.setAttribute("download", `agent-registrations-${new Date().toISOString().split("T")[0]}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      toast({
+        title: "Export Successful",
+        description: "Registrations have been exported to CSV.",
+      })
+    } catch (error) {
+      console.error("Error exporting registrations:", error)
+      toast({
+        title: "Export Failed",
+        description: "Failed to export registrations. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -310,10 +379,27 @@ export default function RegistrationsPage() {
             <CardTitle>Registrations List</CardTitle>
             <CardDescription>Review and approve agent registration applications</CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            {isLoading ? "Refreshing..." : "Refresh"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={isLoading || registrations.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            <Button
+              variant={hasNewRegistrations ? "default" : "outline"}
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className={hasNewRegistrations ? "bg-yammy-orange hover:bg-yammy-orange/90" : ""}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+              {hasNewRegistrations ? "New Registrations!" : isLoading ? "Refreshing..." : "Refresh"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -358,6 +444,7 @@ export default function RegistrationsPage() {
                   <TableHead>ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Contact</TableHead>
+                  <TableHead>Region</TableHead>
                   <TableHead>Payment Ref</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
@@ -367,7 +454,7 @@ export default function RegistrationsPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       <div className="flex justify-center items-center">
                         <RefreshCw className="h-6 w-6 animate-spin mr-2" />
                         Loading registrations...
@@ -376,7 +463,7 @@ export default function RegistrationsPage() {
                   </TableRow>
                 ) : filteredRegistrations.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       No registrations found.
                     </TableCell>
                   </TableRow>
@@ -391,6 +478,7 @@ export default function RegistrationsPage() {
                           <span className="text-xs text-muted-foreground">{registration.phone}</span>
                         </div>
                       </TableCell>
+                      <TableCell>{registration.region}</TableCell>
                       <TableCell>{registration.paymentReference}</TableCell>
                       <TableCell>{formatDate(registration.date)}</TableCell>
                       <TableCell>{getStatusBadge(registration.status)}</TableCell>

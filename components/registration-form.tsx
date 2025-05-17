@@ -113,16 +113,31 @@ export function RegistrationForm() {
 
     try {
       // Add the registration to the store
-      await addRegistration({
+      const newRegistration = await addRegistration({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         paymentReference: formData.paymentConfirmation,
+        region: formData.region,
         notes: `Region: ${formData.region}`,
       })
 
+      console.log("Registration submitted:", newRegistration)
+
       // Save registration info in the registration store
       setRegistrationInfo(formData)
+
+      // Save to shared storage for admin access
+      saveRegistrationToSharedStorage({
+        id: newRegistration.id,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        region: formData.region,
+        paymentReference: formData.paymentConfirmation,
+        date: new Date().toISOString(),
+        status: "pending",
+      })
 
       // Reset form
       setFormData({
@@ -142,6 +157,55 @@ export function RegistrationForm() {
       setErrors({ submit: "An error occurred. Please try again." })
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Function to save registration to a shared storage mechanism
+  const saveRegistrationToSharedStorage = (registration: any) => {
+    try {
+      // Get existing registrations
+      const existingRegistrationsJSON = localStorage.getItem("yammy-registrations") || "[]"
+      const existingRegistrations = JSON.parse(existingRegistrationsJSON)
+
+      // Check if this email already exists
+      const existingIndex = existingRegistrations.findIndex((r: any) => r.email === registration.email)
+
+      if (existingIndex >= 0) {
+        // Update existing registration
+        existingRegistrations[existingIndex] = {
+          ...existingRegistrations[existingIndex],
+          ...registration,
+          lastUpdated: new Date().toISOString(),
+        }
+      } else {
+        // Add new registration
+        existingRegistrations.push({
+          ...registration,
+          lastUpdated: new Date().toISOString(),
+        })
+      }
+
+      // Save back to localStorage
+      localStorage.setItem("yammy-registrations", JSON.stringify(existingRegistrations))
+
+      // Broadcast an event for other tabs/windows
+      if (typeof window !== "undefined") {
+        // Create and dispatch a custom event
+        const event = new CustomEvent("yammy-registration-added", {
+          detail: { registration },
+        })
+        window.dispatchEvent(event)
+
+        // Also dispatch a storage event for cross-tab communication
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "yammy-registration-added",
+            newValue: JSON.stringify(registration),
+          }),
+        )
+      }
+    } catch (error) {
+      console.error("Error saving registration to shared storage:", error)
     }
   }
 
