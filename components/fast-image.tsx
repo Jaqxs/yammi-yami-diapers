@@ -15,7 +15,6 @@ interface FastImageProps {
   quality?: number
   sizes?: string
   fallbackSrc?: string
-  placeholder?: "blur" | "empty" | "data:image/..."
   onLoad?: () => void
 }
 
@@ -30,7 +29,6 @@ export function FastImage({
   quality = 75,
   sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
   fallbackSrc = "/assorted-products-display.png",
-  placeholder = "empty",
   onLoad,
 }: FastImageProps) {
   const [imgSrc, setImgSrc] = useState<string>(src)
@@ -56,14 +54,10 @@ export function FastImage({
     setIsError(true)
     setIsLoading(false)
     setImgSrc(fallbackSrc)
-    console.warn(`Image failed to load: ${src}`)
   }
 
-  // Determine if the image should be preloaded
-  const shouldPreload = priority || imgSrc.includes("featured") || imgSrc.includes("hero")
-
   return (
-    <div className={cn("relative overflow-hidden", isLoading && "bg-gray-100 animate-pulse", className)}>
+    <div className={cn("relative overflow-hidden", isLoading && "bg-gray-100", className)}>
       {/* Loading indicator */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -81,16 +75,16 @@ export function FastImage({
         fill={fill}
         quality={quality}
         sizes={sizes}
-        loading={shouldPreload ? "eager" : "lazy"}
+        loading={priority ? "eager" : "lazy"}
         priority={priority}
         onLoad={handleLoad}
         onError={handleError}
         className={cn(
           "transition-opacity duration-300",
           isLoading ? "opacity-0" : "opacity-100",
-          fill && "object-cover",
+          fill ? "object-contain" : "",
         )}
-        unoptimized={false} // Use Next.js optimization
+        unoptimized={false}
       />
     </div>
   )

@@ -105,16 +105,16 @@ export function ProductCard({ product, onWhatsAppOrder, priority = false }: Prod
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="relative h-64 bg-yammy-light-blue">
+      <div className="relative h-64 bg-yammy-light-blue overflow-hidden">
         <FastImage
           src={product.image || "/placeholder.svg?height=300&width=300&query=diaper product"}
           alt={product.name[language || "en"]}
           fill
-          className="p-4"
+          className="object-contain p-2"
           fallbackSrc={getFallbackImage()}
-          quality={isHovered ? 85 : 70}
+          quality={80}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          priority={priority}
+          priority={isHovered || priority}
           onLoad={() => setIsImageLoaded(true)}
         />
 

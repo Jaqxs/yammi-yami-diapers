@@ -1,80 +1,69 @@
 /**
- * Image Preloader Service
- * Preloads important images to improve perceived performance
+ * Preloads images to browser cache
+ * @param urls Array of image URLs to preload
+ * @param options Configuration options
  */
-
-// Preload a single image
-export const preloadImage = (src: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve()
-    img.onerror = () => reject()
-    img.src = src
-  })
-}
-
-// Preload multiple images with priority
-export const preloadImages = async (
-  images: string[],
+export function preloadImages(
+  urls: string[],
   options: {
     concurrency?: number
     onProgress?: (loaded: number, total: number) => void
+    onComplete?: () => void
   } = {},
-): Promise<void> => {
-  const { concurrency = 3, onProgress } = options
+) {
+  const { concurrency = 4, onProgress, onComplete } = options
   let loaded = 0
-  const total = images.length
+  const total = urls.length
 
-  // Process images in batches to avoid overwhelming the browser
-  for (let i = 0; i < total; i += concurrency) {
-    const batch = images.slice(i, i + concurrency)
-    await Promise.allSettled(
-      batch.map((src) =>
-        preloadImage(src)
-          .then(() => {
-            loaded++
-            onProgress?.(loaded, total)
-          })
-          .catch(() => {
-            loaded++
-            onProgress?.(loaded, total)
-            console.warn(`Failed to preload image: ${src}`)
-          }),
-      ),
-    )
+  // Create a queue of URLs to load
+  const queue = [...urls]
+  let active = 0
+
+  // Function to load the next image in the queue
+  const loadNext = () => {
+    if (queue.length === 0 || active >= concurrency) return
+
+    active++
+    const url = queue.shift()!
+    const img = new Image()
+
+    img.onload = img.onerror = () => {
+      loaded++
+      active--
+
+      // Report progress
+      onProgress?.(loaded, total)
+
+      // Load the next image or complete
+      if (queue.length > 0) {
+        loadNext()
+      } else if (active === 0) {
+        onComplete?.()
+      }
+    }
+
+    img.src = url
+  }
+
+  // Start loading images up to concurrency limit
+  for (let i = 0; i < Math.min(concurrency, queue.length); i++) {
+    loadNext()
   }
 }
 
-// Preload category-specific images
-export const preloadCategoryImages = (category: string): void => {
-  const categoryImages: Record<string, string[]> = {
-    babyDiapers: [
-      "/images/baby-diapers.png",
-      // Add more category-specific images here
-    ],
-    adultDiapers: [
-      "/images/diaper-features.png",
-      // Add more category-specific images here
-    ],
-    ladyPads: [
-      "/images/lady-pads.png",
-      // Add more category-specific images here
-    ],
+/**
+ * Preloads images for a specific product category
+ * @param category Product category
+ */
+export function preloadCategoryImages(category: string) {
+  const categoryImageMap: Record<string, string[]> = {
+    babyDiapers: ["/images/baby-diapers.png"],
+    babyPants: ["/images/baby-diapers.png"],
+    adultDiapers: ["/images/diaper-features.png"],
+    ladyPads: ["/images/lady-pads.png"],
   }
 
-  const imagesToPreload = categoryImages[category] || []
-  if (imagesToPreload.length > 0) {
-    preloadImages(imagesToPreload, { concurrency: 2 })
-  }
-}
-
-// Preload featured product images
-export const preloadFeaturedProductImages = (products: any[]): void => {
-  const imagesToPreload = products
-    .filter((product) => product.featured && product.image)
-    .map((product) => product.image)
-    .slice(0, 4) // Only preload the first 4 featured products
-
+  const imagesToPreload = categoryImageMap[category] || []
   if (imagesToPreload.length > 0) {
     preloadImages(imagesToPreload, { concurrency: 2 })
   }

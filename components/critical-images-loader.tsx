@@ -9,8 +9,6 @@ const CRITICAL_IMAGES = [
   "/images/diaper-features.png",
   "/images/lady-pads.png",
   "/assorted-products-display.png",
-  "/images/yammy-yami-mother-baby.png",
-  "/images/diaper-sizes.png",
 ]
 
 export function CriticalImagesLoader() {
