@@ -1,42 +1,60 @@
 "use client"
 
 import { useEffect } from "react"
+import { mockProducts } from "@/data/mock-products"
 
-interface ImagePreloaderProps {
-  images: string[]
-}
-
-export function ImagePreloader({ images }: ImagePreloaderProps) {
+export function ImagePreloader() {
   useEffect(() => {
+    // Only run in browser
+    if (typeof window === "undefined") return
+
     // Function to preload an image
     const preloadImage = (src: string) => {
       return new Promise((resolve, reject) => {
         const img = new Image()
-        img.onload = () => resolve(src)
-        img.onerror = () => reject(new Error(`Failed to load image: ${src}`))
         img.src = src
+        img.onload = resolve
+        img.onerror = reject
+        // Add to DOM to ensure it's cached
+        img.style.display = "none"
+        document.body.appendChild(img)
+        // Remove after loading to clean up
+        setTimeout(() => {
+          if (document.body.contains(img)) {
+            document.body.removeChild(img)
+          }
+        }, 5000)
       })
     }
 
-    // Preload all images
-    const preloadAllImages = async () => {
-      try {
-        // Filter out empty or invalid URLs
-        const validImages = images.filter((img) => img && typeof img === "string" && !img.includes("undefined"))
+    // Get all product images
+    const productImages = mockProducts
+      .map((product) => product.image)
+      .filter((src): src is string => typeof src === "string")
 
-        // Preload in parallel
-        await Promise.allSettled(validImages.map(preloadImage))
-        console.log("Images preloaded successfully")
-      } catch (error) {
-        console.warn("Some images failed to preload:", error)
-      }
-    }
+    // Preload featured product images first
+    const featuredImages = mockProducts
+      .filter((product) => product.featured)
+      .map((product) => product.image)
+      .filter((src): src is string => typeof src === "string")
 
-    if (images && images.length > 0) {
-      preloadAllImages()
-    }
-  }, [images])
+    // Preload featured images immediately
+    featuredImages.forEach((src) => {
+      preloadImage(src).catch(() => {
+        console.log("Failed to preload featured image:", src)
+      })
+    })
 
-  // This component doesn't render anything
+    // Preload remaining images after a delay
+    setTimeout(() => {
+      const remainingImages = productImages.filter((src) => !featuredImages.includes(src))
+      remainingImages.forEach((src) => {
+        preloadImage(src).catch(() => {
+          console.log("Failed to preload image:", src)
+        })
+      })
+    }, 2000)
+  }, [])
+
   return null
 }
