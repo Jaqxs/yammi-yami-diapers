@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { ShoppingCart } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -10,6 +10,7 @@ import { useCart } from "@/components/cart-provider"
 import { OptimizedImage } from "@/components/optimized-image"
 import type { Product } from "@/lib/store"
 import { toast } from "@/components/ui/use-toast"
+import { getCategoryFallbackImage, ensureValidImageUrl } from "@/lib/image-utils"
 
 interface ProductCardProps {
   product: Product
@@ -20,12 +21,6 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
   const { language } = useLanguage()
   const { addItem, openCart } = useCart()
   const [isHovered, setIsHovered] = useState(false)
-  const [imageKey, setImageKey] = useState(Date.now())
-
-  // Force image refresh when product changes
-  useEffect(() => {
-    setImageKey(Date.now())
-  }, [product.id, product.image])
 
   const formatPrice = (price: number) => {
     return `TZS ${price.toLocaleString()}`
@@ -58,19 +53,8 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
     })
   }
 
-  // Get appropriate fallback image based on product category
-  const getFallbackImage = () => {
-    if (product.category === "babyDiapers") {
-      return "/images/baby-diapers.png"
-    } else if (product.category === "babyPants") {
-      return "/images/baby-diapers.png"
-    } else if (product.category === "adultDiapers") {
-      return "/images/diaper-features.png"
-    } else if (product.category === "ladyPads") {
-      return "/images/lady-pads.png"
-    }
-    return "/assorted-products-display.png"
-  }
+  const fallbackImage = getCategoryFallbackImage(product.category)
+  const imageUrl = ensureValidImageUrl(product.image, fallbackImage)
 
   const t = {
     en: {
@@ -101,30 +85,6 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
     },
   }
 
-  // Process image URL to ensure it's not cached
-  const getProcessedImageUrl = (url: string | undefined) => {
-    if (!url) return undefined
-
-    // If it's already a placeholder, return as is
-    if (url.includes("placeholder.svg")) return url
-
-    // Handle relative paths for local images
-    if (url.startsWith("/")) {
-      // For local images, ensure they're properly referenced
-      return url
-    }
-
-    // Add cache-busting parameter
-    const timestamp = imageKey
-    const separator = url.includes("?") ? "&" : "?"
-    return `${url}${separator}v=${timestamp}`
-  }
-
-  // Get the final image URL
-  const getFinalImageUrl = (url: string | undefined) => {
-    return getProcessedImageUrl(url)
-  }
-
   return (
     <motion.div
       className="product-card bg-white rounded-2xl shadow-md overflow-hidden h-full flex flex-col"
@@ -135,16 +95,13 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="relative h-64 bg-yammy-light-blue">
+      <div className="relative h-64 bg-yammy-light-blue flex items-center justify-center">
         <OptimizedImage
-          key={`product-image-${product.id}-${imageKey}`}
-          src={getFinalImageUrl(product.image) || "/placeholder.svg?height=300&width=300&query=diaper product"}
+          src={imageUrl}
           alt={product.name[language || "en"]}
           fill
-          className="object-cover md:object-contain p-0"
-          fallbackSrc={getFallbackImage()}
-          quality={90}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="p-4"
+          fallbackSrc={fallbackImage}
           priority={isHovered}
         />
 

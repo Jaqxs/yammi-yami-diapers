@@ -108,13 +108,14 @@ export function BlogPostModal({ post, isOpen, onClose }: BlogPostModalProps) {
             </Button>
 
             {/* Header image */}
-            <div className="relative h-48 md:h-64 w-full">
+            <div className="relative h-48 md:h-64 w-full flex items-center justify-center bg-yammy-light-blue">
               <OptimizedImage
                 src={post.image || "/placeholder.svg?height=300&width=500&query=blog post"}
                 alt={post.title[language || "en"]}
                 fill
-                className="object-cover"
+                className="p-4"
                 fallbackSrc="/blog-post-concept.png"
+                priority
               />
             </div>
 
