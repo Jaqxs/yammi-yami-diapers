@@ -101,21 +101,40 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
     },
   }
 
-  // Ensure the image URL is properly formatted
-  const getImageUrl = (url: string | undefined) => {
+  // Process image URL to ensure it's not cached
+  const getProcessedImageUrl = (url: string | undefined) => {
     if (!url) return undefined
 
-    // If it's a placeholder or already an absolute URL, return as is
-    if (url.includes("placeholder.svg") || url.startsWith("http")) {
-      return url
+    // If it's already a placeholder, return as is
+    if (url.includes("placeholder.svg")) return url
+
+    // Add cache-busting parameter
+    const timestamp = imageKey
+    const separator = url.includes("?") ? "&" : "?"
+    return `${url}${separator}v=${timestamp}`
+  }
+
+  // Ensure the image URL is absolute
+  const ensureAbsoluteUrl = (url: string | undefined) => {
+    if (!url) return undefined
+
+    // If it's already absolute, return as is
+    if (url.startsWith("http")) return url
+
+    // If it's a relative URL, make it absolute
+    if (url.startsWith("/")) {
+      // Use the current origin
+      return `${window.location.origin}${url}`
     }
 
-    // Ensure relative URLs start with /
-    if (!url.startsWith("/")) {
-      return `/${url}`
-    }
+    // If it's a relative URL without leading slash
+    return `${window.location.origin}/${url}`
+  }
 
-    return url
+  // Get the final image URL
+  const getFinalImageUrl = (url: string | undefined) => {
+    const processedUrl = getProcessedImageUrl(url)
+    return processedUrl
   }
 
   return (
@@ -131,7 +150,7 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
       <div className="relative h-64 bg-yammy-light-blue">
         <OptimizedImage
           key={`product-image-${product.id}-${imageKey}`}
-          src={getImageUrl(product.image) || "/placeholder.svg?height=300&width=300&query=diaper product"}
+          src={getFinalImageUrl(product.image) || "/placeholder.svg?height=300&width=300&query=diaper product"}
           alt={product.name[language || "en"]}
           fill
           className="object-cover md:object-contain p-0"
