@@ -146,8 +146,7 @@ export const mockProducts: Product[] = [
     wholesalePrice: 19000,
     size: "large",
     bundleSize: 50,
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1011.jpg-kyHylrVCgJKZGHSxfOAMQ6GEz7jRUZ.jpeg?v=1",
+    image: "/images/yammy-yami-pullup-baby-diaper.jpeg",
     tags: ["bestSeller", "internationalQuality", "highAbsorption"],
     weightRange: "12-17kg",
     description: {

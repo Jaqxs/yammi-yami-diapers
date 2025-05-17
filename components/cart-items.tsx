@@ -52,6 +52,7 @@ export function CartItems() {
   }
 
   const handleCheckout = () => {
+    // Direct navigation to checkout without any confirmation
     router.push("/checkout")
   }
 
