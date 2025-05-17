@@ -108,33 +108,21 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
     // If it's already a placeholder, return as is
     if (url.includes("placeholder.svg")) return url
 
+    // Handle relative paths for local images
+    if (url.startsWith("/")) {
+      // For local images, ensure they're properly referenced
+      return url
+    }
+
     // Add cache-busting parameter
     const timestamp = imageKey
     const separator = url.includes("?") ? "&" : "?"
     return `${url}${separator}v=${timestamp}`
   }
 
-  // Ensure the image URL is absolute
-  const ensureAbsoluteUrl = (url: string | undefined) => {
-    if (!url) return undefined
-
-    // If it's already absolute, return as is
-    if (url.startsWith("http")) return url
-
-    // If it's a relative URL, make it absolute
-    if (url.startsWith("/")) {
-      // Use the current origin
-      return `${window.location.origin}${url}`
-    }
-
-    // If it's a relative URL without leading slash
-    return `${window.location.origin}/${url}`
-  }
-
   // Get the final image URL
   const getFinalImageUrl = (url: string | undefined) => {
-    const processedUrl = getProcessedImageUrl(url)
-    return processedUrl
+    return getProcessedImageUrl(url)
   }
 
   return (
