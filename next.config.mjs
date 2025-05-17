@@ -16,14 +16,18 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**',
       },
-   ],
-   // Disable image optimization caching
-   minimumCacheTTL: 0,
-   // Disable static image imports caching
-   disableStaticImages: true,
-   // Allow unoptimized images
-   unoptimized: true,
- },
+    ],
+    // Disable image optimization caching
+    minimumCacheTTL: 0,
+    // Disable static image imports caching
+    disableStaticImages: true,
+    // Allow unoptimized images
+    unoptimized: true,
+    // Add dangerouslyAllowSVG for SVG support
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
   // Remove the optimizeCss experimental feature that requires critters
   experimental: {
     // optimizeCss: true, // Removing this line as it requires critters

@@ -12,6 +12,7 @@ import { StoreSyncProvider } from "@/lib/store-sync"
 import { RegistrationSync } from "@/lib/registration-sync"
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
+import { ImagePreloader } from "@/components/image-preloader"
 
 // Load fonts
 const inter = Inter({
@@ -49,6 +50,18 @@ export const viewport: Viewport = {
   ],
 }
 
+// Critical images to preload
+const criticalImages = [
+  "/images/yammy-yami-mother-daughter-hero.jpeg",
+  "/images/brand-ambassador-1.jpeg",
+  "/images/brand-ambassador-2.jpeg",
+  "/blog-post-concept.png",
+  "/images/baby-diapers.png",
+  "/images/lady-pads.png",
+  "/images/diaper-features.png",
+  "/images/diaper-sizes.png",
+]
+
 export default function RootLayout({
   children,
 }: {
@@ -69,6 +82,8 @@ export default function RootLayout({
                     <Footer />
                   </div>
                   <Toaster />
+                  {/* Preload critical images */}
+                  <ImagePreloader images={criticalImages} />
                 </CartProvider>
               </LanguageProvider>
             </StoreSyncProvider>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react"
 import { motion } from "framer-motion"
 import { Search, Calendar, Clock, ChevronRight } from "lucide-react"
 import dynamic from "next/dynamic"
+import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,7 +15,6 @@ import { useLanguage } from "@/components/language-provider"
 import { useStore } from "@/lib/store"
 import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
-import { OptimizedImage } from "@/components/optimized-image"
 import { useIsMobile } from "@/hooks/use-media-query"
 import { throttle } from "@/lib/performance"
 
@@ -101,6 +101,8 @@ export default function BlogPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const isMobile = useIsMobile()
   const t = translations[language || "en"]
+  const [imageKey, setImageKey] = useState(Date.now())
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({})
 
   // Load blog posts on component mount
   useEffect(() => {
@@ -117,6 +119,15 @@ export default function BlogPage() {
 
     fetchBlogPosts()
   }, [loadBlogPosts])
+
+  // Force re-render images every 30 seconds to prevent stale images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setImageKey(Date.now())
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   // Listen for sync events
   useEffect(() => {
@@ -164,6 +175,24 @@ export default function BlogPage() {
   const handleSearchChange = throttle((e) => {
     setSearchQuery(e.target.value)
   }, 300)
+
+  // Add timestamp to image URL to prevent caching
+  const getImageUrl = (url: string, postId: string) => {
+    if (!url || imageErrors[postId]) return "/blog-post-concept.png"
+
+    // If URL already has a query parameter, add timestamp
+    if (url.includes("?")) {
+      return `${url}&t=${imageKey}`
+    }
+
+    // Otherwise add timestamp as a new query parameter
+    return `${url}?t=${imageKey}`
+  }
+
+  const handleImageError = (postId: string) => {
+    console.error("Error loading blog post image for post:", postId)
+    setImageErrors((prev) => ({ ...prev, [postId]: true }))
+  }
 
   // Filter blog posts based on search, category, and active tab
   const filteredPosts = state.blogPosts.filter((post) => {
@@ -269,12 +298,13 @@ export default function BlogPage() {
               >
                 <div className="block h-full flex flex-col">
                   <div className="relative h-48">
-                    <OptimizedImage
-                      src={post.image || "/placeholder.svg?height=300&width=500&query=blog post"}
+                    <Image
+                      src={getImageUrl(post.image || "/blog-post-concept.png", post.id)}
                       alt={post.title[language || "en"]}
                       fill
                       className="object-cover"
-                      fallbackSrc="/blog-post-concept.png"
+                      onError={() => handleImageError(post.id)}
+                      unoptimized={true}
                     />
                     {post.featured && (
                       <Badge className="absolute top-2 left-2 bg-yammy-orange text-white">
