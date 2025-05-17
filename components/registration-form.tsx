@@ -4,235 +4,229 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "@/components/ui/use-toast"
-
-const regions = [
-  "Arusha",
-  "Dar es Salaam",
-  "Dodoma",
-  "Geita",
-  "Iringa",
-  "Kagera",
-  "Katavi",
-  "Kigoma",
-  "Kilimanjaro",
-  "Lindi",
-  "Manyara",
-  "Mara",
-  "Mbeya",
-  "Morogoro",
-  "Mtwara",
-  "Mwanza",
-  "Njombe",
-  "Pemba North",
-  "Pemba South",
-  "Pwani",
-  "Rukwa",
-  "Ruvuma",
-  "Shinyanga",
-  "Simiyu",
-  "Singida",
-  "Songwe",
-  "Tabora",
-  "Tanga",
-  "Zanzibar Central/South",
-  "Zanzibar North",
-  "Zanzibar Urban/West",
-]
+import { CheckCircle } from "lucide-react"
 
 interface RegistrationFormProps {
-  onRegistrationComplete: () => void
+  onRegistrationComplete?: () => void
 }
 
 export function RegistrationForm({ onRegistrationComplete }: RegistrationFormProps) {
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: "",
     email: "",
     phone: "",
+    businessName: "",
+    businessAddress: "",
     region: "",
-    location: "",
+    district: "",
+    businessType: "",
+    additionalInfo: "",
   })
-  const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
-    }
   }
 
-  const handleSelectChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, region: value }))
-    if (errors.region) {
-      setErrors((prev) => ({ ...prev, region: "" }))
-    }
-  }
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.name.trim()) newErrors.name = "Name is required"
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid"
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required"
-    } else if (!/^\d{10,12}$/.test(formData.phone.replace(/\D/g, ""))) {
-      newErrors.phone = "Phone number is invalid"
-    }
-
-    if (!formData.region) newErrors.region = "Region is required"
-    if (!formData.location) newErrors.location = "Location is required"
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!validateForm()) return
-
     setIsSubmitting(true)
 
-    try {
-      // Simple localStorage storage of registration
-      const registrations = JSON.parse(localStorage.getItem("yammy-registrations") || "[]")
-
-      const newRegistration = {
-        id: Date.now(),
-        ...formData,
-        status: "approved",
-        date: new Date().toISOString(),
-      }
-
-      registrations.push(newRegistration)
-      localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
-
-      // Store current user info
-      localStorage.setItem(
-        "yammy-current-user",
-        JSON.stringify({
-          email: formData.email,
-          name: formData.name,
+    // Simulate form submission
+    setTimeout(() => {
+      try {
+        // Store registration data in localStorage
+        const registrationData = {
+          ...formData,
+          registrationDate: new Date().toISOString(),
           isRegistered: true,
-        }),
-      )
+        }
 
-      // Show success message
-      toast({
-        title: "Registration successful!",
-        description: "You now have access to agent pricing.",
-      })
+        localStorage.setItem("yammy-current-user", JSON.stringify(registrationData))
 
-      // Call the completion handler
-      onRegistrationComplete()
-    } catch (error) {
-      console.error("Registration error:", error)
-      toast({
-        title: "Registration failed",
-        description: "Please try again later.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
+        // Mark registration as successful
+        setIsSuccess(true)
+        setIsSubmitting(false)
+
+        // Call the completion handler if provided
+        if (onRegistrationComplete) {
+          onRegistrationComplete()
+        }
+      } catch (error) {
+        console.error("Error saving registration:", error)
+        setIsSubmitting(false)
+      }
+    }, 1000)
+  }
+
+  if (isSuccess) {
+    return (
+      <Card className="bg-green-50 border-green-100">
+        <CardContent className="pt-6 text-center">
+          <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="h-6 w-6 text-green-600" />
+          </div>
+          <h3 className="text-xl font-semibold text-green-800 mb-2">Registration Successful!</h3>
+          <p className="text-green-700 mb-4">
+            Thank you for registering as a Yammy Yami agent. You now have access to exclusive agent pricing.
+          </p>
+          <Button onClick={() => window.location.reload()} className="bg-green-600 hover:bg-green-700">
+            View Agent Pricing
+          </Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Agent Registration</CardTitle>
-        <CardDescription>Register as an agent to access exclusive pricing - Registration is free!</CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Business/Shop Name</Label>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Your business or shop name"
-              value={formData.name}
-              onChange={handleChange}
-              className={errors.name ? "border-red-500" : ""}
-            />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="fullName">Full Name *</Label>
+          <Input
+            id="fullName"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            placeholder="Your full name"
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email Address *</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="your.email@example.com"
+            required
+          />
+        </div>
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="your.email@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              className={errors.email ? "border-red-500" : ""}
-            />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number *</Label>
+          <Input
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="+255 XXX XXX XXX"
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="businessName">Business Name *</Label>
+          <Input
+            id="businessName"
+            name="businessName"
+            value={formData.businessName}
+            onChange={handleChange}
+            placeholder="Your business name"
+            required
+          />
+        </div>
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              name="phone"
-              placeholder="Your phone number"
-              value={formData.phone}
-              onChange={handleChange}
-              className={errors.phone ? "border-red-500" : ""}
-            />
-            {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
-          </div>
+      <div className="space-y-2">
+        <Label htmlFor="businessAddress">Business Address *</Label>
+        <Input
+          id="businessAddress"
+          name="businessAddress"
+          value={formData.businessAddress}
+          onChange={handleChange}
+          placeholder="Street address"
+          required
+        />
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="region">Region</Label>
-            <Select value={formData.region} onValueChange={handleSelectChange}>
-              <SelectTrigger className={errors.region ? "border-red-500" : ""}>
-                <SelectValue placeholder="Select your region" />
-              </SelectTrigger>
-              <SelectContent>
-                {regions.map((region) => (
-                  <SelectItem key={region} value={region}>
-                    {region}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.region && <p className="text-red-500 text-sm">{errors.region}</p>}
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="region">Region *</Label>
+          <Select value={formData.region} onValueChange={(value) => handleSelectChange("region", value)} required>
+            <SelectTrigger id="region">
+              <SelectValue placeholder="Select region" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="dar-es-salaam">Dar es Salaam</SelectItem>
+              <SelectItem value="arusha">Arusha</SelectItem>
+              <SelectItem value="mwanza">Mwanza</SelectItem>
+              <SelectItem value="zanzibar">Zanzibar</SelectItem>
+              <SelectItem value="dodoma">Dodoma</SelectItem>
+              <SelectItem value="mbeya">Mbeya</SelectItem>
+              <SelectItem value="tanga">Tanga</SelectItem>
+              <SelectItem value="morogoro">Morogoro</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="district">District *</Label>
+          <Input
+            id="district"
+            name="district"
+            value={formData.district}
+            onChange={handleChange}
+            placeholder="Your district"
+            required
+          />
+        </div>
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="location">Location/Area</Label>
-            <Input
-              id="location"
-              name="location"
-              placeholder="Your specific location or area"
-              value={formData.location}
-              onChange={handleChange}
-              className={errors.location ? "border-red-500" : ""}
-            />
-            {errors.location && <p className="text-red-500 text-sm">{errors.location}</p>}
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? "Processing..." : "Register & View Pricing"}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+      <div className="space-y-2">
+        <Label htmlFor="businessType">Business Type *</Label>
+        <Select
+          value={formData.businessType}
+          onValueChange={(value) => handleSelectChange("businessType", value)}
+          required
+        >
+          <SelectTrigger id="businessType">
+            <SelectValue placeholder="Select business type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="retail">Retail Shop</SelectItem>
+            <SelectItem value="wholesale">Wholesale</SelectItem>
+            <SelectItem value="pharmacy">Pharmacy</SelectItem>
+            <SelectItem value="supermarket">Supermarket</SelectItem>
+            <SelectItem value="distributor">Distributor</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="additionalInfo">Additional Information</Label>
+        <Textarea
+          id="additionalInfo"
+          name="additionalInfo"
+          value={formData.additionalInfo}
+          onChange={handleChange}
+          placeholder="Any additional information about your business"
+          rows={3}
+        />
+      </div>
+
+      <Button type="submit" className="w-full bg-yammy-blue hover:bg-yammy-blue/90" disabled={isSubmitting}>
+        {isSubmitting ? "Registering..." : "Register & View Pricing"}
+      </Button>
+
+      <p className="text-xs text-gray-500 text-center">
+        By registering, you agree to our terms and conditions and privacy policy.
+      </p>
+    </form>
   )
 }

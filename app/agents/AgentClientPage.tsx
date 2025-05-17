@@ -73,7 +73,7 @@ export default function AgentClientPage() {
 
           <div
             id="register"
-            className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 max-w-4xl mx-auto"
+            className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 max-w-5xl mx-auto"
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -101,7 +101,7 @@ export default function AgentClientPage() {
                 )}
               </TabsContent>
               <TabsContent value="pricing" className="p-6">
-                <AgentPricing showPreview={isRegistered} />
+                <AgentPricing showFullPricing={isRegistered} />
               </TabsContent>
             </Tabs>
           </div>
