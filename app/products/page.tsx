@@ -19,6 +19,7 @@ import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { ProductCard } from "@/components/product-card"
 import { useIsMobile, useIsTablet } from "@/hooks/use-media-query"
 import { toast } from "@/components/ui/use-toast"
+import { PricingUpdateBanner } from "@/components/pricing-update-banner"
 
 // Dynamically import heavy components
 const BrandAmbassadorSection = dynamic(() => import("@/components/brand-ambassador-section"), {
@@ -54,6 +55,8 @@ const translations = {
     clearCache: "Clear Image Cache",
     imageCacheCleared: "Image cache cleared successfully",
     productsRefreshed: "Products refreshed successfully",
+    updatedPricing: "Updated Pricing",
+    premiumPackage: "Premium Package (with red cup)",
   },
   sw: {
     products: "Bidhaa",
@@ -81,6 +84,8 @@ const translations = {
     clearCache: "Futa Picha zilizohifadhiwa",
     imageCacheCleared: "Picha zilizohifadhiwa zimefutwa kwa mafanikio",
     productsRefreshed: "Bidhaa zimeonyeshwa upya kwa mafanikio",
+    updatedPricing: "Bei Mpya",
+    premiumPackage: "Kifurushi Bora (na kikombe chekundu)",
   },
 }
 
@@ -330,6 +335,9 @@ export default function ProductsPage() {
 
   return (
     <PageWrapper>
+      {/* Pricing Update Banner */}
+      <PricingUpdateBanner />
+
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-4xl font-bubblegum mb-8 text-yammy-dark-blue text-center">{t.products}</h1>
 
@@ -351,6 +359,25 @@ export default function ProductsPage() {
           <div className="absolute right-6 bottom-0 hidden lg:block">
             <div className="relative w-32 h-32">
               <Tag className="h-8 w-8 text-white absolute -top-4 -right-4" />
+            </div>
+          </div>
+        </div>
+
+        {/* Updated Pricing Notice */}
+        <div className="mb-8 p-4 border border-yammy-blue/30 rounded-lg bg-yammy-light-blue/20">
+          <h3 className="font-bubblegum text-lg text-yammy-dark-blue mb-2">{t.updatedPricing}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-3 rounded-md shadow-sm">
+              <h4 className="font-medium text-yammy-blue">{t.babyDiapers}</h4>
+              <p className="text-sm">TZS 20,000</p>
+            </div>
+            <div className="bg-white p-3 rounded-md shadow-sm">
+              <h4 className="font-medium text-yammy-blue">{t.babyPants}</h4>
+              <p className="text-sm">TZS 20,000</p>
+            </div>
+            <div className="bg-white p-3 rounded-md shadow-sm">
+              <h4 className="font-medium text-yammy-blue">{t.premiumPackage}</h4>
+              <p className="text-sm">TZS 19,000</p>
             </div>
           </div>
         </div>

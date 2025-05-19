@@ -177,7 +177,10 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
 
       <div className="p-6 flex-grow flex flex-col">
         <h3 className="font-bubblegum text-xl mb-1 text-yammy-dark-blue line-clamp-2">
-          {(product.name[language || "en"] || "").replace("XXXL", "")}
+          {(product.name[language || "en"] || "")
+            .replace("XXXL", "")
+            .replace(/premium/gi, "")
+            .replace(/with red cup/gi, "")}
         </h3>
 
         {/* Product details */}
