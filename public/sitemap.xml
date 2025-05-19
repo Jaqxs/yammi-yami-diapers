@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <!-- Main Pages -->
+  <url>
+    <loc>https://yammyyami.com/</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://yammyyami.com/images/yammy-yami-mother-baby.png</image:loc>
+      <image:title>Yammy Yami Diapers</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/products</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://yammyyami.com/images/baby-diapers.png</image:loc>
+      <image:title>Yammy Yami Baby Diapers</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://yammyyami.com/images/lady-pads.png</image:loc>
+      <image:title>Yammy Yami Lady Pads</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/about</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://yammyyami.com/confident-leader.png</image:loc>
+      <image:title>Yammy Yami Leadership</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/blog</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://yammyyami.com/blog-post-concept.png</image:loc>
+      <image:title>Yammy Yami Blog</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/contact</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/pricing</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/agents</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/agents-list</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/projects</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <image:image>
+      <image:loc>https://yammyyami.com/zanzibar-ocean-view.png</image:loc>
+      <image:title>Yammy Yami Projects - Zanzibar</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://yammyyami.com/football-team-action.png</image:loc>
+      <image:title>Yammy Yami Projects - Football Team</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/checkout</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Product Categories -->
+  <url>
+    <loc>https://yammyyami.com/products?category=babyDiapers</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://yammyyami.com/images/baby-diapers.png</image:loc>
+      <image:title>Yammy Yami Baby Diapers</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/products?category=babyPants</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://yammyyami.com/images/baby-diapers.png</image:loc>
+      <image:title>Yammy Yami Baby Pants</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/products?category=adultDiapers</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://yammyyami.com/images/diaper-features.png</image:loc>
+      <image:title>Yammy Yami Adult Diapers</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/products?category=ladyPads</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://yammyyami.com/images/lady-pads.png</image:loc>
+      <image:title>Yammy Yami Lady Pads</image:title>
+    </image:image>
+  </url>
+
+  <!-- Team Members -->
+  <url>
+    <loc>https://yammyyami.com/about#team</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <image:image>
+      <image:loc>https://yammyyami.com/images/hassan-new.jpeg</image:loc>
+      <image:title>Hassan - Yammy Yami Team</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://yammyyami.com/images/feisal-new.jpeg</image:loc>
+      <image:title>Feisal - Yammy Yami Team</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://yammyyami.com/images/dericko-moghela.jpeg</image:loc>
+      <image:title>Dericko Moghela - Yammy Yami Team</image:title>
+    </image:image>
+  </url>
+
+  <!-- Documents -->
+  <url>
+    <loc>https://yammyyami.com/documents/agent-price-list.pdf</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://yammyyami.com/documents/WAKALA_WA_YAMMY_YAMI_DIAPERS.pdf</loc>
+    <lastmod>2023-05-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>

@@ -1,0 +1,13 @@
+# Yammy Yami Diapers Robots.txt
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://yammyyami.com/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /admin/*
+
+# Allow product images to be crawled
+Allow: /images/
