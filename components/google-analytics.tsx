@@ -1,37 +1,45 @@
 "use client"
 
+import { useEffect } from "react"
 import Script from "next/script"
 import { usePathname, useSearchParams } from "next/navigation"
-import { useEffect } from "react"
 
-// The GA Measurement ID from the user's script
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-DWP5DBLY4P"
+// Your Google Analytics measurement ID
+const GA_MEASUREMENT_ID = "G-DWP5DBLY4P"
 
-export function GoogleAnalytics() {
+declare global {
+  interface Window {
+    gtag: (command: string, action: string, params?: Record<string, any> | undefined) => void
+  }
+}
+
+// Initialize Google Analytics
+export const GoogleAnalytics = () => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    if (pathname) {
+    if (pathname && window.gtag) {
       // Track page views
-      window.gtag?.("config", GA_MEASUREMENT_ID, {
-        page_path: pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : ""),
+      window.gtag("config", GA_MEASUREMENT_ID, {
+        page_path: pathname,
       })
     }
   }, [pathname, searchParams])
 
   return (
     <>
-      {/* Global Site Tag (gtag.js) - Google Analytics */}
+      {/* Google Analytics Script - Exactly as provided */}
       <Script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
       <Script
-        id="gtag-init"
+        id="google-analytics"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
+            
             gtag('config', '${GA_MEASUREMENT_ID}');
           `,
         }}
@@ -40,73 +48,77 @@ export function GoogleAnalytics() {
   )
 }
 
-// Helper function to track events
-export function trackEvent(action: string, category: string, label: string, value?: number) {
-  window.gtag?.("event", action, {
-    event_category: category,
-    event_label: label,
-    value: value,
-  })
+// Utility functions for tracking events
+export const trackEvent = (action: string, category: string, label?: string, value?: number) => {
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", action, {
+      event_category: category,
+      event_label: label,
+      value: value,
+    })
+  }
 }
 
-// Helper function to track product views
-export function trackProductView(product: { id: number; name: { en: string; sw: string }; category: string }) {
-  window.gtag?.("event", "view_item", {
-    items: [
-      {
-        id: product.id,
-        name: product.name.en,
-        category: product.category,
-      },
-    ],
-  })
+// Predefined event tracking functions
+export const trackProductView = (product: { id: string; name: string; category?: string }) => {
+  trackEvent("view_item", "Products", product.name, 0)
+
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "view_item", {
+      currency: "TZS",
+      items: [
+        {
+          item_id: product.id,
+          item_name: product.name,
+          item_category: product.category || "Diapers",
+        },
+      ],
+    })
+  }
 }
 
-// Helper function to track add to cart events
-export function trackAddToCart(product: {
-  id: number
-  name: { en: string; sw: string }
-  price: number
-  quantity: number
-}) {
-  window.gtag?.("event", "add_to_cart", {
-    currency: "TZS",
-    value: product.price * product.quantity,
-    items: [
-      {
-        id: product.id,
-        name: product.name.en,
-        quantity: product.quantity,
-        price: product.price,
-      },
-    ],
-  })
+export const trackAddToCart = (product: { id: string; name: string; price?: number; quantity?: number }) => {
+  trackEvent("add_to_cart", "Ecommerce", product.name, product.price)
+
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "add_to_cart", {
+      currency: "TZS",
+      value: product.price || 0,
+      items: [
+        {
+          item_id: product.id,
+          item_name: product.name,
+          price: product.price || 0,
+          quantity: product.quantity || 1,
+        },
+      ],
+    })
+  }
 }
 
-// Helper function to track blog post views
-export function trackBlogView(title: { en: string; sw: string }) {
-  window.gtag?.("event", "view_blog_post", {
-    blog_post_title: title.en,
-  })
+export const trackCheckout = (products: Array<{ id: string; name: string; price?: number; quantity?: number }>) => {
+  const totalValue = products.reduce((sum, product) => sum + (product.price || 0) * (product.quantity || 1), 0)
+
+  trackEvent("begin_checkout", "Ecommerce", "Checkout", totalValue)
+
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "begin_checkout", {
+      currency: "TZS",
+      value: totalValue,
+      items: products.map((product) => ({
+        item_id: product.id,
+        item_name: product.name,
+        price: product.price || 0,
+        quantity: product.quantity || 1,
+      })),
+    })
+  }
 }
 
-// Helper function to track agent registrations
-export function trackAgentRegistration() {
-  window.gtag?.("event", "agent_registration", {
-    method: "website",
-  })
+export const trackAgentRegistration = () => {
+  trackEvent("generate_lead", "Agents", "Agent Registration", 0)
 }
 
-// Helper function to track checkout events
-export function trackCheckout(items: any[]) {
-  window.gtag?.("event", "begin_checkout", {
-    currency: "TZS",
-    value: items.reduce((acc, item) => acc + item.price * item.quantity, 0),
-    items: items.map((item) => ({
-      id: item.id,
-      name: item.name.en,
-      quantity: item.quantity,
-      price: item.price,
-    })),
-  })
+export const trackBlogView = (title: string) => {
+  trackEvent("view_item", "Blog", title, 0)
 }
