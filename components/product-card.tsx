@@ -10,6 +10,7 @@ import { useCart } from "@/components/cart-provider"
 import { OptimizedImage } from "@/components/optimized-image"
 import type { Product } from "@/lib/store"
 import { toast } from "@/components/ui/use-toast"
+import { trackProductView, trackAddToCart } from "@/components/google-analytics"
 
 interface ProductCardProps {
   product: Product
@@ -25,13 +26,28 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
   // Force image refresh when product changes
   useEffect(() => {
     setImageKey(Date.now())
-  }, [product.id, product.image])
+
+    // Track product view
+    trackProductView({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+    })
+  }, [product.id, product.image, product.name, product.category])
 
   const formatPrice = (price: number) => {
     return `TZS ${price.toLocaleString()}`
   }
 
   const handleAddToCart = () => {
+    // Track add to cart event
+    trackAddToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+    })
+
     // Add item to cart
     addItem({
       id: product.id,

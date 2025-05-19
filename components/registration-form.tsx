@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckCircle } from "lucide-react"
+import { trackAgentRegistration } from "@/components/google-analytics"
 
 interface RegistrationFormProps {
   onRegistrationComplete?: () => void
@@ -63,6 +64,9 @@ export function RegistrationForm({ onRegistrationComplete }: RegistrationFormPro
         if (onRegistrationComplete) {
           onRegistrationComplete()
         }
+
+        // Track agent registration
+        trackAgentRegistration()
       } catch (error) {
         console.error("Error saving registration:", error)
         setIsSubmitting(false)

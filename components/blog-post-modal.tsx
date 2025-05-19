@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
 import { useIsMobile } from "@/hooks/use-media-query"
 import type { BlogPost } from "@/lib/store"
+import { trackBlogView } from "@/components/google-analytics"
 
 interface BlogPostModalProps {
   post: BlogPost | null
@@ -45,12 +46,17 @@ export function BlogPostModal({ post, isOpen, onClose }: BlogPostModalProps) {
       document.body.style.overflow = "hidden"
     }
 
+    // Track blog post view
+    if (post) {
+      trackBlogView(post.title)
+    }
+
     return () => {
       document.removeEventListener("keydown", handleEscKey)
       document.removeEventListener("mousedown", handleClickOutside)
       document.body.style.overflow = "auto"
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, post])
 
   // Format date function
   const formatDate = (dateString: string) => {
