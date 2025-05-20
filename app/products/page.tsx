@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback, Suspense, useMemo } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import { Filter, Search, Tag, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
-import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,10 +17,9 @@ import { useStore } from "@/lib/store"
 import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { ProductCard } from "@/components/product-card"
-import { useIsMobile } from "@/hooks/use-media-query"
+import { useIsMobile, useIsTablet } from "@/hooks/use-media-query"
 import { toast } from "@/components/ui/use-toast"
 import { PricingUpdateBanner } from "@/components/pricing-update-banner"
-import { useCart } from "@/components/cart-provider"
 
 // Dynamically import heavy components
 const BrandAmbassadorSection = dynamic(() => import("@/components/brand-ambassador-section"), {
@@ -59,9 +57,6 @@ const translations = {
     productsRefreshed: "Products refreshed successfully",
     updatedPricing: "Updated Pricing",
     premiumPackage: "Premium Package (with red cup)",
-    featuredProducts: "Featured Products",
-    shopNow: "Shop Now",
-    addToCart: "Add to Cart",
   },
   sw: {
     products: "Bidhaa",
@@ -81,7 +76,7 @@ const translations = {
     noProducts: "Hakuna bidhaa zilizopatikana",
     newest: "Mpya Zaidi",
     priceHighToLow: "Bei: Juu hadi Chini",
-    priceLowToHigh: "Bei: Chini hadi Juu",
+    priceLowToHigh: "Bei: Chini hadi Chini",
     viewAllPricing: "Tazama Bei Zote",
     priceNote: "* Bei hizi ni za Dar es Salaam/Kariakoo. Tazama ukurasa wa Bei kwa maelezo zaidi.",
     loading: "Inapakia bidhaa...",
@@ -91,19 +86,20 @@ const translations = {
     productsRefreshed: "Bidhaa zimeonyeshwa upya kwa mafanikio",
     updatedPricing: "Bei Mpya",
     premiumPackage: "Kifurushi Bora (na kikombe chekundu)",
-    featuredProducts: "Bidhaa Maarufu",
-    shopNow: "Nunua Sasa",
-    addToCart: "Ongeza kwenye Kikapu",
   },
 }
 
-// Featured products to display at the top
-const featuredProductIds = [1, 2, 3, 4]
-
 // Loading skeleton component
 function ProductsSkeleton() {
+  const isMobile = useIsMobile()
+  const isTablet = useIsTablet()
+
+  let columns = 4
+  if (isMobile) columns = 1
+  else if (isTablet) columns = 2
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6`}>
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="bg-white rounded-2xl shadow-md overflow-hidden h-[500px]">
           <div className="h-64 bg-gray-200 animate-pulse"></div>
@@ -120,42 +116,10 @@ function ProductsSkeleton() {
   )
 }
 
-// Featured product card component
-function FeaturedProductCard({ product, onAddToCart }) {
-  const { language } = useLanguage()
-  const t = translations[language || "en"]
-
-  return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105">
-      <div className="relative h-48 bg-yammy-light-blue/30">
-        <Image
-          src={product.image || "/assorted-products-display.png"}
-          alt={product.name[language]}
-          fill
-          className="object-contain p-2"
-        />
-      </div>
-      <div className="p-4">
-        <h3 className="font-bubblegum text-lg text-yammy-dark-blue mb-2">{product.name[language]}</h3>
-        <div className="flex justify-between items-center mb-3">
-          <span className="font-bold text-yammy-blue">TZS {product.price.toLocaleString()}</span>
-          {product.oldPrice && (
-            <span className="text-gray-400 line-through text-sm">TZS {product.oldPrice.toLocaleString()}</span>
-          )}
-        </div>
-        <Button onClick={() => onAddToCart(product)} className="w-full bg-yammy-blue hover:bg-yammy-dark-blue">
-          {t.addToCart}
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 export default function ProductsPage() {
   const { language } = useLanguage()
   const { state, loadProducts } = useStore()
   const { lastEvent } = useStoreSync()
-  const { addItem, openCart } = useCart()
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [priceRange, setPriceRange] = useState([0, 30000])
@@ -163,6 +127,7 @@ export default function ProductsPage() {
   const [sortOption, setSortOption] = useState("newest")
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  // Image version is used to force image refresh when products are updated
   const [imageVersion, setImageVersion] = useState(Date.now())
   const isMobile = useIsMobile()
   const t = translations[language || "en"]
@@ -295,130 +260,79 @@ export default function ProductsPage() {
     [language],
   )
 
-  // Handle add to cart
-  const handleAddToCart = useCallback(
-    (product) => {
-      addItem({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-        image: product.image,
-        size: product.size,
-        bundleSize: product.bundleSize,
-      })
-
-      // Show confirmation toast
-      toast({
-        title: language === "en" ? "Added to Cart" : "Imeongezwa kwenye Kikapu",
-        description:
-          language === "en"
-            ? `${product.name.en} has been added to your cart`
-            : `${product.name.sw} imeongezwa kwenye kikapu chako`,
-        variant: "default",
-        duration: 3000,
-      })
-
-      // Open cart drawer
-      openCart()
-    },
-    [addItem, openCart, language],
-  )
-
-  // Get featured products
-  const featuredProducts = useMemo(() => {
-    if (!state.products.length) return []
-
-    // First try to get products with featured flag
-    const featured = state.products.filter((p) => p.featured)
-    if (featured.length >= 4) return featured.slice(0, 4)
-
-    // Otherwise use predefined IDs
-    return featuredProductIds
-      .map((id) => state.products.find((p) => p.id === id))
-      .filter(Boolean)
-      .slice(0, 4)
-  }, [state.products])
-
   // Filter products based on active filters
-  const filteredProducts = useMemo(() => {
-    return state.products.filter((product) => {
-      // Filter by category
-      if (activeTab !== "all") {
-        if (activeTab === "wholesale") {
-          // For wholesale tab, show products with wholesalePrice
-          if (!product.wholesalePrice) {
-            return false
-          }
-        } else if (product.category !== activeTab) {
-          // For other tabs, filter by category
+  const filteredProducts = state.products.filter((product) => {
+    // Filter by category
+    if (activeTab !== "all") {
+      if (activeTab === "wholesale") {
+        // For wholesale tab, show products with wholesalePrice
+        if (!product.wholesalePrice) {
           return false
         }
-      }
-
-      // Filter by search query
-      if (searchQuery && !product.name[language || "en"].toLowerCase().includes(searchQuery.toLowerCase())) {
+      } else if (product.category !== activeTab) {
+        // For other tabs, filter by category
         return false
       }
+    }
 
-      // Filter by price range
-      if (product.price < priceRange[0] || product.price > priceRange[1]) {
-        return false
-      }
+    // Filter by search query
+    if (searchQuery && !product.name[language || "en"].toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false
+    }
 
-      // Filter by size
-      if (selectedSize && product.size !== selectedSize) {
-        return false
-      }
+    // Filter by price range
+    if (product.price < priceRange[0] || product.price > priceRange[1]) {
+      return false
+    }
 
-      return true
-    })
-  }, [state.products, activeTab, searchQuery, priceRange, selectedSize, language])
+    // Filter by size
+    if (selectedSize && product.size !== selectedSize) {
+      return false
+    }
+
+    return true
+  })
 
   // Sort products
-  const sortedProducts = useMemo(() => {
-    return [...filteredProducts].sort((a, b) => {
-      if (sortOption === "priceHighToLow") {
-        return b.price - a.price
-      } else if (sortOption === "priceLowToHigh") {
-        return a.price - b.price
-      }
-      // Default: newest (by id in this demo)
-      return b.id - a.id
-    })
-  }, [filteredProducts, sortOption])
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortOption === "priceHighToLow") {
+      return b.price - a.price
+    } else if (sortOption === "priceLowToHigh") {
+      return a.price - b.price
+    }
+    // Default: newest (by id in this demo)
+    return b.id - a.id
+  })
 
   // Process product images to ensure they have proper URLs
-  const processedProducts = useMemo(() => {
-    return sortedProducts.map((product) => {
-      // Make a copy of the product to avoid mutating the original
-      const processedProduct = { ...product }
+  const processedProducts = sortedProducts.map((product) => {
+    // Make a copy of the product to avoid mutating the original
+    const processedProduct = { ...product }
 
-      // Ensure image has a valid URL or use a placeholder
-      if (!processedProduct.image || processedProduct.image.trim() === "") {
-        // Set category-specific placeholder
-        if (processedProduct.category === "babyDiapers") {
-          processedProduct.image = "/images/baby-diapers.png"
-        } else if (processedProduct.category === "adultDiapers") {
-          processedProduct.image = "/images/diaper-features.png"
-        } else if (processedProduct.category === "ladyPads") {
-          processedProduct.image = "/images/lady-pads.png"
-        } else if (processedProduct.category === "babyPants") {
-          processedProduct.image = "/images/baby-diapers.png"
-        } else {
-          processedProduct.image = "/assorted-products-display.png"
-        }
+    // Ensure image has a valid URL or use a placeholder
+    if (!processedProduct.image || processedProduct.image.trim() === "") {
+      // Set category-specific placeholder
+      if (processedProduct.category === "babyDiapers") {
+        processedProduct.image = "/images/baby-diapers.png"
+      } else if (processedProduct.category === "adultDiapers") {
+        processedProduct.image = "/images/diaper-features.png"
+      } else if (processedProduct.category === "ladyPads") {
+        processedProduct.image = "/images/lady-pads.png"
+      } else if (processedProduct.category === "babyPants") {
+        processedProduct.image = "/images/baby-diapers.png"
+      } else {
+        processedProduct.image = "/assorted-products-display.png"
       }
+    }
 
-      // Add version to image URL to prevent caching
-      if (processedProduct.image && !processedProduct.image.includes("placeholder")) {
-        const separator = processedProduct.image.includes("?") ? "&" : "?"
-        processedProduct.image = `${processedProduct.image}${separator}v=${imageVersion}`
-      }
+    // Add version to image URL to prevent caching
+    if (processedProduct.image && !processedProduct.image.includes("placeholder")) {
+      const separator = processedProduct.image.includes("?") ? "&" : "?"
+      processedProduct.image = `${processedProduct.image}${separator}v=${imageVersion}`
+    }
 
-      return processedProduct
-    })
-  }, [sortedProducts, imageVersion])
+    return processedProduct
+  })
 
   return (
     <PageWrapper>
@@ -427,18 +341,6 @@ export default function ProductsPage() {
 
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-4xl font-bubblegum mb-8 text-yammy-dark-blue text-center">{t.products}</h1>
-
-        {/* Featured Products Section */}
-        {featuredProducts.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bubblegum text-yammy-dark-blue mb-6 text-center">{t.featuredProducts}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {featuredProducts.map((product) => (
-                <FeaturedProductCard key={`featured-${product.id}`} product={product} onAddToCart={handleAddToCart} />
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Featured banner */}
         <div className="relative w-full mb-8 p-6 rounded-xl bg-gradient-to-r from-yammy-blue to-yammy-dark-blue text-white">
@@ -566,15 +468,7 @@ export default function ProductsPage() {
                     >
                       {t.reset}
                     </Button>
-                    <Button
-                      className="flex-1 bg-yammy-blue hover:bg-yammy-dark-blue"
-                      onClick={() => {
-                        // Close the sheet after applying filters
-                        document.body.click() // This will trigger a click outside the sheet to close it
-                      }}
-                    >
-                      {t.apply}
-                    </Button>
+                    <Button className="flex-1 bg-yammy-blue hover:bg-yammy-dark-blue">{t.apply}</Button>
                   </div>
                 </div>
               </SheetContent>
