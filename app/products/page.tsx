@@ -127,6 +127,7 @@ export default function ProductsPage() {
   const [sortOption, setSortOption] = useState("newest")
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  // Image version is used to force image refresh when products are updated
   const [imageVersion, setImageVersion] = useState(Date.now())
   const isMobile = useIsMobile()
   const t = translations[language || "en"]
@@ -393,12 +394,18 @@ export default function ProductsPage() {
                 className="pl-10 border-yammy-blue/30 focus-visible:ring-yammy-blue"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label={t.search}
               />
             </div>
 
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="border-yammy-blue/30 text-yammy-blue">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border-yammy-blue/30 text-yammy-blue"
+                  aria-label={t.filter}
+                >
                   <Filter className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
@@ -475,6 +482,7 @@ export default function ProductsPage() {
               className="border-yammy-blue/30 text-yammy-blue"
               onClick={handleRefresh}
               disabled={isRefreshing}
+              aria-label={isRefreshing ? `${t.refresh} in progress` : t.refresh}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
               {t.refresh}
