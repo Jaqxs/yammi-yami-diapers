@@ -116,8 +116,8 @@ export const mockProducts: Product[] = [
   {
     id: 7,
     name: {
-      en: "Royal Baby Pants (with red cup)",
-      sw: "Pants za Kifalme za Watoto (na kikombe chekundu)",
+      en: "Royal Baby Pants with red cup",
+      sw: "Pants za Kifalme za Watoto na kikombe chekundu",
     },
     category: "babyPants",
     price: 19000,
