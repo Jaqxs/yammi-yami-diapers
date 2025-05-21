@@ -364,25 +364,6 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* Updated Pricing Notice */}
-        <div className="mb-8 p-4 border border-yammy-blue/30 rounded-lg bg-yammy-light-blue/20">
-          <h3 className="font-bubblegum text-lg text-yammy-dark-blue mb-2">{t.updatedPricing}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-3 rounded-md shadow-sm">
-              <h4 className="font-medium text-yammy-blue">{t.babyDiapers}</h4>
-              <p className="text-sm">TZS 20,000</p>
-            </div>
-            <div className="bg-white p-3 rounded-md shadow-sm">
-              <h4 className="font-medium text-yammy-blue">{t.babyPants}</h4>
-              <p className="text-sm">TZS 20,000</p>
-            </div>
-            <div className="bg-white p-3 rounded-md shadow-sm">
-              <h4 className="font-medium text-yammy-blue">{t.premiumPackage}</h4>
-              <p className="text-sm">TZS 19,000</p>
-            </div>
-          </div>
-        </div>
-
         {/* Filters and Search */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div className="flex items-center gap-2 w-full md:w-auto">
