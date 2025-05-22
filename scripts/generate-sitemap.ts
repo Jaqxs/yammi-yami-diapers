@@ -3,7 +3,7 @@ import path from "path"
 import { format } from "date-fns"
 
 // Base URL of the website
-const BASE_URL = "https://yammyyami.com"
+const BASE_URL = "https://yammyyamidiapers.co.tz"
 
 // Main pages with their priorities and change frequencies
 const MAIN_PAGES = [
