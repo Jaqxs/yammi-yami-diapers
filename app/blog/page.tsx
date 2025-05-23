@@ -1,14 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback, Suspense } from "react"
-import { motion } from "framer-motion"
-import { Search, Calendar, Clock, ChevronRight, Users, Heart, Gift } from "lucide-react"
+import { Search, Calendar, Users, Heart, Gift } from "lucide-react"
 import dynamic from "next/dynamic"
-import Image from "next/image"
-
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageWrapper } from "@/components/page-wrapper"
 import { useLanguage } from "@/components/language-provider"
@@ -18,6 +13,8 @@ import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { useIsMobile } from "@/hooks/use-media-query"
 import { throttle } from "@/lib/performance"
 import { CommunityVideo } from "@/components/community-video"
+import { EventCard } from "@/components/event-card"
+import { BlogCard } from "@/components/blog-card"
 
 // Dynamically import the modal for better performance
 const BlogPostModal = dynamic(() => import("@/components/blog-post-modal").then((mod) => mod.BlogPostModal), {
@@ -372,81 +369,28 @@ export default function BlogPage() {
           <BlogPostSkeleton />
         ) : sortedPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {sortedPosts.map((post) => (
-              <motion.div
-                key={post.id}
-                className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col"
-                whileHover={{ y: -5 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="block h-full flex flex-col">
-                  <div className="relative h-48">
-                    <Image
-                      src={getImageUrl(post.image || "/blog-post-concept.png", post.id.toString())}
-                      alt={post.title[language || "en"]}
-                      fill
-                      className="object-cover"
-                      onError={() => handleImageError(post.id.toString())}
-                      unoptimized={true}
-                    />
-                    <div className="absolute top-2 left-2 flex gap-2">
-                      {post.featured && (
-                        <Badge className="bg-yammy-orange text-white">
-                          {language === "en" ? "Featured" : "Iliyoangaziwa"}
-                        </Badge>
-                      )}
-                      {post.category === "events" && (
-                        <Badge className="bg-yammy-blue text-white flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {language === "en" ? "Event" : "Tukio"}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="p-6 flex-grow flex flex-col">
-                    <div className="flex items-center gap-2 mb-2">
-                      {getCategoryIcon(post.category)}
-                      <span className="text-sm text-yammy-blue font-medium">
-                        {post.category === "events"
-                          ? t.events
-                          : post.category === "babyHealth"
-                            ? t.babyHealth
-                            : post.category === "parentingTips"
-                              ? t.parentingTips
-                              : post.category === "productInfo"
-                                ? t.productInfo
-                                : post.category === "latestNews"
-                                  ? t.latestNews
-                                  : post.category}
-                      </span>
-                    </div>
-                    <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">{post.title[language || "en"]}</h3>
-                    <p className="text-gray-600 mb-4 line-clamp-2 flex-grow">{post.excerpt[language || "en"]}</p>
-                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {formatDate(post.date)}
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {post.readTime} {t.minutes}
-                      </div>
-                    </div>
-                    <div className="flex justify-end mt-auto">
-                      <Button
-                        variant="link"
-                        className="p-0 h-auto text-yammy-blue hover:text-yammy-dark-blue font-medium"
-                        onClick={() => handleOpenModal(post)}
-                      >
-                        {t.readMore} <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+            {sortedPosts.map((post) =>
+              post.category === "events" ? (
+                <EventCard
+                  key={post.id}
+                  post={post}
+                  onOpenModal={handleOpenModal}
+                  formatDate={formatDate}
+                  getImageUrl={getImageUrl}
+                  handleImageError={handleImageError}
+                />
+              ) : (
+                <BlogCard
+                  key={post.id}
+                  post={post}
+                  onOpenModal={handleOpenModal}
+                  formatDate={formatDate}
+                  getImageUrl={getImageUrl}
+                  handleImageError={handleImageError}
+                  getCategoryIcon={getCategoryIcon}
+                />
+              ),
+            )}
           </div>
         ) : (
           <div className="text-center py-12">
