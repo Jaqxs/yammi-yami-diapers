@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { motion } from "framer-motion"
-import { Search, Calendar, Clock, ChevronRight } from "lucide-react"
+import { Search, Calendar, Clock, ChevronRight, Users, Heart, Gift } from "lucide-react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
 
@@ -17,6 +17,7 @@ import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { useIsMobile } from "@/hooks/use-media-query"
 import { throttle } from "@/lib/performance"
+import { CommunityVideo } from "@/components/community-video"
 
 // Dynamically import the modal for better performance
 const BlogPostModal = dynamic(() => import("@/components/blog-post-modal").then((mod) => mod.BlogPostModal), {
@@ -27,10 +28,11 @@ const BlogPostModal = dynamic(() => import("@/components/blog-post-modal").then(
 // Language translations
 const translations = {
   en: {
-    blog: "Blog",
+    blog: "Blog & Events",
     allPosts: "All Posts",
     latestPosts: "Latest Articles",
     featuredPosts: "Featured Articles",
+    events: "Events & Community",
     search: "Search articles...",
     filter: "Filter By",
     category: "Category",
@@ -42,13 +44,19 @@ const translations = {
     readMore: "Read More",
     minutes: "min read",
     noPosts: "No articles found",
+    noEvents: "No events found",
     loading: "Loading articles...",
+    communityOutreach: "Community Outreach",
+    brandNews: "Brand News",
+    upcomingEvents: "Upcoming Events",
+    pastEvents: "Past Events",
   },
   sw: {
-    blog: "Blogu",
+    blog: "Blogu na Matukio",
     allPosts: "Makala Zote",
     latestPosts: "Makala za Hivi Karibuni",
     featuredPosts: "Makala Zilizoangaziwa",
+    events: "Matukio na Jamii",
     search: "Tafuta makala...",
     filter: "Chuja Kwa",
     category: "Jamii",
@@ -60,7 +68,12 @@ const translations = {
     readMore: "Soma Zaidi",
     minutes: "dakika za kusoma",
     noPosts: "Hakuna makala zilizopatikana",
+    noEvents: "Hakuna matukio yaliyo patikana",
     loading: "Inapakia makala...",
+    communityOutreach: "Kufikia Jamii",
+    brandNews: "Habari za Chapa",
+    upcomingEvents: "Matukio Yanayokuja",
+    pastEvents: "Matukio ya Zamani",
   },
 }
 
@@ -218,6 +231,14 @@ export default function BlogPage() {
       return false
     }
 
+    if (activeTab === "events" && post.category !== "events") {
+      return false
+    }
+
+    if (activeTab === "articles" && post.category === "events") {
+      return false
+    }
+
     return true
   })
 
@@ -225,6 +246,20 @@ export default function BlogPage() {
   const sortedPosts = [...filteredPosts].sort((a, b) => {
     return new Date(b.date).getTime() - new Date(a.date).getTime()
   })
+
+  // Get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "events":
+        return <Users className="h-4 w-4" />
+      case "babyHealth":
+        return <Heart className="h-4 w-4" />
+      case "latestNews":
+        return <Gift className="h-4 w-4" />
+      default:
+        return <Calendar className="h-4 w-4" />
+    }
+  }
 
   return (
     <PageWrapper>
@@ -245,6 +280,28 @@ export default function BlogPage() {
             </button>
             <button
               type="button"
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === "articles"
+                  ? "bg-yammy-blue text-white"
+                  : "bg-white text-yammy-blue hover:bg-yammy-light-blue"
+              }`}
+              onClick={() => setActiveTab("articles")}
+            >
+              {t.latestPosts}
+            </button>
+            <button
+              type="button"
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === "events"
+                  ? "bg-yammy-blue text-white"
+                  : "bg-white text-yammy-blue hover:bg-yammy-light-blue"
+              }`}
+              onClick={() => setActiveTab("events")}
+            >
+              {t.events}
+            </button>
+            <button
+              type="button"
               className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                 activeTab === "featured"
                   ? "bg-yammy-blue text-white"
@@ -256,6 +313,33 @@ export default function BlogPage() {
             </button>
           </div>
         </div>
+
+        {/* Events Section Description */}
+        {activeTab === "events" && (
+          <div className="mb-8 text-center">
+            <div className="bg-gradient-to-r from-yammy-blue to-yammy-orange text-white p-6 rounded-2xl">
+              <h2 className="text-2xl font-bubblegum mb-2">{t.communityOutreach}</h2>
+              <p className="text-lg">
+                {language === "en"
+                  ? "Stay updated with Yammy Yami's community initiatives, health drives, partnerships, and daily brand activities. Together, we're making a difference in Tanzanian families' lives."
+                  : "Pata habari za hivi karibuni kuhusu miradi ya jamii ya Yammy Yami, kampeni za afya, ushirikiano, na shughuli za kila siku za chapa. Pamoja, tunaleta mabadiliko katika maisha ya familia za Kitanzania."}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "events" && (
+          <div className="mb-8">
+            <CommunityVideo
+              src="/videos/community-event-2025.mp4"
+              title={
+                language === "en"
+                  ? "Yammy Yami Community Event Highlights"
+                  : "Vidokezo vya Tukio la Jamii la Yammy Yami"
+              }
+            />
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -274,6 +358,7 @@ export default function BlogPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t.allCategories}</SelectItem>
+              <SelectItem value="events">{t.events}</SelectItem>
               <SelectItem value="babyHealth">{t.babyHealth}</SelectItem>
               <SelectItem value="parentingTips">{t.parentingTips}</SelectItem>
               <SelectItem value="productInfo">{t.productInfo}</SelectItem>
@@ -299,20 +384,44 @@ export default function BlogPage() {
                 <div className="block h-full flex flex-col">
                   <div className="relative h-48">
                     <Image
-                      src={getImageUrl(post.image || "/blog-post-concept.png", post.id)}
+                      src={getImageUrl(post.image || "/blog-post-concept.png", post.id.toString())}
                       alt={post.title[language || "en"]}
                       fill
                       className="object-cover"
-                      onError={() => handleImageError(post.id)}
+                      onError={() => handleImageError(post.id.toString())}
                       unoptimized={true}
                     />
-                    {post.featured && (
-                      <Badge className="absolute top-2 left-2 bg-yammy-orange text-white">
-                        {language === "en" ? "Featured" : "Iliyoangaziwa"}
-                      </Badge>
-                    )}
+                    <div className="absolute top-2 left-2 flex gap-2">
+                      {post.featured && (
+                        <Badge className="bg-yammy-orange text-white">
+                          {language === "en" ? "Featured" : "Iliyoangaziwa"}
+                        </Badge>
+                      )}
+                      {post.category === "events" && (
+                        <Badge className="bg-yammy-blue text-white flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {language === "en" ? "Event" : "Tukio"}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="p-6 flex-grow flex flex-col">
+                    <div className="flex items-center gap-2 mb-2">
+                      {getCategoryIcon(post.category)}
+                      <span className="text-sm text-yammy-blue font-medium">
+                        {post.category === "events"
+                          ? t.events
+                          : post.category === "babyHealth"
+                            ? t.babyHealth
+                            : post.category === "parentingTips"
+                              ? t.parentingTips
+                              : post.category === "productInfo"
+                                ? t.productInfo
+                                : post.category === "latestNews"
+                                  ? t.latestNews
+                                  : post.category}
+                      </span>
+                    </div>
                     <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">{post.title[language || "en"]}</h3>
                     <p className="text-gray-600 mb-4 line-clamp-2 flex-grow">{post.excerpt[language || "en"]}</p>
                     <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
@@ -341,7 +450,7 @@ export default function BlogPage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 font-bubblegum text-xl">{t.noPosts}</p>
+            <p className="text-gray-500 font-bubblegum text-xl">{activeTab === "events" ? t.noEvents : t.noPosts}</p>
           </div>
         )}
       </div>
