@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Play, Pause, Volume2, VolumeX } from "lucide-react"
+import { Play, Pause, Volume2, VolumeX, Maximize2 } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 
 interface CommunityVideoProps {
@@ -13,7 +13,9 @@ export function CommunityVideo({ src, title }: CommunityVideoProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(true)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const { language } = useLanguage()
 
   const translations = {
@@ -24,6 +26,7 @@ export function CommunityVideo({ src, title }: CommunityVideoProps) {
       pauseVideo: "Pause video",
       muteVideo: "Mute video",
       unmuteVideo: "Unmute video",
+      fullscreen: "Fullscreen",
     },
     sw: {
       watchVideo: "Tazama Video ya Jamii",
@@ -32,6 +35,7 @@ export function CommunityVideo({ src, title }: CommunityVideoProps) {
       pauseVideo: "Simamisha video",
       muteVideo: "Zima sauti ya video",
       unmuteVideo: "Washa sauti ya video",
+      fullscreen: "Skrini nzima",
     },
   }
 
@@ -55,62 +59,102 @@ export function CommunityVideo({ src, title }: CommunityVideoProps) {
     }
   }
 
+  const toggleFullscreen = () => {
+    if (containerRef.current) {
+      if (!isFullscreen) {
+        containerRef.current.requestFullscreen()
+      } else {
+        document.exitFullscreen()
+      }
+    }
+  }
+
   useEffect(() => {
     const handleLoad = () => {
       setIsLoaded(true)
     }
 
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+
     const video = videoRef.current
     if (video) {
       video.addEventListener("loadeddata", handleLoad)
-      return () => {
+    }
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange)
+
+    return () => {
+      if (video) {
         video.removeEventListener("loadeddata", handleLoad)
       }
+      document.removeEventListener("fullscreenchange", handleFullscreenChange)
     }
   }, [])
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden bg-black shadow-lg">
-      {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-10">
-          <div className="text-white text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-2"></div>
-            <p>{t.loading}</p>
-          </div>
-        </div>
-      )}
+    <div className="w-full mb-8">
+      <div className="bg-gradient-to-r from-yammy-blue to-yammy-orange p-1 rounded-3xl">
+        <div ref={containerRef} className="relative w-full bg-black rounded-3xl overflow-hidden shadow-2xl">
+          {!isLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-10 rounded-3xl">
+              <div className="text-white text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-2"></div>
+                <p>{t.loading}</p>
+              </div>
+            </div>
+          )}
 
-      <div className="aspect-video relative">
-        <video
-          ref={videoRef}
-          src={src}
-          className="w-full h-full object-cover"
-          playsInline
-          muted={isMuted}
-          loop
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-        />
+          {/* Video container with proper aspect ratio */}
+          <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+            <video
+              ref={videoRef}
+              src={src}
+              className="absolute top-0 left-0 w-full h-full object-contain"
+              playsInline
+              muted={isMuted}
+              loop
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+            />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col items-center justify-center">
-          {title && <h3 className="text-white text-xl md:text-2xl font-bubblegum mb-4 text-center px-4">{title}</h3>}
+            {/* Controls overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 flex flex-col justify-between p-6">
+              {/* Title at top */}
+              {title && (
+                <div className="text-center">
+                  <h3 className="text-white text-xl md:text-2xl font-bubblegum drop-shadow-lg">{title}</h3>
+                </div>
+              )}
 
-          <div className="flex space-x-4">
-            <button
-              onClick={togglePlay}
-              className="bg-yammy-blue hover:bg-yammy-dark-blue text-white rounded-full p-3 transition-all"
-              aria-label={isPlaying ? t.pauseVideo : t.playVideo}
-            >
-              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-            </button>
+              {/* Controls at bottom */}
+              <div className="flex justify-center items-center space-x-4">
+                <button
+                  onClick={togglePlay}
+                  className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-full p-4 transition-all transform hover:scale-110"
+                  aria-label={isPlaying ? t.pauseVideo : t.playVideo}
+                >
+                  {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
+                </button>
 
-            <button
-              onClick={toggleMute}
-              className="bg-yammy-blue hover:bg-yammy-dark-blue text-white rounded-full p-3 transition-all"
-              aria-label={isMuted ? t.unmuteVideo : t.muteVideo}
-            >
-              {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-            </button>
+                <button
+                  onClick={toggleMute}
+                  className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-full p-3 transition-all transform hover:scale-110"
+                  aria-label={isMuted ? t.unmuteVideo : t.muteVideo}
+                >
+                  {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                </button>
+
+                <button
+                  onClick={toggleFullscreen}
+                  className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-full p-3 transition-all transform hover:scale-110"
+                  aria-label={t.fullscreen}
+                >
+                  <Maximize2 className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

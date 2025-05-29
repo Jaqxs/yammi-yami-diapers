@@ -310,12 +310,6 @@ const teamMembers = [
     nickname: "Secretary Dericko",
     image: "/images/dericko-moghela.jpeg",
   },
-  {
-    name: "Wito Peter",
-    role: "Digital Marketing Manager (DMM)",
-    nickname: "Mckalipeter",
-    image: "/images/wito-peter.jpeg",
-  },
 ]
 
 // Timeline items
