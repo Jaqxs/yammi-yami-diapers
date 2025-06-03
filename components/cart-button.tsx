@@ -20,37 +20,14 @@ const translations = {
 }
 
 export function CartButton() {
-  const { itemCount, isOpen, openCart, closeCart } = useCart()
+  const { itemCount } = useCart()
   const { language } = useLanguage()
   const t = translations[language]
 
-  // Handle sheet state changes
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      openCart()
-    } else {
-      closeCart()
-    }
-  }
-
   return (
-    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
+    <Sheet>
       <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="relative border-yammy-blue/30 text-yammy-blue"
-          onClick={(e) => {
-            // If cart is already open and user clicks the button, close it
-            if (isOpen) {
-              e.preventDefault()
-              closeCart()
-            } else {
-              // Otherwise open it
-              openCart()
-            }
-          }}
-        >
+        <Button variant="outline" size="icon" className="relative border-yammy-blue/30 text-yammy-blue">
           <ShoppingCart className="h-4 w-4" />
           {itemCount > 0 && (
             <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center bg-yammy-orange text-white">

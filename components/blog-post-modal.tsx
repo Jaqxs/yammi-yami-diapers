@@ -1,15 +1,14 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { Calendar, Clock, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
+import { OptimizedImage } from "@/components/optimized-image"
 import { useIsMobile } from "@/hooks/use-media-query"
 import type { BlogPost } from "@/lib/store"
-import { trackBlogView } from "@/components/google-analytics"
 
 interface BlogPostModalProps {
   post: BlogPost | null
@@ -21,8 +20,6 @@ export function BlogPostModal({ post, isOpen, onClose }: BlogPostModalProps) {
   const { language } = useLanguage()
   const modalRef = useRef<HTMLDivElement>(null)
   const isMobile = useIsMobile()
-  const [imageKey, setImageKey] = useState(Date.now())
-  const [imageError, setImageError] = useState(false)
 
   // Close modal on escape key press
   useEffect(() => {
@@ -46,17 +43,12 @@ export function BlogPostModal({ post, isOpen, onClose }: BlogPostModalProps) {
       document.body.style.overflow = "hidden"
     }
 
-    // Track blog post view
-    if (post) {
-      trackBlogView(post.title)
-    }
-
     return () => {
       document.removeEventListener("keydown", handleEscKey)
       document.removeEventListener("mousedown", handleClickOutside)
       document.body.style.overflow = "auto"
     }
-  }, [isOpen, onClose, post])
+  }, [isOpen, onClose])
 
   // Format date function
   const formatDate = (dateString: string) => {
@@ -88,24 +80,6 @@ export function BlogPostModal({ post, isOpen, onClose }: BlogPostModalProps) {
     return { __html: html }
   }
 
-  // Add timestamp to image URL to prevent caching
-  const getImageUrl = (url: string) => {
-    if (!url) return "/blog-post-concept.png"
-
-    // If URL already has a query parameter, add timestamp
-    if (url.includes("?")) {
-      return `${url}&t=${imageKey}`
-    }
-
-    // Otherwise add timestamp as a new query parameter
-    return `${url}?t=${imageKey}`
-  }
-
-  const handleImageError = () => {
-    console.error("Error loading blog post image:", post?.image)
-    setImageError(true)
-  }
-
   if (!post) return null
 
   return (
@@ -135,14 +109,12 @@ export function BlogPostModal({ post, isOpen, onClose }: BlogPostModalProps) {
 
             {/* Header image */}
             <div className="relative h-48 md:h-64 w-full">
-              <Image
-                src={imageError ? "/blog-post-concept.png" : getImageUrl(post.image || "/blog-post-concept.png")}
+              <OptimizedImage
+                src={post.image || "/placeholder.svg?height=300&width=500&query=blog post"}
                 alt={post.title[language || "en"]}
                 fill
                 className="object-cover"
-                onError={handleImageError}
-                unoptimized={true}
-                priority
+                fallbackSrc="/blog-post-concept.png"
               />
             </div>
 

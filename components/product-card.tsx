@@ -10,7 +10,6 @@ import { useCart } from "@/components/cart-provider"
 import { OptimizedImage } from "@/components/optimized-image"
 import type { Product } from "@/lib/store"
 import { toast } from "@/components/ui/use-toast"
-import { trackProductView, trackAddToCart } from "@/components/google-analytics"
 
 interface ProductCardProps {
   product: Product
@@ -19,36 +18,20 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
   const { language } = useLanguage()
-  const { addItem, openCart } = useCart()
+  const { addItem } = useCart()
   const [isHovered, setIsHovered] = useState(false)
   const [imageKey, setImageKey] = useState(Date.now())
 
   // Force image refresh when product changes
   useEffect(() => {
     setImageKey(Date.now())
-
-    // Track product view
-    trackProductView({
-      id: product.id,
-      name: product.name,
-      category: product.category,
-    })
-  }, [product.id, product.image, product.name, product.category])
+  }, [product.id, product.image])
 
   const formatPrice = (price: number) => {
     return `TZS ${price.toLocaleString()}`
   }
 
   const handleAddToCart = () => {
-    // Track add to cart event
-    trackAddToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-    })
-
-    // Add item to cart
     addItem({
       id: product.id,
       name: product.name,
@@ -58,9 +41,6 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
       size: product.size,
       bundleSize: product.bundleSize,
     })
-
-    // Explicitly open the cart
-    openCart()
 
     // Show confirmation toast
     toast({
@@ -124,21 +104,33 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
     // If it's already a placeholder, return as is
     if (url.includes("placeholder.svg")) return url
 
-    // Handle relative paths for local images
-    if (url.startsWith("/")) {
-      // For local images, ensure they're properly referenced
-      return url
-    }
-
     // Add cache-busting parameter
     const timestamp = imageKey
     const separator = url.includes("?") ? "&" : "?"
     return `${url}${separator}v=${timestamp}`
   }
 
+  // Ensure the image URL is absolute
+  const ensureAbsoluteUrl = (url: string | undefined) => {
+    if (!url) return undefined
+
+    // If it's already absolute, return as is
+    if (url.startsWith("http")) return url
+
+    // If it's a relative URL, make it absolute
+    if (url.startsWith("/")) {
+      // Use the current origin
+      return `${window.location.origin}${url}`
+    }
+
+    // If it's a relative URL without leading slash
+    return `${window.location.origin}/${url}`
+  }
+
   // Get the final image URL
   const getFinalImageUrl = (url: string | undefined) => {
-    return getProcessedImageUrl(url)
+    const processedUrl = getProcessedImageUrl(url)
+    return processedUrl
   }
 
   return (
@@ -177,10 +169,7 @@ export function ProductCard({ product, onWhatsAppOrder }: ProductCardProps) {
 
       <div className="p-6 flex-grow flex flex-col">
         <h3 className="font-bubblegum text-xl mb-1 text-yammy-dark-blue line-clamp-2">
-          {(product.name[language || "en"] || "")
-            .replace("XXXL", "")
-            .replace(/premium/gi, "")
-            .replace(/with red cup/gi, "")}
+          {(product.name[language || "en"] || "").replace("XXXL", "")}
         </h3>
 
         {/* Product details */}

@@ -8,7 +8,7 @@ export const mockProducts: Product[] = [
       sw: "Diapers Bora za Watoto",
     },
     category: "babyDiapers",
-    price: 20000,
+    price: 18000,
     wholesalePrice: 16000,
     size: "small",
     bundleSize: 50,
@@ -46,7 +46,29 @@ export const mockProducts: Product[] = [
     stock: 85,
     status: "active",
   },
-  // Product with ID 3 (Baby Pull-up Pants size Large 9-14kg) has been removed
+  {
+    id: 3,
+    name: {
+      en: "Baby Pull-up Pants",
+      sw: "Pants za Watoto",
+    },
+    category: "babyPants",
+    price: 20000,
+    wholesalePrice: 17000,
+    size: "large",
+    bundleSize: 50,
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1016.jpg-N7AFkyLYxdcxtB9xZpOyAB7xo2TYYZ.jpeg?v=1",
+    tags: ["bestSeller", "highAbsorption"],
+    weightRange: "9-14kg",
+    description: {
+      en: "Large-sized pull-up pants for growing toddlers. Easy to put on and take off.",
+      sw: "Pants za ukubwa mkubwa kwa watoto wanaokua. Rahisi kuvaa na kuvua.",
+    },
+    stock: 65,
+    status: "active",
+    featured: true,
+  },
   {
     id: 4,
     name: {
@@ -116,20 +138,21 @@ export const mockProducts: Product[] = [
   {
     id: 7,
     name: {
-      en: "Royal Baby Pants with red cup",
-      sw: "Pants za Kifalme za Watoto na kikombe chekundu",
+      en: "Premium Royal Baby Pants",
+      sw: "Pants Bora za Kifalme za Watoto",
     },
     category: "babyPants",
-    price: 19000,
-    wholesalePrice: 22000,
+    price: 22000,
+    wholesalePrice: 19000,
     size: "large",
     bundleSize: 50,
-    image: "/images/yammy-yami-pullup-baby-diaper.jpeg",
-    tags: ["bestSeller", "internationalQuality", "highAbsorption", "premiumPackage"],
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1011.jpg-kyHylrVCgJKZGHSxfOAMQ6GEz7jRUZ.jpeg?v=1",
+    tags: ["bestSeller", "internationalQuality", "highAbsorption"],
     weightRange: "12-17kg",
     description: {
-      en: "Our highest quality pants with premium absorption and extra softness. Royal quality with a special red cup.",
-      sw: "Pants zetu za ubora wa juu zaidi zenye unyonywaji wa hali ya juu na ulaini wa ziada. Ubora wa kifalme na kikombe maalum chekundu.",
+      en: "Our highest quality pants with premium absorption and extra softness. Royal quality.",
+      sw: "Pants zetu za ubora wa juu zaidi zenye unyonywaji wa hali ya juu na ulaini wa ziada. Ubora wa kifalme.",
     },
     stock: 15,
     status: "low_stock",
@@ -156,5 +179,26 @@ export const mockProducts: Product[] = [
     stock: 25,
     status: "active",
   },
-  // Product with ID 9 (Baby Diaper XXXL size extraLarge 19kg+) has been removed
+  {
+    id: 9,
+    name: {
+      en: "Baby Diaper XXXL",
+      sw: "Diaper za Watoto XXXL",
+    },
+    category: "babyPants",
+    price: 24000,
+    wholesalePrice: 21000,
+    size: "extraLarge",
+    bundleSize: 50,
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1015.jpg-MrDwEHu3Gt9fjrXcq7CwoswxVdePaz.jpeg?v=1",
+    tags: ["newArrival", "highAbsorption"],
+    weightRange: "19kg+",
+    description: {
+      en: "Our largest size baby diapers for older toddlers. Maximum comfort and absorption for active children.",
+      sw: "Diaper zetu za ukubwa mkubwa zaidi kwa watoto wakubwa. Faraja na unyonywaji wa hali ya juu kwa watoto wanaocheza.",
+    },
+    stock: 30,
+    status: "active",
+  },
 ]

@@ -12,8 +12,6 @@ import { StoreSyncProvider } from "@/lib/store-sync"
 import { RegistrationSync } from "@/lib/registration-sync"
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
-import Script from "next/script"
-import { Suspense } from "react"
 
 // Load fonts
 const inter = Inter({
@@ -58,24 +56,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={cn("no-horizontal-overflow", inter.variable, nunito.variable)}>
-      <head>{/* Google tag (gtag.js) - Added exactly as provided by the user */}</head>
       <body className={cn("min-h-screen no-horizontal-overflow", inter.className)}>
-        {/* Google tag (gtag.js) - Exactly as provided by user */}
-        <Script strategy="afterInteractive" src="https://www.googletagmanager.com/gtag/js?id=G-DWP5DBLY4P" />
-        <Script
-          id="google-analytics"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              
-              gtag('config', 'G-DWP5DBLY4P');
-            `,
-          }}
-        />
-
         <ThemeProvider attribute="class" defaultTheme="light">
           <StoreProvider>
             <StoreSyncProvider>
@@ -84,9 +65,7 @@ export default function RootLayout({
                   <RegistrationSync />
                   <div className="flex flex-col min-h-screen">
                     <Navbar />
-                    <Suspense>
-                      <main className="flex-grow">{children}</main>
-                    </Suspense>
+                    <main className="flex-grow">{children}</main>
                     <Footer />
                   </div>
                   <Toaster />

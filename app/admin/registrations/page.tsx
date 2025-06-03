@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import { useStore, type Registration } from "@/lib/store"
 import { useToast } from "@/components/ui/use-toast"
 import { format } from "date-fns"
 
@@ -31,127 +32,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Search, X, CheckCircle, XCircle, Clock, Eye, Filter, RefreshCw, Download } from "lucide-react"
-import { useStore } from "@/lib/store"
-import { mockRegistrations } from "@/data/mock-registrations"
+import { Search, X, CheckCircle, XCircle, Clock, Eye, Filter, RefreshCw } from "lucide-react"
 
 export default function RegistrationsPage() {
+  const { state, loadRegistrations, approveRegistration, rejectRegistration } = useStore()
   const { toast } = useToast()
   const [mounted, setMounted] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all")
-  const [selectedRegistration, setSelectedRegistration] = useState<any | null>(null)
+  const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   const [notes, setNotes] = useState("")
-  const [registrations, setRegistrations] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasNewRegistrations, setHasNewRegistrations] = useState(false)
 
-  // Get store functions
-  const { state, loadRegistrations, approveRegistration, rejectRegistration } = useStore()
-
-  // Function to load all registrations from various sources
-  const loadAllRegistrations = async () => {
-    setIsLoading(true)
-    try {
-      // First try to load from localStorage
-      const storedRegistrations = localStorage.getItem("yammy-registrations")
-      let allRegistrations = []
-
-      if (storedRegistrations) {
-        try {
-          const parsedRegistrations = JSON.parse(storedRegistrations)
-          allRegistrations = parsedRegistrations
-          console.log("Loaded registrations from localStorage:", parsedRegistrations)
-        } catch (error) {
-          console.error("Error parsing registrations from localStorage:", error)
-        }
-      }
-
-      // If no registrations in localStorage, use mock data
-      if (allRegistrations.length === 0) {
-        allRegistrations = mockRegistrations.map((reg) => ({
-          ...reg,
-          id: typeof reg.id === "string" ? Number.parseInt(reg.id.replace("reg-", "")) : reg.id,
-          date: reg.registrationDate || new Date().toISOString(),
-        }))
-        console.log("Using mock registrations:", allRegistrations)
-      }
-
-      // Update state with all registrations
-      setRegistrations(allRegistrations)
-      setHasNewRegistrations(false)
-    } catch (error) {
-      console.error("Error loading registrations:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load registrations. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Load registrations on mount
   useEffect(() => {
     setMounted(true)
-    loadAllRegistrations()
-
-    // Set up event listeners for new registrations
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "yammy-registrations" || event.key === "yammy-registration-added") {
-        console.log("Registration storage changed:", event)
-        setHasNewRegistrations(true)
-      }
-    }
-
-    const handleCustomEvent = (event: Event) => {
-      console.log("Custom registration event received:", event)
-      setHasNewRegistrations(true)
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    window.addEventListener("yammy-registration-added", handleCustomEvent)
-
-    // Set up polling to check for new registrations
-    const intervalId = setInterval(() => {
-      const storedRegistrations = localStorage.getItem("yammy-registrations")
-      if (storedRegistrations) {
-        try {
-          const parsedRegistrations = JSON.parse(storedRegistrations)
-          if (parsedRegistrations.length !== registrations.length) {
-            setHasNewRegistrations(true)
-          }
-        } catch (error) {
-          console.error("Error checking for new registrations:", error)
-        }
-      }
-    }, 30000) // Check every 30 seconds
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-      window.removeEventListener("yammy-registration-added", handleCustomEvent)
-      clearInterval(intervalId)
-    }
-  }, [])
-
-  // Refresh registrations
-  const handleRefresh = () => {
-    loadAllRegistrations()
-  }
+    loadRegistrations()
+  }, [loadRegistrations])
 
   if (!mounted) return null
 
   // Filter registrations based on search term and status filter
-  const filteredRegistrations = registrations.filter((registration) => {
+  const filteredRegistrations = state.registrations.filter((registration) => {
     const matchesSearch =
-      registration.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registration.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registration.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registration.paymentReference?.toLowerCase().includes(searchTerm.toLowerCase())
+      registration.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      registration.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      registration.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      registration.paymentReference.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesStatus = statusFilter === "all" || registration.status === statusFilter
 
@@ -172,34 +80,7 @@ export default function RegistrationsPage() {
     if (!selectedRegistration) return
 
     try {
-      setIsLoading(true)
-
-      // Update the registration status in localStorage
-      const storedRegistrations = localStorage.getItem("yammy-registrations")
-      if (storedRegistrations) {
-        const parsedRegistrations = JSON.parse(storedRegistrations)
-        const updatedRegistrations = parsedRegistrations.map((reg: any) =>
-          reg.id === selectedRegistration.id
-            ? {
-                ...reg,
-                status: "approved",
-                reviewedBy: "Admin User",
-                notes: notes,
-                reviewDate: new Date().toISOString(),
-              }
-            : reg,
-        )
-
-        localStorage.setItem("yammy-registrations", JSON.stringify(updatedRegistrations))
-        setRegistrations(updatedRegistrations)
-      }
-
-      // Also update in the store if available
-      try {
-        await approveRegistration(selectedRegistration.id, "Admin User", notes)
-      } catch (error) {
-        console.error("Error updating registration in store:", error)
-      }
+      await approveRegistration(selectedRegistration.id, "Admin User", notes)
 
       // Trigger a localStorage event to notify other tabs/windows
       const event = new StorageEvent("storage", {
@@ -219,15 +100,15 @@ export default function RegistrationsPage() {
         title: "Registration Approved",
         description: "The agent registration has been approved successfully.",
       })
+
+      // Refresh the registrations list
+      loadRegistrations()
     } catch (error) {
-      console.error("Error approving registration:", error)
       toast({
         title: "Error",
-        description: "Failed to approve registration. Please try again.",
+        description: "Failed to approve registration.",
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -236,34 +117,7 @@ export default function RegistrationsPage() {
     if (!selectedRegistration) return
 
     try {
-      setIsLoading(true)
-
-      // Update the registration status in localStorage
-      const storedRegistrations = localStorage.getItem("yammy-registrations")
-      if (storedRegistrations) {
-        const parsedRegistrations = JSON.parse(storedRegistrations)
-        const updatedRegistrations = parsedRegistrations.map((reg: any) =>
-          reg.id === selectedRegistration.id
-            ? {
-                ...reg,
-                status: "rejected",
-                reviewedBy: "Admin User",
-                notes: notes,
-                reviewDate: new Date().toISOString(),
-              }
-            : reg,
-        )
-
-        localStorage.setItem("yammy-registrations", JSON.stringify(updatedRegistrations))
-        setRegistrations(updatedRegistrations)
-      }
-
-      // Also update in the store if available
-      try {
-        await rejectRegistration(selectedRegistration.id, "Admin User", notes)
-      } catch (error) {
-        console.error("Error updating registration in store:", error)
-      }
+      await rejectRegistration(selectedRegistration.id, "Admin User", notes)
 
       // Trigger a localStorage event to notify other tabs/windows
       const event = new StorageEvent("storage", {
@@ -283,58 +137,13 @@ export default function RegistrationsPage() {
         title: "Registration Rejected",
         description: "The agent registration has been rejected.",
       })
+
+      // Refresh the registrations list
+      loadRegistrations()
     } catch (error) {
-      console.error("Error rejecting registration:", error)
       toast({
         title: "Error",
-        description: "Failed to reject registration. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Export registrations to CSV
-  const handleExport = () => {
-    try {
-      const headers = ["ID", "Name", "Email", "Phone", "Region", "Payment Ref", "Date", "Status", "Notes"]
-      const csvRows = [headers.join(",")]
-
-      filteredRegistrations.forEach((reg) => {
-        const row = [
-          reg.id,
-          `"${reg.name || ""}"`,
-          `"${reg.email || ""}"`,
-          `"${reg.phone || ""}"`,
-          `"${reg.region || ""}"`,
-          `"${reg.paymentReference || ""}"`,
-          `"${reg.date ? formatDate(reg.date) : ""}"`,
-          `"${reg.status || ""}"`,
-          `"${reg.notes || ""}"`,
-        ]
-        csvRows.push(row.join(","))
-      })
-
-      const csvContent = csvRows.join("\n")
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.setAttribute("href", url)
-      link.setAttribute("download", `agent-registrations-${new Date().toISOString().split("T")[0]}.csv`)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      toast({
-        title: "Export Successful",
-        description: "Registrations have been exported to CSV.",
-      })
-    } catch (error) {
-      console.error("Error exporting registrations:", error)
-      toast({
-        title: "Export Failed",
-        description: "Failed to export registrations. Please try again.",
+        description: "Failed to reject registration.",
         variant: "destructive",
       })
     }
@@ -346,19 +155,19 @@ export default function RegistrationsPage() {
       case "pending":
         return (
           <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-            <Clock className="h-3 w-3 mr-1" /> Pending
+            Pending
           </Badge>
         )
       case "approved":
         return (
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <CheckCircle className="h-3 w-3 mr-1" /> Approved
+            Approved
           </Badge>
         )
       case "rejected":
         return (
           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-            <XCircle className="h-3 w-3 mr-1" /> Rejected
+            Rejected
           </Badge>
         )
       default:
@@ -379,27 +188,10 @@ export default function RegistrationsPage() {
             <CardTitle>Registrations List</CardTitle>
             <CardDescription>Review and approve agent registration applications</CardDescription>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              disabled={isLoading || registrations.length === 0}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button
-              variant={hasNewRegistrations ? "default" : "outline"}
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className={hasNewRegistrations ? "bg-yammy-orange hover:bg-yammy-orange/90" : ""}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-              {hasNewRegistrations ? "New Registrations!" : isLoading ? "Refreshing..." : "Refresh"}
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" onClick={() => loadRegistrations()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -444,7 +236,6 @@ export default function RegistrationsPage() {
                   <TableHead>ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Contact</TableHead>
-                  <TableHead>Region</TableHead>
                   <TableHead>Payment Ref</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
@@ -452,18 +243,9 @@ export default function RegistrationsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
+                {filteredRegistrations.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
-                      <div className="flex justify-center items-center">
-                        <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-                        Loading registrations...
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : filteredRegistrations.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       No registrations found.
                     </TableCell>
                   </TableRow>
@@ -478,7 +260,6 @@ export default function RegistrationsPage() {
                           <span className="text-xs text-muted-foreground">{registration.phone}</span>
                         </div>
                       </TableCell>
-                      <TableCell>{registration.region}</TableCell>
                       <TableCell>{registration.paymentReference}</TableCell>
                       <TableCell>{formatDate(registration.date)}</TableCell>
                       <TableCell>{getStatusBadge(registration.status)}</TableCell>
@@ -562,10 +343,6 @@ export default function RegistrationsPage() {
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Phone</Label>
                 <div className="col-span-3">{selectedRegistration.phone}</div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Region</Label>
-                <div className="col-span-3">{selectedRegistration.region}</div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Payment Ref</Label>
@@ -658,15 +435,8 @@ export default function RegistrationsPage() {
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setNotes("")}>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-green-600 hover:bg-green-700" onClick={handleApprove} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                "Approve Registration"
-              )}
+            <AlertDialogAction className="bg-green-600 hover:bg-green-700" onClick={handleApprove}>
+              Approve Registration
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -697,15 +467,8 @@ export default function RegistrationsPage() {
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setNotes("")}>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleReject} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                "Reject Registration"
-              )}
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleReject}>
+              Reject Registration
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

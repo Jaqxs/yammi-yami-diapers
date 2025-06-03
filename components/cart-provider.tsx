@@ -24,9 +24,6 @@ type CartContextType = {
   clearCart: () => void
   itemCount: number
   total: number
-  isOpen: boolean
-  openCart: () => void
-  closeCart: () => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -35,7 +32,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [itemCount, setItemCount] = useState(0)
   const [total, setTotal] = useState(0)
-  const [isOpen, setIsOpen] = useState(false)
   const { language } = useLanguage()
 
   // Load cart from localStorage on initial render
@@ -82,9 +78,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return [...prevItems, newItem]
       }
     })
-
-    // Open the cart when an item is added
-    openCart()
   }
 
   const removeItem = (id: number) => {
@@ -105,14 +98,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("yammy-cart")
   }
 
-  const openCart = () => {
-    setIsOpen(true)
-  }
-
-  const closeCart = () => {
-    setIsOpen(false)
-  }
-
   return (
     <CartContext.Provider
       value={{
@@ -123,9 +108,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         itemCount,
         total,
-        isOpen,
-        openCart,
-        closeCart,
       }}
     >
       {children}

@@ -42,7 +42,7 @@ const translations = {
 }
 
 export function CartItems() {
-  const { items, removeItem, updateQuantity, total, clearCart, closeCart } = useCart()
+  const { items, removeItem, updateQuantity, total, clearCart } = useCart()
   const { language } = useLanguage()
   const router = useRouter()
   const t = translations[language]
@@ -52,14 +52,10 @@ export function CartItems() {
   }
 
   const handleCheckout = () => {
-    // Close the cart first
-    closeCart()
-    // Then navigate to checkout
     router.push("/checkout")
   }
 
   const handleContinueShopping = () => {
-    closeCart()
     router.push("/products")
   }
 

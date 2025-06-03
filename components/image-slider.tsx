@@ -27,7 +27,6 @@ export default function ImageSlider({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isHovering, setIsHovering] = useState(false)
   const [imageError, setImageError] = useState<Record<number, boolean>>({})
-  const [imageKey, setImageKey] = useState(Date.now()) // Add a key to force re-render
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex === images.length - 1 ? 0 : prevIndex + 1))
@@ -47,15 +46,6 @@ export default function ImageSlider({
     return () => clearInterval(interval)
   }, [nextSlide, autoplaySpeed, isHovering])
 
-  // Force re-render images every 30 seconds to prevent stale images
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setImageKey(Date.now())
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [])
-
   if (images.length === 0) {
     return null
   }
@@ -63,19 +53,6 @@ export default function ImageSlider({
   const handleImageError = (index: number) => {
     console.error(`Error loading image at index ${index}:`, images[index])
     setImageError((prev) => ({ ...prev, [index]: true }))
-  }
-
-  // Add timestamp to image URL to prevent caching
-  const getImageUrl = (url: string) => {
-    if (!url) return "/placeholder.svg"
-
-    // If URL already has a query parameter, add timestamp
-    if (url.includes("?")) {
-      return `${url}&t=${imageKey}`
-    }
-
-    // Otherwise add timestamp as a new query parameter
-    return `${url}?t=${imageKey}`
   }
 
   return (
@@ -95,13 +72,11 @@ export default function ImageSlider({
             className="absolute inset-0"
           >
             <Image
-              src={imageError[currentIndex] ? "/placeholder.svg" : getImageUrl(images[currentIndex])}
+              src={imageError[currentIndex] ? "/placeholder.svg" : images[currentIndex]}
               alt={`${title || "Image"} ${currentIndex + 1}`}
               fill
               className="object-cover"
               priority={currentIndex === 0}
-              onError={() => handleImageError(currentIndex)}
-              unoptimized={true}
             />
             {names && names[currentIndex] && names[currentIndex].includes("Paula") && (
               <div className="absolute bottom-4 left-4 right-4 bg-yammy-pink/80 text-white py-1 px-3 rounded-full text-sm font-medium">

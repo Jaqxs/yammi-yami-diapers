@@ -55,19 +55,12 @@ export function OptimizedImage({
         return
       }
 
-      // Handle relative paths for local images
-      let processedSrc = src
-      if (typeof src === "string" && src.startsWith("/")) {
-        // Ensure local paths work correctly in production
-        processedSrc = src
-      }
-
       // Add cache-busting parameter to image URLs
-      if (typeof processedSrc === "string") {
+      if (typeof src === "string") {
         const timestamp = Date.now()
-        const separator = processedSrc.includes("?") ? "&" : "?"
+        const separator = src.includes("?") ? "&" : "?"
         if (mountedRef.current) {
-          setImgSrc(`${processedSrc}${separator}t=${timestamp}`)
+          setImgSrc(`${src}${separator}t=${timestamp}`)
         }
       } else {
         if (mountedRef.current) {

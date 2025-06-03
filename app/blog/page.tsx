@@ -1,20 +1,22 @@
 "use client"
 
 import { useState, useEffect, useCallback, Suspense } from "react"
-import { Search, Calendar, Users, Heart, Gift } from "lucide-react"
+import { motion } from "framer-motion"
+import { Search, Calendar, Clock, ChevronRight } from "lucide-react"
 import dynamic from "next/dynamic"
+
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageWrapper } from "@/components/page-wrapper"
 import { useLanguage } from "@/components/language-provider"
 import { useStore } from "@/lib/store"
 import { useStoreSync } from "@/lib/store-sync"
 import { AdminChangeNotification } from "@/components/admin-change-notification"
+import { OptimizedImage } from "@/components/optimized-image"
 import { useIsMobile } from "@/hooks/use-media-query"
 import { throttle } from "@/lib/performance"
-import { CommunityVideo } from "@/components/community-video"
-import { EventCard } from "@/components/event-card"
-import { BlogCard } from "@/components/blog-card"
 
 // Dynamically import the modal for better performance
 const BlogPostModal = dynamic(() => import("@/components/blog-post-modal").then((mod) => mod.BlogPostModal), {
@@ -25,11 +27,10 @@ const BlogPostModal = dynamic(() => import("@/components/blog-post-modal").then(
 // Language translations
 const translations = {
   en: {
-    blog: "Blog & Events",
+    blog: "Blog",
     allPosts: "All Posts",
     latestPosts: "Latest Articles",
     featuredPosts: "Featured Articles",
-    events: "Events & Community",
     search: "Search articles...",
     filter: "Filter By",
     category: "Category",
@@ -41,19 +42,13 @@ const translations = {
     readMore: "Read More",
     minutes: "min read",
     noPosts: "No articles found",
-    noEvents: "No events found",
     loading: "Loading articles...",
-    communityOutreach: "Community Outreach",
-    brandNews: "Brand News",
-    upcomingEvents: "Upcoming Events",
-    pastEvents: "Past Events",
   },
   sw: {
-    blog: "Blogu na Matukio",
+    blog: "Blogu",
     allPosts: "Makala Zote",
     latestPosts: "Makala za Hivi Karibuni",
     featuredPosts: "Makala Zilizoangaziwa",
-    events: "Matukio na Jamii",
     search: "Tafuta makala...",
     filter: "Chuja Kwa",
     category: "Jamii",
@@ -65,12 +60,7 @@ const translations = {
     readMore: "Soma Zaidi",
     minutes: "dakika za kusoma",
     noPosts: "Hakuna makala zilizopatikana",
-    noEvents: "Hakuna matukio yaliyo patikana",
     loading: "Inapakia makala...",
-    communityOutreach: "Kufikia Jamii",
-    brandNews: "Habari za Chapa",
-    upcomingEvents: "Matukio Yanayokuja",
-    pastEvents: "Matukio ya Zamani",
   },
 }
 
@@ -111,8 +101,6 @@ export default function BlogPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const isMobile = useIsMobile()
   const t = translations[language || "en"]
-  const [imageKey, setImageKey] = useState(Date.now())
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({})
 
   // Load blog posts on component mount
   useEffect(() => {
@@ -129,15 +117,6 @@ export default function BlogPage() {
 
     fetchBlogPosts()
   }, [loadBlogPosts])
-
-  // Force re-render images every 30 seconds to prevent stale images
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setImageKey(Date.now())
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [])
 
   // Listen for sync events
   useEffect(() => {
@@ -186,24 +165,6 @@ export default function BlogPage() {
     setSearchQuery(e.target.value)
   }, 300)
 
-  // Add timestamp to image URL to prevent caching
-  const getImageUrl = (url: string, postId: string) => {
-    if (!url || imageErrors[postId]) return "/blog-post-concept.png"
-
-    // If URL already has a query parameter, add timestamp
-    if (url.includes("?")) {
-      return `${url}&t=${imageKey}`
-    }
-
-    // Otherwise add timestamp as a new query parameter
-    return `${url}?t=${imageKey}`
-  }
-
-  const handleImageError = (postId: string) => {
-    console.error("Error loading blog post image for post:", postId)
-    setImageErrors((prev) => ({ ...prev, [postId]: true }))
-  }
-
   // Filter blog posts based on search, category, and active tab
   const filteredPosts = state.blogPosts.filter((post) => {
     // Only show published posts
@@ -228,14 +189,6 @@ export default function BlogPage() {
       return false
     }
 
-    if (activeTab === "events" && post.category !== "events") {
-      return false
-    }
-
-    if (activeTab === "articles" && post.category === "events") {
-      return false
-    }
-
     return true
   })
 
@@ -243,20 +196,6 @@ export default function BlogPage() {
   const sortedPosts = [...filteredPosts].sort((a, b) => {
     return new Date(b.date).getTime() - new Date(a.date).getTime()
   })
-
-  // Get category icon
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case "events":
-        return <Users className="h-4 w-4" />
-      case "babyHealth":
-        return <Heart className="h-4 w-4" />
-      case "latestNews":
-        return <Gift className="h-4 w-4" />
-      default:
-        return <Calendar className="h-4 w-4" />
-    }
-  }
 
   return (
     <PageWrapper>
@@ -277,28 +216,6 @@ export default function BlogPage() {
             </button>
             <button
               type="button"
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === "articles"
-                  ? "bg-yammy-blue text-white"
-                  : "bg-white text-yammy-blue hover:bg-yammy-light-blue"
-              }`}
-              onClick={() => setActiveTab("articles")}
-            >
-              {t.latestPosts}
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === "events"
-                  ? "bg-yammy-blue text-white"
-                  : "bg-white text-yammy-blue hover:bg-yammy-light-blue"
-              }`}
-              onClick={() => setActiveTab("events")}
-            >
-              {t.events}
-            </button>
-            <button
-              type="button"
               className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                 activeTab === "featured"
                   ? "bg-yammy-blue text-white"
@@ -310,33 +227,6 @@ export default function BlogPage() {
             </button>
           </div>
         </div>
-
-        {/* Events Section Description */}
-        {activeTab === "events" && (
-          <div className="mb-8 text-center">
-            <div className="bg-gradient-to-r from-yammy-blue to-yammy-orange text-white p-6 rounded-2xl">
-              <h2 className="text-2xl font-bubblegum mb-2">{t.communityOutreach}</h2>
-              <p className="text-lg">
-                {language === "en"
-                  ? "Stay updated with Yammy Yami's community initiatives, health drives, partnerships, and daily brand activities. Together, we're making a difference in Tanzanian families' lives."
-                  : "Pata habari za hivi karibuni kuhusu miradi ya jamii ya Yammy Yami, kampeni za afya, ushirikiano, na shughuli za kila siku za chapa. Pamoja, tunaleta mabadiliko katika maisha ya familia za Kitanzania."}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "events" && (
-          <div className="mb-8">
-            <CommunityVideo
-              src="/videos/community-event-2025.mp4"
-              title={
-                language === "en"
-                  ? "Yammy Yami Community Event Highlights"
-                  : "Vidokezo vya Tukio la Jamii la Yammy Yami"
-              }
-            />
-          </div>
-        )}
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -355,7 +245,6 @@ export default function BlogPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t.allCategories}</SelectItem>
-              <SelectItem value="events">{t.events}</SelectItem>
               <SelectItem value="babyHealth">{t.babyHealth}</SelectItem>
               <SelectItem value="parentingTips">{t.parentingTips}</SelectItem>
               <SelectItem value="productInfo">{t.productInfo}</SelectItem>
@@ -369,32 +258,60 @@ export default function BlogPage() {
           <BlogPostSkeleton />
         ) : sortedPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {sortedPosts.map((post) =>
-              post.category === "events" ? (
-                <EventCard
-                  key={post.id}
-                  post={post}
-                  onOpenModal={handleOpenModal}
-                  formatDate={formatDate}
-                  getImageUrl={getImageUrl}
-                  handleImageError={handleImageError}
-                />
-              ) : (
-                <BlogCard
-                  key={post.id}
-                  post={post}
-                  onOpenModal={handleOpenModal}
-                  formatDate={formatDate}
-                  getImageUrl={getImageUrl}
-                  handleImageError={handleImageError}
-                  getCategoryIcon={getCategoryIcon}
-                />
-              ),
-            )}
+            {sortedPosts.map((post) => (
+              <motion.div
+                key={post.id}
+                className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col"
+                whileHover={{ y: -5 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="block h-full flex flex-col">
+                  <div className="relative h-48">
+                    <OptimizedImage
+                      src={post.image || "/placeholder.svg?height=300&width=500&query=blog post"}
+                      alt={post.title[language || "en"]}
+                      fill
+                      className="object-cover"
+                      fallbackSrc="/blog-post-concept.png"
+                    />
+                    {post.featured && (
+                      <Badge className="absolute top-2 left-2 bg-yammy-orange text-white">
+                        {language === "en" ? "Featured" : "Iliyoangaziwa"}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="p-6 flex-grow flex flex-col">
+                    <h3 className="font-bubblegum text-xl mb-2 text-yammy-dark-blue">{post.title[language || "en"]}</h3>
+                    <p className="text-gray-600 mb-4 line-clamp-2 flex-grow">{post.excerpt[language || "en"]}</p>
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        {formatDate(post.date)}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {post.readTime} {t.minutes}
+                      </div>
+                    </div>
+                    <div className="flex justify-end mt-auto">
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto text-yammy-blue hover:text-yammy-dark-blue font-medium"
+                        onClick={() => handleOpenModal(post)}
+                      >
+                        {t.readMore} <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 font-bubblegum text-xl">{activeTab === "events" ? t.noEvents : t.noPosts}</p>
+            <p className="text-gray-500 font-bubblegum text-xl">{t.noPosts}</p>
           </div>
         )}
       </div>

@@ -305,10 +305,10 @@ const teamMembers = [
     image: "/images/juma.jpeg",
   },
   {
-    name: "Dericko Fredy Moghela",
-    role: "General Secretary",
-    nickname: "Secretary Dericko",
-    image: "/images/dericko-moghela.jpeg",
+    name: "Wito Peter",
+    role: "Digital Marketing Manager (DMM)",
+    nickname: "Mckalipeter",
+    image: "/images/wito-peter.jpeg",
   },
 ]
 

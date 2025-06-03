@@ -19,7 +19,6 @@ import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { ProductCard } from "@/components/product-card"
 import { useIsMobile, useIsTablet } from "@/hooks/use-media-query"
 import { toast } from "@/components/ui/use-toast"
-import { PricingUpdateBanner } from "@/components/pricing-update-banner"
 
 // Dynamically import heavy components
 const BrandAmbassadorSection = dynamic(() => import("@/components/brand-ambassador-section"), {
@@ -55,8 +54,6 @@ const translations = {
     clearCache: "Clear Image Cache",
     imageCacheCleared: "Image cache cleared successfully",
     productsRefreshed: "Products refreshed successfully",
-    updatedPricing: "Updated Pricing",
-    premiumPackage: "Premium Package (with red cup)",
   },
   sw: {
     products: "Bidhaa",
@@ -84,8 +81,6 @@ const translations = {
     clearCache: "Futa Picha zilizohifadhiwa",
     imageCacheCleared: "Picha zilizohifadhiwa zimefutwa kwa mafanikio",
     productsRefreshed: "Bidhaa zimeonyeshwa upya kwa mafanikio",
-    updatedPricing: "Bei Mpya",
-    premiumPackage: "Kifurushi Bora (na kikombe chekundu)",
   },
 }
 
@@ -127,7 +122,6 @@ export default function ProductsPage() {
   const [sortOption, setSortOption] = useState("newest")
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  // Image version is used to force image refresh when products are updated
   const [imageVersion, setImageVersion] = useState(Date.now())
   const isMobile = useIsMobile()
   const t = translations[language || "en"]
@@ -336,9 +330,6 @@ export default function ProductsPage() {
 
   return (
     <PageWrapper>
-      {/* Pricing Update Banner */}
-      <PricingUpdateBanner />
-
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-4xl font-bubblegum mb-8 text-yammy-dark-blue text-center">{t.products}</h1>
 
@@ -375,18 +366,12 @@ export default function ProductsPage() {
                 className="pl-10 border-yammy-blue/30 focus-visible:ring-yammy-blue"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label={t.search}
               />
             </div>
 
             <Sheet>
               <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="border-yammy-blue/30 text-yammy-blue"
-                  aria-label={t.filter}
-                >
+                <Button variant="outline" size="icon" className="border-yammy-blue/30 text-yammy-blue">
                   <Filter className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
@@ -463,7 +448,6 @@ export default function ProductsPage() {
               className="border-yammy-blue/30 text-yammy-blue"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              aria-label={isRefreshing ? `${t.refresh} in progress` : t.refresh}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
               {t.refresh}

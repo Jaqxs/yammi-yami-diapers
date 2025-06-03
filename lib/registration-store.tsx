@@ -2,113 +2,112 @@
 
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { mockRegistrations } from "@/data/mock-registrations"
 
-interface RegistrationInfo {
-  name: string
-  email: string
-  phone: string
-  region: string
-  location?: string
-  paymentConfirmation?: string
-  status?: "pending" | "approved" | "rejected"
-}
+export type RegistrationStatus = "unregistered" | "pending" | "approved" | "rejected"
 
-interface RegistrationState {
-  info: RegistrationInfo | null
-  status: "none" | "pending" | "approved" | "rejected"
+export interface RegistrationState {
+  status: RegistrationStatus
   email: string | null
-  setRegistrationInfo: (info: RegistrationInfo) => void
-  setRegistrationStatus: (status: "none" | "pending" | "approved" | "rejected") => void
-  checkRegistrationStatus: (email: string) => "none" | "pending" | "approved" | "rejected"
-  clearRegistration: () => void
+  name: string | null
+  phone: string | null
+  region: string | null
+  registrationDate: Date | null
+  paymentConfirmation: string | null
+  setRegistrationInfo: (info: {
+    name: string
+    email: string
+    phone: string
+    region: string
+    paymentConfirmation: string
+  }) => void
+  updateStatus: (email: string, status: RegistrationStatus) => void
+  checkRegistrationStatus: (email: string) => RegistrationStatus
+  reset: () => void
 }
 
 export const useRegistrationStore = create<RegistrationState>()(
   persist(
     (set, get) => ({
-      info: null,
-      status: "none",
+      status: "unregistered",
       email: null,
+      name: null,
+      phone: null,
+      region: null,
+      registrationDate: null,
+      paymentConfirmation: null,
+
       setRegistrationInfo: (info) => {
+        // Check if there's an existing registration with this email in localStorage
+        const storedRegistrations = localStorage.getItem("yammy-registrations")
+        let currentStatus = "pending" as RegistrationStatus
+
+        if (storedRegistrations) {
+          const registrations = JSON.parse(storedRegistrations)
+          const existingRegistration = registrations.find((reg: any) => reg.email === info.email)
+
+          if (existingRegistration) {
+            currentStatus = existingRegistration.status as RegistrationStatus
+          }
+        }
+
         set({
-          info,
+          name: info.name,
           email: info.email,
-          status: info.status || "approved", // Default to approved
+          phone: info.phone,
+          region: info.region,
+          paymentConfirmation: info.paymentConfirmation,
+          registrationDate: new Date(),
+          status: currentStatus,
         })
-
-        // Also update in localStorage for persistence
-        try {
-          const registrationsJSON = localStorage.getItem("yammy-registrations") || "[]"
-          const registrations = JSON.parse(registrationsJSON)
-
-          // Check if this email already exists
-          const existingIndex = registrations.findIndex((r: any) => r.email === info.email)
-
-          if (existingIndex >= 0) {
-            // Update existing registration
-            registrations[existingIndex] = {
-              ...registrations[existingIndex],
-              ...info,
-              status: info.status || "approved",
-              lastUpdated: new Date().toISOString(),
-            }
-          } else {
-            // Add new registration
-            registrations.push({
-              id: registrations.length > 0 ? Math.max(...registrations.map((r: any) => r.id)) + 1 : 1,
-              ...info,
-              status: info.status || "approved",
-              date: new Date().toISOString(),
-              lastUpdated: new Date().toISOString(),
-            })
-          }
-
-          localStorage.setItem("yammy-registrations", JSON.stringify(registrations))
-
-          // Dispatch event for other components
-          window.dispatchEvent(new Event("registrationUpdated"))
-        } catch (error) {
-          console.error("Error updating registration in localStorage:", error)
-        }
       },
-      setRegistrationStatus: (status) => {
-        set((state) => ({
-          ...state,
-          status,
-        }))
-      },
-      checkRegistrationStatus: (email) => {
-        // First check if this is the current user
+
+      updateStatus: (email, status) => {
         if (get().email === email) {
-          return get().status
+          set({ status })
         }
-
-        // Check in localStorage for this email
-        try {
-          const registrationsJSON = localStorage.getItem("yammy-registrations")
-          if (registrationsJSON) {
-            const registrations = JSON.parse(registrationsJSON)
-            const registration = registrations.find((r: any) => r.email === email)
-            if (registration) {
-              return registration.status
-            }
-          }
-        } catch (error) {
-          console.error("Error checking registration status:", error)
-        }
-
-        return "none"
       },
-      clearRegistration: () => {
+
+      checkRegistrationStatus: (email) => {
+        // First check localStorage for registrations
+        const storedRegistrations = localStorage.getItem("yammy-registrations")
+        if (storedRegistrations) {
+          const registrations = JSON.parse(storedRegistrations)
+          const existingRegistration = registrations.find((reg: any) => reg.email === email)
+
+          if (existingRegistration) {
+            // If this is the current user, update their status
+            if (get().email === email && get().status !== existingRegistration.status) {
+              set({ status: existingRegistration.status as RegistrationStatus })
+            }
+            return existingRegistration.status as RegistrationStatus
+          }
+        }
+
+        // Then check mock registrations
+        const existingMockRegistration = mockRegistrations.find((reg) => reg.email === email)
+        if (existingMockRegistration) {
+          return existingMockRegistration.status as RegistrationStatus
+        }
+
+        // Finally check the current state
+        return get().email === email ? get().status : "unregistered"
+      },
+
+      reset: () => {
         set({
-          info: null,
-          status: "none",
+          status: "unregistered",
           email: null,
+          name: null,
+          phone: null,
+          region: null,
+          registrationDate: null,
+          paymentConfirmation: null,
         })
       },
     }),
     {
-      name: "yammy-registration",
+      name: "registration-storage",
     },
   ),
 )

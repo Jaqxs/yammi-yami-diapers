@@ -16,7 +16,6 @@ import { Separator } from "@/components/ui/separator"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Image from "next/image"
-import { trackCheckout } from "@/components/google-analytics"
 
 const translations = {
   en: {
@@ -193,18 +192,6 @@ export default function CheckoutPage() {
     }
 
     setIsSubmitting(true)
-
-    // Track checkout event
-    if (items.length > 0) {
-      trackCheckout(
-        items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-        })),
-      )
-    }
 
     // Format order details for WhatsApp
     const orderItems = items

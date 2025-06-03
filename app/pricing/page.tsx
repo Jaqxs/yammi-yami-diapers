@@ -61,7 +61,6 @@ const translations = {
     qualityAssuredText: "All our products meet international quality standards for comfort and performance.",
     familyFirst: "Family First",
     familyFirstText: "Designed with the entire family in mind, from newborns to adults.",
-    premiumPackage: "Premium Package (with red cup)",
   },
   sw: {
     pageTitle: "Bei",
@@ -108,7 +107,6 @@ const translations = {
     qualityAssuredText: "Bidhaa zetu zote zinakidhi viwango vya kimataifa vya starehe na utendaji.",
     familyFirst: "Familia Kwanza",
     familyFirstText: "Zimebuniwa kwa kuzingatia familia nzima, kuanzia watoto wachanga hadi watu wazima.",
-    premiumPackage: "Pakiti Bora (na kikombe chekundu)",
   },
 }
 
@@ -197,16 +195,6 @@ export default function PricingPage() {
                     <TableCell>S, M, L, XL, XXL, XXXL, XXXXL</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">
-                      {t.babyPants} ({t.premiumPackage})
-                    </TableCell>
-                    <TableCell>
-                      {formatPrice(22000)} / 50 {t.pcs}
-                    </TableCell>
-                    <TableCell>6 {t.bundles}</TableCell>
-                    <TableCell>L</TableCell>
-                  </TableRow>
-                  <TableRow>
                     <TableCell className="font-medium">{t.adultPants}</TableCell>
                     <TableCell>
                       {formatPrice(22000)} / 20 {t.pcs}
@@ -243,7 +231,7 @@ export default function PricingPage() {
                   <TableRow>
                     <TableCell className="font-medium">{t.babyPants} (50/6)</TableCell>
                     <TableCell>
-                      {formatPrice(102000)} / {t.carton}
+                      {formatPrice(103000)} / {t.carton}
                     </TableCell>
                     <TableCell>M, L, XL, XXL</TableCell>
                     <TableCell>{t.goodQuality}</TableCell>
@@ -251,17 +239,15 @@ export default function PricingPage() {
                   <TableRow>
                     <TableCell className="font-medium">{t.babyPants} (50/6)</TableCell>
                     <TableCell>
-                      {formatPrice(102000)} / {t.carton}
+                      {formatPrice(105000)} / {t.carton}
                     </TableCell>
                     <TableCell>3XL, 4XL, 5XL</TableCell>
                     <TableCell>{t.goodQuality}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">
-                      {t.babyPants} (50/6) ({t.premiumPackage})
-                    </TableCell>
+                    <TableCell className="font-medium">{t.babyPants} (50/6)</TableCell>
                     <TableCell>
-                      {formatPrice(132000)} / {t.carton}
+                      {formatPrice(114000)} / {t.carton}
                     </TableCell>
                     <TableCell>L</TableCell>
                     <TableCell>
@@ -271,7 +257,7 @@ export default function PricingPage() {
                   <TableRow>
                     <TableCell className="font-medium">{t.babyDiapers} (50/8)</TableCell>
                     <TableCell>
-                      {formatPrice(128000)} / {t.carton}
+                      {formatPrice(124000)} / {t.carton}
                     </TableCell>
                     <TableCell>S/Newborn</TableCell>
                     <TableCell>{t.goodQuality}</TableCell>
@@ -328,30 +314,28 @@ export default function PricingPage() {
                   <TableRow>
                     <TableCell className="font-medium">{t.babyDiapers}</TableCell>
                     <TableCell>
-                      {formatPrice(20000)} / 50 {t.pcs}
+                      {formatPrice(18000)} / 50 {t.pcs}
                     </TableCell>
-                    <TableCell>Newborn - S, M, L, XL</TableCell>
+                    <TableCell>Newborn - S</TableCell>
                     <TableCell>side-tape diapers</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">{t.babyPants}</TableCell>
+                    <TableCell className="font-medium">
+                      {t.babyDiapers} & {t.babyPants}
+                    </TableCell>
                     <TableCell>
                       {formatPrice(20000)} / 50 {t.pcs}
                     </TableCell>
-                    <TableCell>S, M, L, XL, XXL, 3XL, 4XL, 5XL</TableCell>
+                    <TableCell>M, L, XL, XXL, 3XL, 4XL, 5XL</TableCell>
                     <TableCell>{t.standardQuality}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">
-                      {t.babyPants} ({t.premiumPackage})
-                    </TableCell>
+                    <TableCell className="font-medium">Premium Package</TableCell>
                     <TableCell>
-                      {formatPrice(19000)} / 50 {t.pcs}
+                      {formatPrice(22000)} / 50 {t.pcs}
                     </TableCell>
                     <TableCell>L size</TableCell>
-                    <TableCell>
-                      {t.bestQuality}, {t.royalQuality}
-                    </TableCell>
+                    <TableCell>{t.royalQuality}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">{t.adultPants}</TableCell>
@@ -421,7 +405,7 @@ export default function PricingPage() {
                   {language === "en" ? "Baby Diapers - Size S" : "Diapers za Watoto - Ukubwa S"}
                 </h4>
                 <p className="text-gray-600 text-sm mb-2">4-8kg, 50 pcs</p>
-                <p className="text-yammy-blue font-bold mb-3">{formatPrice(20000)}</p>
+                <p className="text-yammy-blue font-bold mb-3">{formatPrice(18000)}</p>
                 <Button
                   size="sm"
                   className="w-full bg-yammy-blue hover:bg-yammy-dark-blue"
@@ -432,7 +416,7 @@ export default function PricingPage() {
                         en: "Baby Diapers - Size S",
                         sw: "Diapers za Watoto - Ukubwa S",
                       },
-                      price: 20000,
+                      price: 18000,
                       quantity: 1,
                       image:
                         "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/baby%20diaper.jpg-8TUQ8NXCalui3IondSW0pGQKZezKI1.jpeg",
@@ -530,7 +514,7 @@ export default function PricingPage() {
             <motion.div whileHover={{ y: -10 }} className="bg-white rounded-xl overflow-hidden shadow-md">
               <div className="relative h-64 bg-yammy-light-blue">
                 <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1022.jpg-ACW4aUFuZSJnBBpx7KHHpriGFYTAgE.jpeg?v=1"
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adult%20pants.jpg-eYvgmKtmGCITzb488aMf7pcNvB16Y2.jpeg"
                   alt="Adult Pants L Size"
                   fill
                   className="object-contain p-4"
@@ -555,7 +539,7 @@ export default function PricingPage() {
                       price: 25000,
                       quantity: 1,
                       image:
-                        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3E5A1022.jpg-ACW4aUFuZSJnBBpx7KHHpriGFYTAgE.jpeg?v=1",
+                        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adult%20pants.jpg-eYvgmKtmGCITzb488aMf7pcNvB16Y2.jpeg",
                       size: "L",
                       bundleSize: 20,
                     })

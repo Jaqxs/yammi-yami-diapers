@@ -3,234 +3,283 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRegistrationStore } from "@/lib/registration-store"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CheckCircle } from "lucide-react"
-import { trackAgentRegistration } from "@/components/google-analytics"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle, CheckCircle2, Clock } from "lucide-react"
+import { useStore } from "@/lib/store"
+import { toast } from "@/components/ui/use-toast"
 
-interface RegistrationFormProps {
-  onRegistrationComplete?: () => void
-}
+const regions = [
+  "Arusha",
+  "Dar es Salaam",
+  "Dodoma",
+  "Geita",
+  "Iringa",
+  "Kagera",
+  "Katavi",
+  "Kigoma",
+  "Kilimanjaro",
+  "Lindi",
+  "Manyara",
+  "Mara",
+  "Mbeya",
+  "Morogoro",
+  "Mtwara",
+  "Mwanza",
+  "Njombe",
+  "Pemba North",
+  "Pemba South",
+  "Pwani",
+  "Rukwa",
+  "Ruvuma",
+  "Shinyanga",
+  "Simiyu",
+  "Singida",
+  "Songwe",
+  "Tabora",
+  "Tanga",
+  "Zanzibar Central/South",
+  "Zanzibar North",
+  "Zanzibar Urban/West",
+]
 
-export function RegistrationForm({ onRegistrationComplete }: RegistrationFormProps) {
+export function RegistrationForm() {
+  const { setRegistrationInfo, status, email } = useRegistrationStore()
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
     email: "",
     phone: "",
-    businessName: "",
-    businessAddress: "",
     region: "",
-    district: "",
-    businessType: "",
-    additionalInfo: "",
+    paymentConfirmation: "",
   })
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
+
+  // Import the useStore hook
+  const { addRegistration } = useStore()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    // Clear error when user types
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }))
+    }
   }
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
+  const handleSelectChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, region: value }))
+    if (errors.region) {
+      setErrors((prev) => ({ ...prev, region: "" }))
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.name.trim()) newErrors.name = "Name is required"
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required"
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email is invalid"
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required"
+    } else if (!/^\d{10,12}$/.test(formData.phone.replace(/\D/g, ""))) {
+      newErrors.phone = "Phone number is invalid"
+    }
+
+    if (!formData.region) newErrors.region = "Region is required"
+    // Payment confirmation is now optional, so no validation needed
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  // Update the handleSubmit function to use the store's addRegistration function
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!validateForm()) return
+
     setIsSubmitting(true)
 
-    // Simulate form submission
-    setTimeout(() => {
-      try {
-        // Store registration data in localStorage
-        const registrationData = {
-          ...formData,
-          registrationDate: new Date().toISOString(),
-          isRegistered: true,
-        }
+    try {
+      // Add the registration to the store
+      await addRegistration({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        paymentReference: formData.paymentConfirmation,
+        notes: `Region: ${formData.region}`,
+      })
 
-        localStorage.setItem("yammy-current-user", JSON.stringify(registrationData))
+      // Save registration info in the registration store
+      setRegistrationInfo(formData)
 
-        // Mark registration as successful
-        setIsSuccess(true)
-        setIsSubmitting(false)
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        region: "",
+        paymentConfirmation: "",
+      })
 
-        // Call the completion handler if provided
-        if (onRegistrationComplete) {
-          onRegistrationComplete()
-        }
-
-        // Track agent registration
-        trackAgentRegistration()
-      } catch (error) {
-        console.error("Error saving registration:", error)
-        setIsSubmitting(false)
-      }
-    }, 1000)
+      toast({
+        title: "Registration submitted",
+        description: "Your registration has been submitted successfully. We'll review it shortly.",
+      })
+    } catch (error) {
+      console.error("Registration error:", error)
+      setErrors({ submit: "An error occurred. Please try again." })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  if (isSuccess) {
+  if (status === "approved") {
     return (
-      <Card className="bg-green-50 border-green-100">
-        <CardContent className="pt-6 text-center">
-          <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle className="h-6 w-6 text-green-600" />
-          </div>
-          <h3 className="text-xl font-semibold text-green-800 mb-2">Registration Successful!</h3>
-          <p className="text-green-700 mb-4">
-            Thank you for registering as a Yammy Yami agent. You now have access to exclusive agent pricing.
-          </p>
-          <Button onClick={() => window.location.reload()} className="bg-green-600 hover:bg-green-700">
-            View Agent Pricing
-          </Button>
-        </CardContent>
-      </Card>
+      <Alert className="bg-green-50 border-green-200">
+        <CheckCircle2 className="h-5 w-5 text-green-600" />
+        <AlertTitle className="text-green-800">Registration Approved</AlertTitle>
+        <AlertDescription className="text-green-700">
+          Your registration has been approved. You now have full access to agent pricing and resources.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (status === "pending") {
+    return (
+      <Alert className="bg-yellow-50 border-yellow-200">
+        <Clock className="h-5 w-5 text-yellow-600" />
+        <AlertTitle className="text-yellow-800">Registration Pending</AlertTitle>
+        <AlertDescription className="text-yellow-700">
+          Your registration is being reviewed. We'll notify you at {email} once it's approved. This typically takes 1-2
+          business days.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (status === "rejected") {
+    return (
+      <Alert className="bg-red-50 border-red-200">
+        <AlertCircle className="h-5 w-5 text-red-600" />
+        <AlertTitle className="text-red-800">Registration Rejected</AlertTitle>
+        <AlertDescription className="text-red-700">
+          Unfortunately, your registration was not approved. Please contact our support team at support@yammyyami.com
+          for more information.
+        </AlertDescription>
+      </Alert>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="fullName">Full Name *</Label>
-          <Input
-            id="fullName"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            placeholder="Your full name"
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email Address *</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="your.email@example.com"
-            required
-          />
-        </div>
-      </div>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Agent Registration</CardTitle>
+        <CardDescription>
+          Register as an agent to access exclusive pricing and resources - Registration is free!
+        </CardDescription>
+      </CardHeader>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              name="name"
+              placeholder="Your full name"
+              value={formData.name}
+              onChange={handleChange}
+              className={errors.name ? "border-red-500" : ""}
+            />
+            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number *</Label>
-          <Input
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="+255 XXX XXX XXX"
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="businessName">Business Name *</Label>
-          <Input
-            id="businessName"
-            name="businessName"
-            value={formData.businessName}
-            onChange={handleChange}
-            placeholder="Your business name"
-            required
-          />
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="your.email@example.com"
+              value={formData.email}
+              onChange={handleChange}
+              className={errors.email ? "border-red-500" : ""}
+            />
+            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="businessAddress">Business Address *</Label>
-        <Input
-          id="businessAddress"
-          name="businessAddress"
-          value={formData.businessAddress}
-          onChange={handleChange}
-          placeholder="Street address"
-          required
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              name="phone"
+              placeholder="Your phone number"
+              value={formData.phone}
+              onChange={handleChange}
+              className={errors.phone ? "border-red-500" : ""}
+            />
+            {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="region">Region *</Label>
-          <Select value={formData.region} onValueChange={(value) => handleSelectChange("region", value)} required>
-            <SelectTrigger id="region">
-              <SelectValue placeholder="Select region" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="dar-es-salaam">Dar es Salaam</SelectItem>
-              <SelectItem value="arusha">Arusha</SelectItem>
-              <SelectItem value="mwanza">Mwanza</SelectItem>
-              <SelectItem value="zanzibar">Zanzibar</SelectItem>
-              <SelectItem value="dodoma">Dodoma</SelectItem>
-              <SelectItem value="mbeya">Mbeya</SelectItem>
-              <SelectItem value="tanga">Tanga</SelectItem>
-              <SelectItem value="morogoro">Morogoro</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="district">District *</Label>
-          <Input
-            id="district"
-            name="district"
-            value={formData.district}
-            onChange={handleChange}
-            placeholder="Your district"
-            required
-          />
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="region">Region</Label>
+            <Select value={formData.region} onValueChange={handleSelectChange}>
+              <SelectTrigger className={errors.region ? "border-red-500" : ""}>
+                <SelectValue placeholder="Select your region" />
+              </SelectTrigger>
+              <SelectContent>
+                {regions.map((region) => (
+                  <SelectItem key={region} value={region}>
+                    {region}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.region && <p className="text-red-500 text-sm">{errors.region}</p>}
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="businessType">Business Type *</Label>
-        <Select
-          value={formData.businessType}
-          onValueChange={(value) => handleSelectChange("businessType", value)}
-          required
-        >
-          <SelectTrigger id="businessType">
-            <SelectValue placeholder="Select business type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="retail">Retail Shop</SelectItem>
-            <SelectItem value="wholesale">Wholesale</SelectItem>
-            <SelectItem value="pharmacy">Pharmacy</SelectItem>
-            <SelectItem value="supermarket">Supermarket</SelectItem>
-            <SelectItem value="distributor">Distributor</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="paymentConfirmation">
+              Payment Reference (Optional)
+              <span className="block text-sm text-gray-500 font-normal mt-1">
+                If you've made any payment, please provide your M-Pesa or bank transfer confirmation number
+              </span>
+            </Label>
+            <Textarea
+              id="paymentConfirmation"
+              name="paymentConfirmation"
+              placeholder="Enter payment confirmation number (optional)"
+              value={formData.paymentConfirmation}
+              onChange={handleChange}
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="additionalInfo">Additional Information</Label>
-        <Textarea
-          id="additionalInfo"
-          name="additionalInfo"
-          value={formData.additionalInfo}
-          onChange={handleChange}
-          placeholder="Any additional information about your business"
-          rows={3}
-        />
-      </div>
-
-      <Button type="submit" className="w-full bg-yammy-blue hover:bg-yammy-blue/90" disabled={isSubmitting}>
-        {isSubmitting ? "Registering..." : "Register & View Pricing"}
-      </Button>
-
-      <p className="text-xs text-gray-500 text-center">
-        By registering, you agree to our terms and conditions and privacy policy.
-      </p>
-    </form>
+          {errors.submit && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{errors.submit}</AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "Submitting..." : "Register as Agent"}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
   )
 }
