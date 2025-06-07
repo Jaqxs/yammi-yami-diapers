@@ -67,7 +67,7 @@ export const mockProducts: Product[] = [
     },
     stock: 65,
     status: "active",
-    featured: true,
+    featured: false,
   },
   {
     id: 4,

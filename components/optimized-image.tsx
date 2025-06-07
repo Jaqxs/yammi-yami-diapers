@@ -114,7 +114,7 @@ export function OptimizedImage({
       )}
 
       <Image
-        src={finalSrc || "/placeholder.svg"}
+        src={finalSrc || "/placeholder.svg?height=400&width=400&text=No+Image"}
         alt={alt}
         {...props}
         onLoad={handleLoad}
@@ -129,7 +129,7 @@ export function OptimizedImage({
           height: "100%",
           ...props.style,
         }}
-        unoptimized={true} // Skip Next.js image optimization to avoid caching issues
+        unoptimized={true}
       />
     </div>
   )
