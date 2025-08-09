@@ -4,268 +4,240 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useCart } from "@/components/cart-provider"
-import { useLanguage } from "@/components/language-provider"
-import { PageWrapper } from "@/components/page-wrapper"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useToast } from "@/components/ui/use-toast"
 import { Separator } from "@/components/ui/separator"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import Image from "next/image"
+import { Badge } from "@/components/ui/badge"
+import { ShoppingCart, CreditCard, MapPin, User, Package, Truck } from "lucide-react"
+import { useCart } from "@/components/cart-provider"
+import { useLanguage } from "@/components/language-provider"
+import { useRealtime } from "@/lib/realtime-store"
+import { PageWrapper } from "@/components/page-wrapper"
 
 const translations = {
   en: {
     checkout: "Checkout",
-    contactInfo: "Contact Information",
-    firstName: "First Name",
-    lastName: "Last Name",
-    email: "Email",
+    orderSummary: "Order Summary",
+    customerInfo: "Customer Information",
+    deliveryInfo: "Delivery Information",
+    paymentMethod: "Payment Method",
+    fullName: "Full Name",
+    email: "Email Address",
     phone: "Phone Number",
-    shippingInfo: "Shipping Information",
-    address: "Address",
+    address: "Delivery Address",
     city: "City",
     region: "Region",
-    additionalInfo: "Additional Information",
-    notes: "Order Notes (Optional)",
-    orderSummary: "Order Summary",
-    items: "Items",
+    notes: "Special Instructions",
+    cashOnDelivery: "Cash on Delivery",
+    mobileMoney: "Mobile Money",
+    bankTransfer: "Bank Transfer",
+    placeOrder: "Place Order",
+    processing: "Processing Order...",
     total: "Total",
-    placeOrder: "Place Order via WhatsApp",
-    continueShopping: "Continue Shopping",
-    emptyCart: "Your cart is empty",
-    startShopping: "Start Shopping",
-    quantity: "Quantity",
-    size: "Size",
-    bundleSize: "Bundle Size",
-    pieces: "pieces",
+    subtotal: "Subtotal",
+    delivery: "Delivery Fee",
+    orderSuccess: "Order Placed Successfully!",
+    orderError: "Failed to place order. Please try again.",
     required: "This field is required",
-    invalidPhone: "Please enter a valid phone number",
     invalidEmail: "Please enter a valid email address",
-    orderSuccess: "Order Submitted Successfully",
-    orderSuccessMessage: "Your order has been sent to WhatsApp. Please complete the payment process there.",
-    darEsSalaam: "Dar es Salaam",
-    arusha: "Arusha",
-    mwanza: "Mwanza",
-    dodoma: "Dodoma",
-    tanga: "Tanga",
-    mbeya: "Mbeya",
-    morogoro: "Morogoro",
-    zanzibar: "Zanzibar",
-    kigoma: "Kigoma",
-    selectRegion: "Select Region",
+    invalidPhone: "Please enter a valid phone number",
   },
   sw: {
     checkout: "Malipo",
-    contactInfo: "Taarifa za Mawasiliano",
-    firstName: "Jina la Kwanza",
-    lastName: "Jina la Familia",
-    email: "Barua Pepe",
-    phone: "Namba ya Simu",
-    shippingInfo: "Taarifa za Usafirishaji",
-    address: "Anwani",
-    city: "Mji",
-    region: "Mkoa",
-    additionalInfo: "Taarifa za Ziada",
-    notes: "Maelezo ya Oda (Hiari)",
     orderSummary: "Muhtasari wa Oda",
-    items: "Bidhaa",
+    customerInfo: "Taarifa za Mteja",
+    deliveryInfo: "Taarifa za Uwasilishaji",
+    paymentMethod: "Njia ya Malipo",
+    fullName: "Jina Kamili",
+    email: "Barua Pepe",
+    phone: "Nambari ya Simu",
+    address: "Anwani ya Uwasilishaji",
+    city: "Jiji",
+    region: "Mkoa",
+    notes: "Maelezo Maalum",
+    cashOnDelivery: "Malipo Wakati wa Uwasilishaji",
+    mobileMoney: "Pesa za Simu",
+    bankTransfer: "Uhamisho wa Benki",
+    placeOrder: "Weka Oda",
+    processing: "Inachakata Oda...",
     total: "Jumla",
-    placeOrder: "Weka Oda kupitia WhatsApp",
-    continueShopping: "Endelea na Ununuzi",
-    emptyCart: "Kikapu chako ni tupu",
-    startShopping: "Anza Ununuzi",
-    quantity: "Idadi",
-    size: "Ukubwa",
-    bundleSize: "Ukubwa wa Kifurushi",
-    pieces: "vipande",
+    subtotal: "Jumla Ndogo",
+    delivery: "Ada ya Uwasilishaji",
+    orderSuccess: "Oda Imewekwa Kwa Mafanikio!",
+    orderError: "Imeshindwa kuweka oda. Tafadhali jaribu tena.",
     required: "Sehemu hii inahitajika",
-    invalidPhone: "Tafadhali ingiza namba ya simu sahihi",
-    invalidEmail: "Tafadhali ingiza anwani ya barua pepe sahihi",
-    orderSuccess: "Oda Imetumwa kwa Mafanikio",
-    orderSuccessMessage: "Oda yako imetumwa kwenye WhatsApp. Tafadhali kamilisha mchakato wa malipo huko.",
-    darEsSalaam: "Dar es Salaam",
-    arusha: "Arusha",
-    mwanza: "Mwanza",
-    dodoma: "Dodoma",
-    tanga: "Tanga",
-    mbeya: "Mbeya",
-    morogoro: "Morogoro",
-    zanzibar: "Zanzibar",
-    kigoma: "Kigoma",
-    selectRegion: "Chagua Mkoa",
+    invalidEmail: "Tafadhali ingiza barua pepe sahihi",
+    invalidPhone: "Tafadhali ingiza nambari ya simu sahihi",
   },
 }
 
-type FormData = {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  address: string
-  city: string
-  region: string
-  notes: string
-}
-
-type FormErrors = {
-  [key in keyof FormData]?: string
-}
-
 export default function CheckoutPage() {
-  const { items, total, clearCart } = useCart()
+  const { items, getTotalPrice, clearCart } = useCart()
   const { language } = useLanguage()
+  const { createOrder } = useRealtime()
+  const { toast } = useToast()
   const router = useRouter()
   const t = translations[language]
 
-  const [formData, setFormData] = useState<FormData>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [formData, setFormData] = useState({
+    customerName: "",
+    customerEmail: "",
+    customerPhone: "",
+    customerAddress: "",
     city: "",
     region: "",
+    paymentMethod: "cash_on_delivery",
     notes: "",
   })
 
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const formatPrice = (price: number) => {
-    return `TZS ${price.toLocaleString()}`
-  }
+  const deliveryFee = 5000 // TZS 5,000 delivery fee
+  const subtotal = getTotalPrice()
+  const total = subtotal + deliveryFee
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
 
-    // Clear error when user types
-    if (errors[name as keyof FormData]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }))
-    }
-  }
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-
-    // Clear error when user selects
-    if (errors[name as keyof FormData]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }))
-    }
-  }
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
-
-    // Required fields
-    const requiredFields: (keyof FormData)[] = ["firstName", "lastName", "phone", "address", "city", "region"]
-    requiredFields.forEach((field) => {
-      if (!formData[field]) {
-        newErrors[field] = t.required
-      }
-    })
-
-    // Phone validation
-    if (formData.phone && !/^[0-9+\s]{10,15}$/.test(formData.phone)) {
-      newErrors.phone = t.invalidPhone
+    if (!formData.customerName.trim()) {
+      newErrors.customerName = t.required
     }
 
-    // Email validation (only if provided)
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = t.invalidEmail
+    if (!formData.customerEmail.trim()) {
+      newErrors.customerEmail = t.required
+    } else if (!/\S+@\S+\.\S+/.test(formData.customerEmail)) {
+      newErrors.customerEmail = t.invalidEmail
+    }
+
+    if (!formData.customerPhone.trim()) {
+      newErrors.customerPhone = t.required
+    } else if (!/^(\+255|0)[67]\d{8}$/.test(formData.customerPhone.replace(/\s/g, ""))) {
+      newErrors.customerPhone = t.invalidPhone
+    }
+
+    if (!formData.customerAddress.trim()) {
+      newErrors.customerAddress = t.required
+    }
+
+    if (!formData.city.trim()) {
+      newErrors.city = t.required
+    }
+
+    if (!formData.region.trim()) {
+      newErrors.region = t.required
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }))
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!validateForm()) {
       return
     }
 
-    setIsSubmitting(true)
+    if (items.length === 0) {
+      toast({
+        title: "Error",
+        description: "Your cart is empty",
+        variant: "destructive",
+      })
+      return
+    }
 
-    // Format order details for WhatsApp
-    const orderItems = items
-      .map((item) => `${item.name[language]} (${item.quantity}x) - ${formatPrice(item.price * item.quantity)}`)
-      .join("\n")
+    setIsProcessing(true)
 
-    const orderDetails = `
-*NEW ORDER FROM WEBSITE*
+    try {
+      // Create order in real-time database
+      const order = await createOrder({
+        customer_name: formData.customerName,
+        customer_email: formData.customerEmail,
+        customer_phone: formData.customerPhone,
+        customer_address: `${formData.customerAddress}, ${formData.city}, ${formData.region}`,
+        total_amount: total,
+        status: "pending",
+        payment_status: "pending",
+        notes: formData.notes || undefined,
+      })
 
-*Contact Information:*
-Name: ${formData.firstName} ${formData.lastName}
-Phone: ${formData.phone}
-${formData.email ? `Email: ${formData.email}` : ""}
+      if (order) {
+        // Create order items (you would need to create this API endpoint)
+        const orderItems = items.map((item) => ({
+          order_id: order.id,
+          product_id: item.id.toString(),
+          quantity: item.quantity,
+          unit_price: item.price,
+          total_price: item.price * item.quantity,
+        }))
 
-*Shipping Information:*
-Address: ${formData.address}
-City: ${formData.city}
-Region: ${formData.region}
-${formData.notes ? `\nNotes: ${formData.notes}` : ""}
+        // Insert order items
+        await fetch("/api/admin/supabase/order-items", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ orderItems }),
+        })
 
-*Order Summary:*
-${orderItems}
+        // Clear cart and show success
+        clearCart()
 
-*Total: ${formatPrice(total)}*
-`
+        toast({
+          title: t.orderSuccess,
+          description: `Order #${order.id.slice(0, 8)} has been placed successfully.`,
+          duration: 5000,
+        })
 
-    // Create WhatsApp link with order details
-    const whatsappUrl = `https://wa.me/255773181863?text=${encodeURIComponent(orderDetails)}`
-
-    // Set success state and clear cart
-    setIsSuccess(true)
-    clearCart()
-
-    // Open WhatsApp in a new tab
-    window.open(whatsappUrl, "_blank")
-
-    setIsSubmitting(false)
+        // Redirect to success page or order confirmation
+        router.push(`/order-confirmation/${order.id}`)
+      } else {
+        throw new Error("Failed to create order")
+      }
+    } catch (error) {
+      console.error("Error placing order:", error)
+      toast({
+        title: "Error",
+        description: t.orderError,
+        variant: "destructive",
+      })
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
-  const handleContinueShopping = () => {
-    router.push("/products")
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-TZ", {
+      style: "currency",
+      currency: "TZS",
+      minimumFractionDigits: 0,
+    }).format(amount)
   }
 
-  if (items.length === 0 && !isSuccess) {
+  if (items.length === 0) {
     return (
       <PageWrapper>
         <div className="container mx-auto px-4 py-12">
-          <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-            <div className="text-center">
-              <ShoppingCartIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h1 className="text-2xl font-bubblegum text-yammy-dark-blue mb-2">{t.checkout}</h1>
-              <p className="text-gray-500 mb-4">{t.emptyCart}</p>
-            </div>
-            <Button onClick={handleContinueShopping} className="bg-yammy-blue hover:bg-yammy-dark-blue">
-              {t.startShopping}
-            </Button>
-          </div>
-        </div>
-      </PageWrapper>
-    )
-  }
-
-  if (isSuccess) {
-    return (
-      <PageWrapper>
-        <div className="container mx-auto px-4 py-12">
-          <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-            <div className="text-center mb-6">
-              <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h1 className="text-2xl font-bubblegum text-yammy-dark-blue mb-2">{t.orderSuccess}</h1>
-              <p className="text-gray-600">{t.orderSuccessMessage}</p>
-            </div>
-            <Button onClick={handleContinueShopping} className="w-full bg-yammy-blue hover:bg-yammy-dark-blue">
-              {t.continueShopping}
+          <div className="max-w-md mx-auto text-center">
+            <ShoppingCart className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+            <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
+            <p className="text-gray-600 mb-6">Add some products to your cart before checking out.</p>
+            <Button asChild className="bg-yammy-blue hover:bg-yammy-dark-blue">
+              <a href="/products">Continue Shopping</a>
             </Button>
           </div>
         </div>
@@ -276,180 +248,177 @@ ${orderItems}
   return (
     <PageWrapper>
       <div className="container mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bubblegum text-yammy-dark-blue mb-8 text-center">{t.checkout}</h1>
+        <h1 className="text-3xl font-bold text-yammy-dark-blue mb-8 text-center">{t.checkout}</h1>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Checkout Form */}
-          <div className="md:col-span-2">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Contact Information */}
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-bubblegum text-yammy-dark-blue mb-4">{t.contactInfo}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">
-                      {t.firstName} <span className="text-red-500">*</span>
-                    </Label>
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Order Form */}
+          <div className="space-y-6">
+            {/* Customer Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  {t.customerInfo}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="customerName">{t.fullName} *</Label>
                     <Input
-                      id="firstName"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      className={errors.firstName ? "border-red-500" : ""}
+                      id="customerName"
+                      value={formData.customerName}
+                      onChange={(e) => handleInputChange("customerName", e.target.value)}
+                      className={errors.customerName ? "border-red-500" : ""}
                     />
-                    {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
+                    {errors.customerName && <p className="text-red-500 text-sm mt-1">{errors.customerName}</p>}
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">
-                      {t.lastName} <span className="text-red-500">*</span>
-                    </Label>
+                  <div>
+                    <Label htmlFor="customerEmail">{t.email} *</Label>
                     <Input
-                      id="lastName"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className={errors.lastName ? "border-red-500" : ""}
-                    />
-                    {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">{t.email}</Label>
-                    <Input
-                      id="email"
-                      name="email"
+                      id="customerEmail"
                       type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className={errors.email ? "border-red-500" : ""}
+                      value={formData.customerEmail}
+                      onChange={(e) => handleInputChange("customerEmail", e.target.value)}
+                      className={errors.customerEmail ? "border-red-500" : ""}
                     />
-                    {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">
-                      {t.phone} <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className={errors.phone ? "border-red-500" : ""}
-                    />
-                    {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
+                    {errors.customerEmail && <p className="text-red-500 text-sm mt-1">{errors.customerEmail}</p>}
                   </div>
                 </div>
-              </div>
+                <div>
+                  <Label htmlFor="customerPhone">{t.phone} *</Label>
+                  <Input
+                    id="customerPhone"
+                    value={formData.customerPhone}
+                    onChange={(e) => handleInputChange("customerPhone", e.target.value)}
+                    placeholder="+255 7XX XXX XXX"
+                    className={errors.customerPhone ? "border-red-500" : ""}
+                  />
+                  {errors.customerPhone && <p className="text-red-500 text-sm mt-1">{errors.customerPhone}</p>}
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Shipping Information */}
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-bubblegum text-yammy-dark-blue mb-4">{t.shippingInfo}</h2>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="address">
-                      {t.address} <span className="text-red-500">*</span>
-                    </Label>
+            {/* Delivery Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  {t.deliveryInfo}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="customerAddress">{t.address} *</Label>
+                  <Textarea
+                    id="customerAddress"
+                    value={formData.customerAddress}
+                    onChange={(e) => handleInputChange("customerAddress", e.target.value)}
+                    className={errors.customerAddress ? "border-red-500" : ""}
+                    rows={3}
+                  />
+                  {errors.customerAddress && <p className="text-red-500 text-sm mt-1">{errors.customerAddress}</p>}
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="city">{t.city} *</Label>
                     <Input
-                      id="address"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      className={errors.address ? "border-red-500" : ""}
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => handleInputChange("city", e.target.value)}
+                      className={errors.city ? "border-red-500" : ""}
                     />
-                    {errors.address && <p className="text-red-500 text-xs">{errors.address}</p>}
+                    {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="city">
-                        {t.city} <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="city"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        className={errors.city ? "border-red-500" : ""}
-                      />
-                      {errors.city && <p className="text-red-500 text-xs">{errors.city}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="region">
-                        {t.region} <span className="text-red-500">*</span>
-                      </Label>
-                      <Select value={formData.region} onValueChange={(value) => handleSelectChange("region", value)}>
-                        <SelectTrigger id="region" className={errors.region ? "border-red-500" : ""}>
-                          <SelectValue placeholder={t.selectRegion} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="dar-es-salaam">{t.darEsSalaam}</SelectItem>
-                          <SelectItem value="arusha">{t.arusha}</SelectItem>
-                          <SelectItem value="mwanza">{t.mwanza}</SelectItem>
-                          <SelectItem value="dodoma">{t.dodoma}</SelectItem>
-                          <SelectItem value="tanga">{t.tanga}</SelectItem>
-                          <SelectItem value="mbeya">{t.mbeya}</SelectItem>
-                          <SelectItem value="morogoro">{t.morogoro}</SelectItem>
-                          <SelectItem value="zanzibar">{t.zanzibar}</SelectItem>
-                          <SelectItem value="kigoma">{t.kigoma}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {errors.region && <p className="text-red-500 text-xs">{errors.region}</p>}
-                    </div>
+                  <div>
+                    <Label htmlFor="region">{t.region} *</Label>
+                    <Select value={formData.region} onValueChange={(value) => handleInputChange("region", value)}>
+                      <SelectTrigger className={errors.region ? "border-red-500" : ""}>
+                        <SelectValue placeholder="Select region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dar-es-salaam">Dar es Salaam</SelectItem>
+                        <SelectItem value="arusha">Arusha</SelectItem>
+                        <SelectItem value="dodoma">Dodoma</SelectItem>
+                        <SelectItem value="mwanza">Mwanza</SelectItem>
+                        <SelectItem value="tanga">Tanga</SelectItem>
+                        <SelectItem value="morogoro">Morogoro</SelectItem>
+                        <SelectItem value="mbeya">Mbeya</SelectItem>
+                        <SelectItem value="iringa">Iringa</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.region && <p className="text-red-500 text-sm mt-1">{errors.region}</p>}
                   </div>
                 </div>
-              </div>
-
-              {/* Additional Information */}
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-bubblegum text-yammy-dark-blue mb-4">{t.additionalInfo}</h2>
-                <div className="space-y-2">
+                <div>
                   <Label htmlFor="notes">{t.notes}</Label>
                   <Textarea
                     id="notes"
-                    name="notes"
                     value={formData.notes}
-                    onChange={handleInputChange}
-                    className="min-h-[100px]"
+                    onChange={(e) => handleInputChange("notes", e.target.value)}
+                    rows={2}
+                    placeholder="Any special delivery instructions..."
                   />
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <Button type="submit" className="w-full bg-yammy-blue hover:bg-yammy-dark-blue" disabled={isSubmitting}>
-                {isSubmitting ? "Processing..." : t.placeOrder}
-              </Button>
-            </form>
+            {/* Payment Method */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  {t.paymentMethod}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Select
+                  value={formData.paymentMethod}
+                  onValueChange={(value) => handleInputChange("paymentMethod", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash_on_delivery">{t.cashOnDelivery}</SelectItem>
+                    <SelectItem value="mobile_money">{t.mobileMoney}</SelectItem>
+                    <SelectItem value="bank_transfer">{t.bankTransfer}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Order Summary */}
-          <div className="md:col-span-1">
-            <div className="bg-white p-6 rounded-lg shadow-md sticky top-24">
-              <h2 className="text-xl font-bubblegum text-yammy-dark-blue mb-4">{t.orderSummary}</h2>
-
-              <div className="space-y-4">
-                <div className="max-h-[400px] overflow-y-auto">
+          <div>
+            <Card className="sticky top-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  {t.orderSummary}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Cart Items */}
+                <div className="space-y-3">
                   {items.map((item) => (
-                    <div key={item.id} className="flex items-start gap-3 py-3 border-b border-gray-100">
-                      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 bg-yammy-light-blue">
-                        <Image
+                    <div key={`${item.id}-${item.size}`} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        <img
                           src={item.image || "/placeholder.svg"}
                           alt={item.name[language]}
-                          fill
-                          className="object-contain p-1"
+                          className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-gray-900 truncate">
-                          {item.name[language]} <span className="text-gray-500">x{item.quantity}</span>
-                        </h4>
-                        {item.size && (
-                          <p className="text-xs text-gray-500">
-                            {t.size}: {t[item.size as keyof typeof t]}
-                          </p>
-                        )}
-                        <p className="text-sm font-medium text-yammy-blue">{formatPrice(item.price * item.quantity)}</p>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm">{item.name[language]}</h4>
+                        <p className="text-xs text-gray-500">
+                          {item.size && `Size: ${item.size}`} • Qty: {item.quantity}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{formatCurrency(item.price * item.quantity)}</p>
                       </div>
                     </div>
                   ))}
@@ -457,24 +426,46 @@ ${orderItems}
 
                 <Separator />
 
-                <div className="flex justify-between text-base font-medium">
-                  <p>{t.total}</p>
-                  <p className="text-yammy-blue font-bold">{formatPrice(total)}</p>
+                {/* Order Totals */}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>{t.subtotal}:</span>
+                    <span>{formatCurrency(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="flex items-center gap-1">
+                      <Truck className="h-4 w-4" />
+                      {t.delivery}:
+                    </span>
+                    <span>{formatCurrency(deliveryFee)}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>{t.total}:</span>
+                    <span>{formatCurrency(total)}</span>
+                  </div>
                 </div>
 
-                <Alert className="bg-yammy-light-blue border-yammy-blue">
-                  <AlertCircle className="h-4 w-4 text-yammy-blue" />
-                  <AlertTitle className="text-yammy-dark-blue">
-                    {language === "en" ? "Order via WhatsApp" : "Agiza kupitia WhatsApp"}
-                  </AlertTitle>
-                  <AlertDescription className="text-gray-600 text-sm">
-                    {language === "en"
-                      ? "After placing your order, you'll be redirected to WhatsApp to complete payment and delivery arrangements."
-                      : "Baada ya kuweka oda yako, utaelekezwa kwenye WhatsApp kukamilisha malipo na mpangilio wa usafirishaji."}
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </div>
+                {/* Place Order Button */}
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isProcessing}
+                  className="w-full bg-yammy-blue hover:bg-yammy-dark-blue"
+                  size="lg"
+                >
+                  {isProcessing ? t.processing : t.placeOrder}
+                </Button>
+
+                {/* Payment Method Badge */}
+                <div className="text-center">
+                  <Badge variant="outline" className="text-xs">
+                    {formData.paymentMethod === "cash_on_delivery" && t.cashOnDelivery}
+                    {formData.paymentMethod === "mobile_money" && t.mobileMoney}
+                    {formData.paymentMethod === "bank_transfer" && t.bankTransfer}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

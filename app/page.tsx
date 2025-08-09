@@ -17,7 +17,6 @@ import {
   Users,
   ShoppingBag,
   Globe,
-  Loader2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -25,6 +24,8 @@ import { useLanguage } from "@/components/language-provider"
 import { PageWrapper } from "@/components/page-wrapper"
 import { useStore } from "@/lib/store"
 import { useCart } from "@/components/cart-provider"
+import { useStoreSync } from "@/lib/store-sync"
+import { AdminChangeNotification } from "@/components/admin-change-notification"
 import { OptimizedImage } from "@/components/optimized-image"
 import { toast } from "@/components/ui/use-toast"
 import Image from "next/image"
@@ -76,9 +77,6 @@ const translations = {
     regions: "Regions Covered",
     yearsOfExperience: "Years of Experience",
     ourImpact: "Our Impact Across Tanzania",
-    loading: "Loading...",
-    errorLoading: "Error loading data. Please try again.",
-    retry: "Retry",
   },
   sw: {
     heroTitle: "Penda Mtoto Wako, Penda Familia Yako",
@@ -124,9 +122,6 @@ const translations = {
     regions: "Mikoa Inayofikiwa",
     yearsOfExperience: "Miaka ya Uzoefu",
     ourImpact: "Athari Yetu Katika Tanzania",
-    loading: "Inapakia...",
-    errorLoading: "Hitilafu katika kupakia data. Tafadhali jaribu tena.",
-    retry: "Jaribu tena",
   },
 }
 
@@ -203,11 +198,11 @@ const testimonials = [
 // Hero carousel images - removed the third image
 const heroImages = [
   {
-    src: "/images/yammy-yami-mother-daughter-hero.jpeg",
+    src: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-04-21%20at%2004.17.11_e98c889a.jpg-qImS0ea607vm0WJyywYVFZ0KBHG2zi.jpeg",
     alt: "Yammy Yami Brand Ambassador",
   },
   {
-    src: "/images/baby-with-products.png",
+    src: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Post_Reel_1080x1440_03-ErnRKBr1DJ0cJI6Tvwc9mOzLLt1OE8.png",
     alt: "Yammy Yami Product Showcase",
   },
 ]
@@ -272,7 +267,8 @@ const slideVariants = {
 
 export default function Home() {
   const { language } = useLanguage()
-  const { products, blogPosts, loadProducts, loadBlogPosts, isLoading, error } = useStore()
+  const { state, loadProducts, loadBlogPosts } = useStore()
+  const { lastEvent } = useStoreSync()
   const { addItem } = useCart()
   const [bubbles, setBubbles] = useState<Array<{ id: number; size: number; left: string; delay: number }>>([])
   const [featuredProducts, setFeaturedProducts] = useState([])
@@ -283,7 +279,6 @@ export default function Home() {
   const [isPaused, setIsPaused] = useState(false)
   const [selectedPost, setSelectedPost] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [localLoading, setLocalLoading] = useState(true)
   const t = translations[language || "en"]
 
   // Set up hero image carousel
@@ -323,58 +318,53 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLocalLoading(true)
+        // Load products and blog posts if they're not already loaded
+        if (state.products.length === 0) {
+          await loadProducts()
+        }
 
-        // Load products and blog posts
-        await Promise.all([loadProducts(), loadBlogPosts()])
+        if (state.blogPosts.length === 0) {
+          await loadBlogPosts()
+        }
 
-        // Get current products from store
-        const currentProducts = useStore.getState().products
-        const currentBlogPosts = useStore.getState().blogPosts
-
-        // Filter featured items from the loaded data
-        const featured = currentProducts.filter((product) => product.featured === true)
+        // Filter featured items
+        const featured = state.products.filter((product) => product.featured === true)
         setFeaturedProducts(featured.slice(0, 4))
 
-        const featuredPosts = currentBlogPosts.filter((post) => post.featured === true)
+        const featuredPosts = state.blogPosts.filter((post) => post.featured === true)
         setFeaturedBlogPosts(featuredPosts.slice(0, 3))
       } catch (error) {
         console.error("Error fetching data:", error)
-
-        // Fallback to current store state
-        const currentProducts = useStore.getState().products
-        const currentBlogPosts = useStore.getState().blogPosts
-
-        const featured = currentProducts.filter((product) => product.featured === true)
-        setFeaturedProducts(featured.slice(0, 4))
-
-        const featuredPosts = currentBlogPosts.filter((post) => post.featured === true)
-        setFeaturedBlogPosts(featuredPosts.slice(0, 3))
-      } finally {
-        setLocalLoading(false)
       }
     }
 
     fetchData()
-  }, [loadProducts, loadBlogPosts])
+  }, [state.products, state.blogPosts, loadProducts, loadBlogPosts])
 
-  // Update featured items when products or blog posts change
+  // Listen for sync events
   useEffect(() => {
-    if (products.length > 0) {
-      const featured = products.filter((product) => product.featured === true)
-      setFeaturedProducts(featured.slice(0, 4))
-    }
+    if (lastEvent) {
+      // Refresh data based on the event type
+      const refreshData = async () => {
+        if (lastEvent.type === "product") {
+          await loadProducts()
+          // Update featured products
+          const featured = state.products.filter((product) => product.featured === true)
+          setFeaturedProducts(featured.slice(0, 4))
+        } else if (lastEvent.type === "blogPost") {
+          await loadBlogPosts()
+          // Update featured blog posts
+          const featuredPosts = state.blogPosts.filter((post) => post.featured === true)
+          setFeaturedBlogPosts(featuredPosts.slice(0, 3))
+        }
 
-    if (blogPosts.length > 0) {
-      const featuredPosts = blogPosts.filter((post) => post.featured === true)
-      setFeaturedBlogPosts(featuredPosts.slice(0, 3))
-    }
-  }, [products, blogPosts])
+        // Force image refresh by updating the version
+        setImageVersion(Date.now())
+      }
 
-  // Force image refresh by updating the version
-  useEffect(() => {
-    setImageVersion(Date.now())
-  }, [products, blogPosts])
+      refreshData()
+    }
+  }, [lastEvent, loadProducts, loadBlogPosts, state.products, state.blogPosts])
 
   const formatPrice = (price: number) => {
     return `TZS ${price.toLocaleString()}`
@@ -431,42 +421,6 @@ export default function Home() {
     const timestamp = imageVersion
     const separator = url.includes("?") ? "&" : "?"
     return `${url}${separator}v=${timestamp}`
-  }
-
-  // Handle retry loading
-  const handleRetry = async () => {
-    setLocalLoading(true)
-    try {
-      await Promise.all([loadProducts(), loadBlogPosts()])
-    } catch (error) {
-      console.error("Error retrying data load:", error)
-    } finally {
-      setLocalLoading(false)
-    }
-  }
-
-  // Show loading state
-  if (localLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <Loader2 className="h-12 w-12 text-yammy-blue animate-spin mb-4" />
-        <p className="text-yammy-dark-blue font-medium">{t.loading}</p>
-      </div>
-    )
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="bg-red-50 p-6 rounded-lg text-center">
-          <p className="text-red-600 mb-4">{t.errorLoading}</p>
-          <Button onClick={handleRetry} className="bg-yammy-blue hover:bg-yammy-dark-blue">
-            {t.retry}
-          </Button>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -534,6 +488,7 @@ export default function Home() {
                     fill
                     className="object-contain"
                     priority
+                    unoptimized={currentImageIndex === 1}
                   />
 
                   {/* Image caption */}
@@ -941,6 +896,9 @@ export default function Home() {
       <Suspense fallback={null}>
         {selectedPost && <BlogPostModal post={selectedPost} isOpen={isModalOpen} onClose={handleCloseModal} />}
       </Suspense>
+
+      {/* Admin Change Notification */}
+      <AdminChangeNotification />
     </PageWrapper>
   )
 }

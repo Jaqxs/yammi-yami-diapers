@@ -2,409 +2,511 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2, Plus, X, Upload, Check } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, Save, AlertCircle } from "lucide-react"
-import Link from "next/link"
-import ImageUpload from "@/components/admin/image-upload"
-
-interface Category {
-  id: number
-  name_en: string
-  name_sw: string
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { useStore } from "@/lib/store"
+import { useToast } from "@/hooks/use-toast"
+import { useStoreSync } from "@/lib/store-sync"
 
 export default function NewProductPage() {
   const router = useRouter()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [formData, setFormData] = useState({
-    name_en: "",
-    name_sw: "",
-    description_en: "",
-    description_sw: "",
-    price: "",
-    wholesale_price: "",
-    category: "",
-    size: "",
-    bundle_size: "",
-    carton_size: "",
-    weight_range: "",
-    hip_size: "",
-    stock: "0",
-    featured: false,
-    status: "active",
-    image_url: "",
-    tags: "",
-  })
+  const { addProduct } = useStore()
+  const { notifyChange } = useStoreSync()
+  const { toast } = useToast()
 
-  useEffect(() => {
-    fetchCategories()
-    checkDatabase()
-  }, [])
+  // Form state
+  const [name, setName] = useState({ en: "", sw: "" })
+  const [description, setDescription] = useState({ en: "", sw: "" })
+  const [category, setCategory] = useState("")
+  const [price, setPrice] = useState("")
+  const [wholesalePrice, setWholesalePrice] = useState("")
+  const [size, setSize] = useState("")
+  const [bundleSize, setBundleSize] = useState("")
+  const [cartonSize, setCartonSize] = useState("")
+  const [weightRange, setWeightRange] = useState("")
+  const [hipSize, setHipSize] = useState("")
+  const [stock, setStock] = useState("")
+  const [status, setStatus] = useState<"active" | "low_stock" | "out_of_stock" | "draft">("active")
+  const [isCarton, setIsCarton] = useState(false)
+  const [featured, setFeatured] = useState(false)
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [activeTab, setActiveTab] = useState("details")
 
-  const checkDatabase = async () => {
-    try {
-      const response = await fetch("/api/admin/db-check")
-      const data = await response.json()
+  // Image handling
+  const [images, setImages] = useState<string[]>([])
+  const [imageFiles, setImageFiles] = useState<File[]>([])
 
-      if (!data.tableExists) {
-        setError("Products table doesn't exist. Please run the database setup script.")
-      } else {
-        const hasImageUrl = data.columns.some((col: any) => col.column_name === "image_url")
-        if (!hasImageUrl) {
-          setError("Database schema is outdated. Please run the migration script to add the image_url column.")
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files)
+      setImageFiles((prev) => [...prev, ...newFiles])
+
+      // Create base64 data URLs for preview
+      newFiles.forEach((file) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImages((prev) => [...prev, reader.result as string])
         }
-      }
-    } catch (error) {
-      console.error("Error checking database:", error)
+        reader.readAsDataURL(file)
+      })
     }
   }
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch("/api/admin/categories")
-      if (response.ok) {
-        const data = await response.json()
-        setCategories(data)
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error)
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index))
+    setImageFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  // Tag handling
+  const handleAddTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags((prev) => [...prev, tagInput.trim()])
+      setTagInput("")
     }
   }
 
+  const removeTag = (tag: string) => {
+    setTags((prev) => prev.filter((t) => t !== tag))
+  }
+
+  // Form validation
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!name.en) newErrors.nameEn = "English name is required"
+    if (!name.sw) newErrors.nameSw = "Swahili name is required"
+    if (!category) newErrors.category = "Category is required"
+    if (!price) newErrors.price = "Price is required"
+    else if (isNaN(Number(price))) newErrors.price = "Price must be a number"
+    if (wholesalePrice && isNaN(Number(wholesalePrice))) newErrors.wholesalePrice = "Wholesale price must be a number"
+    if (!bundleSize) newErrors.bundleSize = "Bundle size is required"
+    if (!stock) newErrors.stock = "Stock is required"
+    else if (isNaN(Number(stock))) newErrors.stock = "Stock must be a number"
+    if (!description.en) newErrors.descriptionEn = "English description is required"
+    if (!description.sw) newErrors.descriptionSw = "Swahili description is required"
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSubmitting(true)
 
     try {
-      // Validate required fields
-      if (!formData.name_en || !formData.name_sw || !formData.price || !formData.category) {
-        setError("Please fill in all required fields (marked with *)")
-        setLoading(false)
-        return
+      const newProduct = {
+        name,
+        description,
+        category,
+        price: Number(price),
+        wholesalePrice: wholesalePrice ? Number(wholesalePrice) : undefined,
+        size: size || undefined,
+        bundleSize,
+        cartonSize: cartonSize || undefined,
+        image: images.length > 0 ? images[0] : "/assorted-products-display.png",
+        tags,
+        weightRange: weightRange || undefined,
+        hipSize: hipSize || undefined,
+        stock: Number(stock),
+        status,
+        isCarton,
+        featured,
       }
 
-      const payload = {
-        ...formData,
-        price: Number.parseFloat(formData.price),
-        wholesale_price: formData.wholesale_price ? Number.parseFloat(formData.wholesale_price) : null,
-        bundle_size: formData.bundle_size ? Number.parseInt(formData.bundle_size) : null,
-        stock: Number.parseInt(formData.stock),
-        tags: formData.tags ? formData.tags.split(",").map((tag) => tag.trim()) : [],
-      }
+      const addedProduct = await addProduct(newProduct)
 
-      const response = await fetch("/api/admin/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+      // Notify about the new product with the actual product ID
+      notifyChange({
+        type: "product",
+        action: "add",
+        id: addedProduct.id, // Now we have the real ID
       })
 
-      const result = await response.json()
+      toast({
+        title: "Product Added",
+        description: "The product has been added successfully",
+      })
 
-      if (response.ok) {
-        router.push("/admin")
-      } else {
-        setError(result.error || "Failed to create product")
-      }
+      router.push("/admin/products")
     } catch (error) {
-      console.error("Error creating product:", error)
-      setError("Failed to create product. Please try again.")
+      console.error("Error adding product:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add product. Please try again.",
+        variant: "destructive",
+      })
     } finally {
-      setLoading(false)
+      setIsSubmitting(false)
     }
-  }
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Link href="/admin">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold">Add New Product</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Add New Product</h1>
+        <Button variant="outline" onClick={() => router.push("/admin/products")}>
+          Cancel
+        </Button>
       </div>
 
-      {error && (
-        <Alert className="mb-6" variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Product Info */}
-          <div className="lg:col-span-2 space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="details">Product Details</TabsTrigger>
+            <TabsTrigger value="description">Description</TabsTrigger>
+            <TabsTrigger value="images">Images</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Product Information</CardTitle>
-                <CardDescription>Basic product details in both languages</CardDescription>
+                <CardTitle>Product Details</CardTitle>
+                <CardDescription>Enter the basic information about the product.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Product Name */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name_en">Product Name (English) *</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="name-en">Name (English)</Label>
                     <Input
-                      id="name_en"
-                      value={formData.name_en}
-                      onChange={(e) => handleInputChange("name_en", e.target.value)}
-                      required
-                      placeholder="Enter product name in English"
+                      id="name-en"
+                      value={name.en}
+                      onChange={(e) => setName({ ...name, en: e.target.value })}
+                      placeholder="Product name in English"
+                      className={errors.nameEn ? "border-red-500" : ""}
                     />
+                    {errors.nameEn && <p className="text-sm text-red-500">{errors.nameEn}</p>}
                   </div>
-                  <div>
-                    <Label htmlFor="name_sw">Product Name (Swahili) *</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="name-sw">Name (Swahili)</Label>
                     <Input
-                      id="name_sw"
-                      value={formData.name_sw}
-                      onChange={(e) => handleInputChange("name_sw", e.target.value)}
-                      required
-                      placeholder="Ingiza jina la bidhaa kwa Kiswahili"
+                      id="name-sw"
+                      value={name.sw}
+                      onChange={(e) => setName({ ...name, sw: e.target.value })}
+                      placeholder="Product name in Swahili"
+                      className={errors.nameSw ? "border-red-500" : ""}
                     />
+                    {errors.nameSw && <p className="text-sm text-red-500">{errors.nameSw}</p>}
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="description_en">Description (English)</Label>
-                  <Textarea
-                    id="description_en"
-                    value={formData.description_en}
-                    onChange={(e) => handleInputChange("description_en", e.target.value)}
-                    rows={3}
-                    placeholder="Detailed product description in English"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="description_sw">Description (Swahili)</Label>
-                  <Textarea
-                    id="description_sw"
-                    value={formData.description_sw}
-                    onChange={(e) => handleInputChange("description_sw", e.target.value)}
-                    rows={3}
-                    placeholder="Maelezo ya bidhaa kwa Kiswahili"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Specifications</CardTitle>
-                <CardDescription>Detailed product specifications and features</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="size">Size</Label>
-                    <Select value={formData.size} onValueChange={(value) => handleInputChange("size", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Newborn">Newborn</SelectItem>
-                        <SelectItem value="Small">Small</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="Large">Large</SelectItem>
-                        <SelectItem value="Extra Large">Extra Large</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="bundle_size">Bundle Size (pieces)</Label>
-                    <Input
-                      id="bundle_size"
-                      type="number"
-                      value={formData.bundle_size}
-                      onChange={(e) => handleInputChange("bundle_size", e.target.value)}
-                      placeholder="e.g., 30"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="carton_size">Carton Size</Label>
-                    <Input
-                      id="carton_size"
-                      value={formData.carton_size}
-                      onChange={(e) => handleInputChange("carton_size", e.target.value)}
-                      placeholder="e.g., 12 packs"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="weight_range">Weight Range</Label>
-                    <Input
-                      id="weight_range"
-                      value={formData.weight_range}
-                      onChange={(e) => handleInputChange("weight_range", e.target.value)}
-                      placeholder="e.g., 3-6 kg"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="hip_size">Hip Size Range</Label>
-                  <Input
-                    id="hip_size"
-                    value={formData.hip_size}
-                    onChange={(e) => handleInputChange("hip_size", e.target.value)}
-                    placeholder="e.g., 60-90 cm"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="tags">Tags (comma separated)</Label>
-                  <Input
-                    id="tags"
-                    value={formData.tags}
-                    onChange={(e) => handleInputChange("tags", e.target.value)}
-                    placeholder="e.g., premium, soft, absorbent, hypoallergenic"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Image</CardTitle>
-                <CardDescription>Upload a high-quality product image</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ImageUpload
-                  value={formData.image_url}
-                  onChange={(url) => handleInputChange("image_url", url)}
-                  onRemove={() => handleInputChange("image_url", "")}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Pricing & Inventory</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="price">Retail Price ($) *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange("price", e.target.value)}
-                    required
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="wholesale_price">Wholesale Price ($)</Label>
-                  <Input
-                    id="wholesale_price"
-                    type="number"
-                    step="0.01"
-                    value={formData.wholesale_price}
-                    onChange={(e) => handleInputChange("wholesale_price", e.target.value)}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="stock">Stock Quantity *</Label>
-                  <Input
-                    id="stock"
-                    type="number"
-                    value={formData.stock}
-                    onChange={(e) => handleInputChange("stock", e.target.value)}
-                    required
-                    placeholder="0"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="category">Category *</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
-                    <SelectTrigger>
+                {/* Category */}
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger id="category" className={errors.category ? "border-red-500" : ""}>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Baby Diapers">Baby Diapers</SelectItem>
-                      <SelectItem value="Adult Diapers">Adult Diapers</SelectItem>
-                      <SelectItem value="Lady Pads">Lady Pads</SelectItem>
-                      <SelectItem value="Pull-up Pants">Pull-up Pants</SelectItem>
+                      <SelectItem value="babyDiapers">Baby Diapers</SelectItem>
+                      <SelectItem value="babyPants">Baby Pants</SelectItem>
+                      <SelectItem value="adultDiapers">Adult Diapers</SelectItem>
+                      <SelectItem value="ladyPads">Lady Pads</SelectItem>
                     </SelectContent>
                   </Select>
+                  {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
                 </div>
 
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
-                    <SelectTrigger>
-                      <SelectValue />
+                {/* Price */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price (TZS)</Label>
+                    <Input
+                      id="price"
+                      type="text"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="Retail price"
+                      className={errors.price ? "border-red-500" : ""}
+                    />
+                    {errors.price && <p className="text-sm text-red-500">{errors.price}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="wholesale-price">Wholesale Price (TZS)</Label>
+                    <Input
+                      id="wholesale-price"
+                      type="text"
+                      value={wholesalePrice}
+                      onChange={(e) => setWholesalePrice(e.target.value)}
+                      placeholder="Wholesale price (optional)"
+                      className={errors.wholesalePrice ? "border-red-500" : ""}
+                    />
+                    {errors.wholesalePrice && <p className="text-sm text-red-500">{errors.wholesalePrice}</p>}
+                  </div>
+                </div>
+
+                {/* Size */}
+                <div className="space-y-2">
+                  <Label htmlFor="size">Size</Label>
+                  <Select value={size} onValueChange={setSize}>
+                    <SelectTrigger id="size">
+                      <SelectValue placeholder="Select size (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                      <SelectItem value="extraLarge">Extra Large</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="featured"
-                    checked={formData.featured}
-                    onCheckedChange={(checked) => handleInputChange("featured", checked)}
-                  />
-                  <Label htmlFor="featured">Featured Product</Label>
+                {/* Bundle Size */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bundle-size">Bundle Size</Label>
+                    <Input
+                      id="bundle-size"
+                      value={bundleSize}
+                      onChange={(e) => setBundleSize(e.target.value)}
+                      placeholder="e.g., 10 pieces"
+                      className={errors.bundleSize ? "border-red-500" : ""}
+                    />
+                    {errors.bundleSize && <p className="text-sm text-red-500">{errors.bundleSize}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="carton-size">Carton Size</Label>
+                    <Input
+                      id="carton-size"
+                      value={cartonSize}
+                      onChange={(e) => setCartonSize(e.target.value)}
+                      placeholder="e.g., 100 pieces (optional)"
+                    />
+                  </div>
+                </div>
+
+                {/* Weight Range / Hip Size */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="weight-range">Weight Range</Label>
+                    <Input
+                      id="weight-range"
+                      value={weightRange}
+                      onChange={(e) => setWeightRange(e.target.value)}
+                      placeholder="e.g., 3-6 kg (optional)"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hip-size">Hip Size</Label>
+                    <Input
+                      id="hip-size"
+                      value={hipSize}
+                      onChange={(e) => setHipSize(e.target.value)}
+                      placeholder="e.g., 60-90 cm (optional)"
+                    />
+                  </div>
+                </div>
+
+                {/* Stock & Status */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="stock">Stock</Label>
+                    <Input
+                      id="stock"
+                      type="text"
+                      value={stock}
+                      onChange={(e) => setStock(e.target.value)}
+                      placeholder="Available quantity"
+                      className={errors.stock ? "border-red-500" : ""}
+                    />
+                    {errors.stock && <p className="text-sm text-red-500">{errors.stock}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={status} onValueChange={(value) => setStatus(value as any)}>
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="low_stock">Low Stock</SelectItem>
+                        <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="tags"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      placeholder="Add a tag"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          handleAddTag()
+                        }
+                      }}
+                    />
+                    <Button type="button" variant="outline" onClick={handleAddTag}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Switches */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch id="is-carton" checked={isCarton} onCheckedChange={setIsCarton} />
+                    <Label htmlFor="is-carton">Sold as Carton</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch id="featured" checked={featured} onCheckedChange={setFeatured} />
+                    <Label htmlFor="featured">Featured Product</Label>
+                  </div>
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            <div className="space-y-3">
-              <Button type="submit" className="w-full" disabled={loading}>
-                <Save className="w-4 h-4 mr-2" />
-                {loading ? "Creating Product..." : "Create Product"}
-              </Button>
-              <Link href="/admin" className="block">
-                <Button type="button" variant="outline" className="w-full">
-                  Cancel
-                </Button>
-              </Link>
-            </div>
-          </div>
+          <TabsContent value="description" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Description</CardTitle>
+                <CardDescription>Provide detailed information about the product.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="description-en">Description (English)</Label>
+                  <Textarea
+                    id="description-en"
+                    value={description.en}
+                    onChange={(e) => setDescription({ ...description, en: e.target.value })}
+                    placeholder="Detailed description in English"
+                    rows={6}
+                    className={errors.descriptionEn ? "border-red-500" : ""}
+                  />
+                  {errors.descriptionEn && <p className="text-sm text-red-500">{errors.descriptionEn}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description-sw">Description (Swahili)</Label>
+                  <Textarea
+                    id="description-sw"
+                    value={description.sw}
+                    onChange={(e) => setDescription({ ...description, sw: e.target.value })}
+                    placeholder="Detailed description in Swahili"
+                    rows={6}
+                    className={errors.descriptionSw ? "border-red-500" : ""}
+                  />
+                  {errors.descriptionSw && <p className="text-sm text-red-500">{errors.descriptionSw}</p>}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="images" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Images</CardTitle>
+                <CardDescription>Upload images of the product.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input
+                      type="file"
+                      id="image-upload"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <Label htmlFor="image-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                      <Upload className="h-10 w-10 text-gray-400 mb-2" />
+                      <span className="text-sm font-medium text-gray-600">Click to upload images</span>
+                      <span className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</span>
+                    </Label>
+                  </div>
+
+                  {images.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                      {images.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square rounded-md overflow-hidden bg-gray-100">
+                            <img
+                              src={image || "/placeholder.svg"}
+                              alt={`Product ${index + 1}`}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4 text-red-500" />
+                          </button>
+                          {index === 0 && <Badge className="absolute top-1 left-1 bg-blue-500">Primary</Badge>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <div className="mt-6 flex justify-end gap-4">
+          <Button variant="outline" type="button" onClick={() => router.push("/admin/products")}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Save Product
+              </>
+            )}
+          </Button>
         </div>
       </form>
     </div>

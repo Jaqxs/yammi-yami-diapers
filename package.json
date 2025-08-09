@@ -1,10 +1,15 @@
 {
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "start": "next start"
+  },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
-    "@neondatabase/serverless": "latest",
-    "@vercel/blob": "latest",
+    "@supabase/supabase-js": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "latest",
     "framer-motion": "latest",
     "immer": "latest",
     "jspdf": "latest",
@@ -13,6 +18,7 @@
     "next": "15.2.4",
     "react": "^19",
     "react-dom": "^19",
+    "recharts": "latest",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "use-sync-external-store": "latest",
@@ -31,10 +37,5 @@
     "postcss": "^8.5",
     "tailwindcss": "^3.3.2",
     "typescript": "^5"
-  },
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
   }
 }

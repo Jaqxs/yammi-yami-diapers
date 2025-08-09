@@ -1,185 +1,74 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/components/ui/use-toast"
-import { Wifi, WifiOff, RefreshCw, Clock, CheckCircle, X } from "lucide-react"
 import { useStoreSync } from "@/lib/store-sync"
+import { CheckCircle2 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
-interface AdminChangeNotificationProps {
-  className?: string
-  showDetails?: boolean
-}
+export function AdminChangeNotification() {
+  const { lastEvent } = useStoreSync()
+  const [visible, setVisible] = useState(false)
+  const [message, setMessage] = useState("")
 
-export function AdminChangeNotification({ className = "", showDetails = true }: AdminChangeNotificationProps) {
-  const { toast } = useToast()
-  const { syncStatus, triggerSync, isOnline, pendingChanges, lastSync } = useStoreSync()
-  const [isVisible, setIsVisible] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
-
-  // Show notification when there are pending changes or offline
   useEffect(() => {
-    setIsVisible(!isOnline || pendingChanges > 0)
-  }, [isOnline, pendingChanges])
+    if (lastEvent) {
+      // Create a message based on the event
+      let actionText = ""
+      switch (lastEvent.action) {
+        case "add":
+          actionText = "added"
+          break
+        case "update":
+          actionText = "updated"
+          break
+        case "delete":
+          actionText = "deleted"
+          break
+      }
 
-  // Auto-hide after successful sync
-  useEffect(() => {
-    if (isOnline && pendingChanges === 0 && lastSync) {
+      let typeText = ""
+      switch (lastEvent.type) {
+        case "product":
+          typeText = "product"
+          break
+        case "blogPost":
+          typeText = "blog post"
+          break
+        case "order":
+          typeText = "order"
+          break
+      }
+
+      setMessage(`A ${typeText} was ${actionText}. The page has been updated.`)
+      setVisible(true)
+
+      // Hide after 5 seconds
       const timer = setTimeout(() => {
-        setIsVisible(false)
-      }, 3000)
+        setVisible(false)
+      }, 5000)
+
       return () => clearTimeout(timer)
     }
-  }, [isOnline, pendingChanges, lastSync])
-
-  if (!isVisible) return null
-
-  const getStatusIcon = () => {
-    if (!isOnline) return <WifiOff className="h-4 w-4" />
-    if (pendingChanges > 0) return <Clock className="h-4 w-4" />
-    return <CheckCircle className="h-4 w-4" />
-  }
-
-  const getStatusMessage = () => {
-    if (!isOnline && pendingChanges > 0) {
-      return `Offline - ${pendingChanges} changes pending sync`
-    }
-    if (!isOnline) {
-      return "Working offline - changes will sync when reconnected"
-    }
-    if (pendingChanges > 0) {
-      return `${pendingChanges} changes waiting to sync`
-    }
-    if (lastSync) {
-      return `Last synced: ${lastSync.toLocaleTimeString()}`
-    }
-    return "All changes synced"
-  }
-
-  const getAlertVariant = () => {
-    if (!isOnline) return "destructive"
-    if (pendingChanges > 0) return "default"
-    return "default"
-  }
-
-  if (isMinimized) {
-    return (
-      <div className={`fixed bottom-4 right-4 z-50 ${className}`}>
-        <Button onClick={() => setIsMinimized(false)} variant="outline" size="sm" className="shadow-lg">
-          {getStatusIcon()}
-          {pendingChanges > 0 && (
-            <Badge variant="secondary" className="ml-2">
-              {pendingChanges}
-            </Badge>
-          )}
-        </Button>
-      </div>
-    )
-  }
+  }, [lastEvent])
 
   return (
-    <div className={`fixed bottom-4 right-4 z-50 max-w-md ${className}`}>
-      <Alert variant={getAlertVariant()} className="shadow-lg">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            {getStatusIcon()}
-            <div className="flex-1">
-              <AlertDescription className="text-sm">{getStatusMessage()}</AlertDescription>
-
-              {showDetails && (
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    {isOnline ? (
-                      <>
-                        <Wifi className="h-3 w-3" />
-                        Online
-                      </>
-                    ) : (
-                      <>
-                        <WifiOff className="h-3 w-3" />
-                        Offline
-                      </>
-                    )}
-                  </div>
-
-                  {pendingChanges > 0 && (
-                    <Badge variant="outline" className="text-xs">
-                      {pendingChanges} pending
-                    </Badge>
-                  )}
-                </div>
-              )}
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 50 }}
+          className="fixed bottom-4 right-4 z-50 max-w-md"
+        >
+          <div className="bg-green-50 border border-green-200 rounded-lg shadow-lg p-4 flex items-start gap-3">
+            <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-green-800">Content Updated</h3>
+              <p className="text-green-700 text-sm">{message}</p>
             </div>
           </div>
-
-          <div className="flex items-center gap-1">
-            {isOnline && pendingChanges > 0 && (
-              <Button onClick={triggerSync} variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <RefreshCw className="h-3 w-3" />
-              </Button>
-            )}
-
-            <Button onClick={() => setIsMinimized(true)} variant="ghost" size="sm" className="h-6 w-6 p-0">
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-
-        {!isOnline && (
-          <div className="mt-2 text-xs text-muted-foreground">
-            Changes are being saved locally and will sync automatically when connection is restored.
-          </div>
-        )}
-      </Alert>
-    </div>
-  )
-}
-
-// Export additional notification components
-export function AdminSyncStatus() {
-  const { isOnline, pendingChanges, lastSync } = useStoreSync()
-
-  return (
-    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-      {isOnline ? <Wifi className="h-4 w-4 text-green-500" /> : <WifiOff className="h-4 w-4 text-red-500" />}
-
-      <span>{isOnline ? "Online" : "Offline"}</span>
-
-      {pendingChanges > 0 && (
-        <Badge variant="outline" className="text-xs">
-          {pendingChanges} pending
-        </Badge>
+        </motion.div>
       )}
-
-      {lastSync && <span className="text-xs">Last sync: {lastSync.toLocaleTimeString()}</span>}
-    </div>
-  )
-}
-
-export function AdminSyncButton() {
-  const { triggerSync, isOnline, pendingChanges } = useStoreSync()
-  const [isSyncing, setIsSyncing] = useState(false)
-
-  const handleSync = async () => {
-    setIsSyncing(true)
-    try {
-      await triggerSync()
-    } finally {
-      setIsSyncing(false)
-    }
-  }
-
-  return (
-    <Button onClick={handleSync} disabled={!isOnline || pendingChanges === 0 || isSyncing} variant="outline" size="sm">
-      <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
-      {isSyncing ? "Syncing..." : "Sync Now"}
-      {pendingChanges > 0 && (
-        <Badge variant="secondary" className="ml-2">
-          {pendingChanges}
-        </Badge>
-      )}
-    </Button>
+    </AnimatePresence>
   )
 }
