@@ -31,6 +31,18 @@ import { toast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import { CountUp } from "@/components/count-up"
 
+
+
+<script>
+    window.YGC_WIDGET_ID = "1a3e8997-9a9d-4fd9-9c67-480a0fe12d4a";
+    (function() {
+      var script = document.createElement('script');
+      script.src = "https://widget.yourgpt.ai/script.js";
+      script.id = 'yourgpt-chatbot';
+      document.body.appendChild(script);
+    })();
+</script>
+
 // Language translations
 const translations = {
   en: {
